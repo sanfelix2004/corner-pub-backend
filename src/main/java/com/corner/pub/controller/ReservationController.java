@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/reservations")
 public class ReservationController {
@@ -46,4 +48,17 @@ public class ReservationController {
         return ResponseEntity.ok(response);
     }
 
+    // ✅ GET per data
+    @GetMapping("/date/{date}")
+    public ResponseEntity<List<ReservationResponse>> getByDate(@PathVariable String date) {
+        List<ReservationResponse> list = reservationService.getReservationsByDate(date);
+        return ResponseEntity.ok(list);
+    }
+
+    // ✅ GET per numero di telefono
+    @GetMapping("/phone/{phone}")
+    public ResponseEntity<List<ReservationResponse>> getByPhone(@PathVariable String phone) {
+        List<ReservationResponse> list = reservationService.getReservationsByPhone(phone);
+        return ResponseEntity.ok(list);
+    }
 }

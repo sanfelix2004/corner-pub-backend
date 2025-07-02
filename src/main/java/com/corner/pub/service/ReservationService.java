@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -90,5 +91,29 @@ public class ReservationService {
 
         return response;
     }
+
+    public List<ReservationResponse> getReservationsByPhone(String phone) {
+        List<Reservation> list = reservationRepository.findAllByUser_Phone(phone);
+        return list.stream().map(this::toResponse).toList();
+    }
+
+    public List<ReservationResponse> getReservationsByDate(String dateString) {
+        LocalDate date = LocalDate.parse(dateString);
+        List<Reservation> list = reservationRepository.findAllByDate(date);
+        return list.stream().map(this::toResponse).toList();
+    }
+
+    private ReservationResponse toResponse(Reservation r) {
+        ReservationResponse resp = new ReservationResponse();
+        resp.setId(r.getId());
+        resp.setName(r.getUser().getName());
+        resp.setPhone(r.getUser().getPhone());
+        resp.setDate(r.getDate().toString());
+        resp.setTime(r.getTime().toString());
+        resp.setPeople(r.getPeople());
+        resp.setNote(r.getNote());
+        return resp;
+    }
+
 
 }
