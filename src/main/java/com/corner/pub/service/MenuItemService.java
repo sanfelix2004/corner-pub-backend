@@ -35,12 +35,21 @@ public class MenuItemService {
      * Crea un nuovo piatto. Lancia MenuItemDuplicateException se titolo già presente.
      */
     public MenuItemResponse createMenuItem(MenuItemRequest request) {
+        String categoria = request.getCategoria().trim();
         String titolo = request.getTitolo().trim();
-        if (menuItemRepository.findAll().stream()
-                .anyMatch(i -> i.getTitolo().equalsIgnoreCase(titolo))) {
+
+        // duplicato su titolo e categoria?
+        boolean exists = menuItemRepository.findAll().stream()
+                .anyMatch(i ->
+                        i.getCategoria().equalsIgnoreCase(categoria)
+                                && i.getTitolo().equalsIgnoreCase(titolo)
+                );
+        if (exists) {
             throw new MenuItemDuplicateException(titolo);
         }
+
         MenuItem item = new MenuItem();
+        item.setCategoria(categoria);                  // ← set category
         item.setTitolo(titolo);
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
@@ -71,6 +80,7 @@ public class MenuItemService {
     private MenuItemResponse mapToResponse(MenuItem item) {
         MenuItemResponse response = new MenuItemResponse();
         response.setId(item.getId());
+        response.setCategoria(item.getCategoria());    // ← include category
         response.setTitolo(item.getTitolo());
         response.setDescrizione(item.getDescrizione());
         response.setPrezzo(item.getPrezzo());

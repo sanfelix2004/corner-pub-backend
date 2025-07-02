@@ -72,4 +72,23 @@ public class ReservationService {
                 .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
         reservationRepository.delete(reservation);
     }
+
+    public ReservationResponse getReservation(String phone, String dateString) {
+        LocalDate date = LocalDate.parse(dateString);
+        Reservation reservation = reservationRepository
+                .findByUser_PhoneAndDate(phone, date)
+                .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
+
+        ReservationResponse response = new ReservationResponse();
+        response.setId(reservation.getId());
+        response.setName(reservation.getUser().getName());
+        response.setPhone(reservation.getUser().getPhone());
+        response.setDate(reservation.getDate().toString());
+        response.setTime(reservation.getTime().toString());
+        response.setPeople(reservation.getPeople());
+        response.setNote(reservation.getNote());
+
+        return response;
+    }
+
 }

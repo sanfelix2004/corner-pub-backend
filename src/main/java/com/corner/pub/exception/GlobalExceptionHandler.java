@@ -7,7 +7,6 @@ import com.corner.pub.exception.resourcenotfound.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,59 +15,41 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex, WebRequest req) {
-        return buildErrorResponse(ex, HttpStatus.NOT_FOUND, req);
+    public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex, WebRequest req) {
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, req);
+    public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, WebRequest req) {
-        return buildErrorResponse(ex, HttpStatus.CONFLICT, req);
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(ForbiddenException.class)
-    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex, WebRequest req) {
-        return buildErrorResponse(ex, HttpStatus.FORBIDDEN, req);
+    public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenException ex) {
+        return buildErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN);
     }
 
-    // Validation errors from @Valid
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
-    public ResponseEntity<ErrorResponse> handleValidationErrors(Exception ex, WebRequest req) {
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, req, "Validation failed");
+    public ResponseEntity<ErrorResponse> handleValidationErrors(Exception ex) {
+        return buildErrorResponse("Validation failed", HttpStatus.BAD_REQUEST);
     }
 
-    // Type mismatch, e.g. parsing path variable
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest req) {
-        return buildErrorResponse(ex, HttpStatus.BAD_REQUEST, req, "Invalid parameter: " + ex.getName());
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return buildErrorResponse("Invalid parameter: " + ex.getName(), HttpStatus.BAD_REQUEST);
     }
 
-    // Fallback for any other exception
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAll(Exception ex, WebRequest req) {
-        return buildErrorResponse(ex, HttpStatus.INTERNAL_SERVER_ERROR, req, "Unexpected error");
+    public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
+        return buildErrorResponse("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex,
-                                                             HttpStatus status,
-                                                             WebRequest req) {
-        return buildErrorResponse(ex, status, req, ex.getMessage());
-    }
-
-    private ResponseEntity<ErrorResponse> buildErrorResponse(Exception ex,
-                                                             HttpStatus status,
-                                                             WebRequest req,
-                                                             String message) {
-        ErrorResponse err = new ErrorResponse(
-                status.value(),
-                status.getReasonPhrase(),
-                message,
-                req.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(err, status);
+    private ResponseEntity<ErrorResponse> buildErrorResponse(String message, HttpStatus status) {
+        return new ResponseEntity<>(new ErrorResponse(message), status);
     }
 }

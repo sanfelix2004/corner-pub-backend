@@ -6,6 +6,7 @@ import com.corner.pub.dto.response.ReservationResponse;
 import com.corner.pub.dto.response.CancelReservationResponse;
 import com.corner.pub.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +21,14 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
+    // ReservationController → crea con 201
     @PostMapping
-    public ResponseEntity<ReservationResponse> create(@RequestBody ReservationRequest request) {
-        return ResponseEntity.ok(reservationService.createReservation(request));
+    public ResponseEntity<ReservationResponse> create(
+            @RequestBody ReservationRequest request) {
+        ReservationResponse dto = reservationService.createReservation(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
+
 
     @DeleteMapping
     public ResponseEntity<CancelReservationResponse> cancel(@RequestBody CancelReservationRequest req) {
@@ -32,4 +37,13 @@ public class ReservationController {
                 "Prenotazione cancellata con successo.");
         return ResponseEntity.ok(resp);
     }
+
+    @GetMapping
+    public ResponseEntity<ReservationResponse> getReservation(
+            @RequestParam String phone,
+            @RequestParam String date) {
+        ReservationResponse response = reservationService.getReservation(phone, date);
+        return ResponseEntity.ok(response);
+    }
+
 }
