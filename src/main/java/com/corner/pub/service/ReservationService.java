@@ -12,8 +12,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
@@ -113,6 +116,32 @@ public class ReservationService {
         resp.setPeople(r.getPeople());
         resp.setNote(r.getNote());
         return resp;
+    }
+    public List<String> getAvailableTimes(String dateString) {
+        LocalDate date = LocalDate.parse(dateString);
+        List<Reservation> reservations = reservationRepository.findAllByDate(date);
+
+        // Mappa: orario → numero prenotazioni
+        Map<String, Long> countMap = reservations.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getTime().toString(),
+                        Collectors.counting()
+                ));
+
+        List<String> available = new ArrayList<>();
+        LocalTime start = LocalTime.of(20, 0);
+        LocalTime end = LocalTime.of(23, 0);
+
+        while (!start.isAfter(end)) {
+            String timeStr = start.toString(); // es: "20:00"
+            long count = countMap.getOrDefault(timeStr, 0L);
+            if (count < 12) {
+                available.add(timeStr);
+            }
+            start = start.plusMinutes(30);
+        }
+
+        return available;
     }
 
 
