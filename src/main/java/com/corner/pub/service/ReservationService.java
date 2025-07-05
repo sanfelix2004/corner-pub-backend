@@ -144,5 +144,15 @@ public class ReservationService {
         return available;
     }
 
+    public List<ReservationResponse> getFutureReservationsByPhone(String phone) {
+        LocalDate today = LocalDate.now();
+        List<Reservation> list = reservationRepository.findAllByUser_Phone(phone);
+
+        return list.stream()
+                .filter(r -> !r.getDate().isBefore(today)) // solo oggi o dopo
+                .map(this::toResponse)
+                .toList();
+    }
+
 
 }

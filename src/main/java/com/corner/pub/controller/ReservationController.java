@@ -38,12 +38,12 @@ public class ReservationController {
     }
 
 
-    @DeleteMapping
-    public ResponseEntity<CancelReservationResponse> cancel(@RequestBody CancelReservationRequest req) {
-        reservationService.deleteReservation(req.getPhone(), req.getDate());
-        CancelReservationResponse resp = new CancelReservationResponse(true,
-                "Prenotazione cancellata con successo.");
-        return ResponseEntity.ok(resp);
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteByParams(
+            @RequestParam String phone,
+            @RequestParam String date) {
+        reservationService.deleteReservation(phone, date);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping
@@ -87,4 +87,9 @@ public class ReservationController {
         }
     }
 
+    @GetMapping("/by-phone/{phone}")
+    public ResponseEntity<List<ReservationResponse>> getFutureReservations(@PathVariable String phone) {
+        List<ReservationResponse> list = reservationService.getFutureReservationsByPhone(phone);
+        return ResponseEntity.ok(list);
+    }
 }
