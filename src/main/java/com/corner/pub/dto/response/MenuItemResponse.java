@@ -6,6 +6,9 @@ public class MenuItemResponse {
     private String titolo;
     private String descrizione;
     private double prezzo;
+    private String imageUrl;
+
+
 
     // Getters & Setters
 
@@ -23,4 +26,7 @@ public class MenuItemResponse {
 
     public double getPrezzo() { return prezzo; }
     public void setPrezzo(double prezzo) { this.prezzo = prezzo; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }
