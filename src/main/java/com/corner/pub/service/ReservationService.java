@@ -7,39 +7,26 @@ import com.corner.pub.exception.resourcenotfound.ReservationNotFoundException;
 import com.corner.pub.model.Reservation;
 import com.corner.pub.model.User;
 import com.corner.pub.repository.ReservationRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final UserService userService;
 
-    @Autowired
-    public ReservationService(ReservationRepository reservationRepository, UserService userService) {
-        this.reservationRepository = reservationRepository;
-        this.userService = userService;
-    }
-
-    /**
-     * Crea una nuova prenotazione, creando l'utente se non esiste.
-     * Lancia ReservationAlreadyExistsException se esiste già una prenotazione
-     * per lo stesso utente e la stessa data.
-     */
+    // ✅ Crea una nuova prenotazione (con check duplicato)
     public ReservationResponse createReservation(ReservationRequest request) {
         User user = userService.findOrCreate(request.getName(), request.getPhone());
-
         LocalDate date = LocalDate.parse(request.getDate());
-        // verifica prenotazione duplicata
+
         if (reservationRepository.findByUser_PhoneAndDate(user.getPhone(), date).isPresent()) {
             throw new ReservationAlreadyExistsException(user.getPhone(), request.getDate());
         }
@@ -51,24 +38,54 @@ public class ReservationService {
         reservation.setPeople(request.getPeople());
         reservation.setNote(request.getNote());
 
-        Reservation saved = reservationRepository.save(reservation);
-
-        ReservationResponse response = new ReservationResponse();
-        response.setId(saved.getId());
-        response.setName(user.getName());
-        response.setPhone(user.getPhone());
-        response.setDate(saved.getDate().toString());
-        response.setTime(saved.getTime().toString());
-        response.setPeople(saved.getPeople());
-        response.setNote(saved.getNote());
-
-        return response;
+        return toResponse(reservationRepository.save(reservation));
     }
 
-    /**
-     * Cancella una prenotazione cercando per telefono e data.
-     * Lancia ReservationNotFoundException se non trovata.
-     */
+    // ✅ Elenco completo delle prenotazioni
+    public List<ReservationResponse> getAllReservations() {
+        return reservationRepository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ✅ Trova una prenotazione specifica (per ID)
+    public ReservationResponse getReservationById(Long id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
+        return toResponse(reservation);
+    }
+
+    // ✅ Modifica una prenotazione esistente (per ID)
+    public ReservationResponse updateReservation(Long id, ReservationRequest request) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
+
+        // aggiorna l'utente o crealo se nuovo
+        User user = userService.findOrCreate(request.getName(), request.getPhone());
+        reservation.setUser(user);
+        reservation.setDate(LocalDate.parse(request.getDate()));
+        reservation.setTime(LocalTime.parse(request.getTime()));
+        reservation.setPeople(request.getPeople());
+        reservation.setNote(request.getNote());
+
+        return toResponse(reservationRepository.save(reservation));
+    }
+
+    // ✅ Cancella prenotazione per ID
+    public void deleteById(Long id) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
+        reservationRepository.delete(reservation);
+    }
+
+    // ✅ Cancella prenotazione per telefono + data
+    public void deleteReservationByPhoneAndDate(String phone, String dateString) {
+        LocalDate date = LocalDate.parse(dateString);
+        Reservation reservation = reservationRepository
+                .findByUser_PhoneAndDate(phone, date)
+                .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
+        reservationRepository.delete(reservation);
+    }
     public void deleteReservation(String phone, String dateString) {
         LocalDate date = LocalDate.parse(dateString);
         Reservation reservation = reservationRepository
@@ -77,35 +94,83 @@ public class ReservationService {
         reservationRepository.delete(reservation);
     }
 
+    // ✅ Cerca prenotazione per telefono + data
     public ReservationResponse getReservation(String phone, String dateString) {
         LocalDate date = LocalDate.parse(dateString);
         Reservation reservation = reservationRepository
                 .findByUser_PhoneAndDate(phone, date)
                 .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
-
-        ReservationResponse response = new ReservationResponse();
-        response.setId(reservation.getId());
-        response.setName(reservation.getUser().getName());
-        response.setPhone(reservation.getUser().getPhone());
-        response.setDate(reservation.getDate().toString());
-        response.setTime(reservation.getTime().toString());
-        response.setPeople(reservation.getPeople());
-        response.setNote(reservation.getNote());
-
-        return response;
+        return toResponse(reservation);
     }
 
+    // ✅ Trova tutte le prenotazioni per numero
     public List<ReservationResponse> getReservationsByPhone(String phone) {
-        List<Reservation> list = reservationRepository.findAllByUser_Phone(phone);
-        return list.stream().map(this::toResponse).toList();
+        return reservationRepository.findAllByUser_Phone(phone).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
+    // ✅ Trova tutte le prenotazioni per una data specifica
     public List<ReservationResponse> getReservationsByDate(String dateString) {
         LocalDate date = LocalDate.parse(dateString);
-        List<Reservation> list = reservationRepository.findAllByDate(date);
-        return list.stream().map(this::toResponse).toList();
+        return reservationRepository.findAllByDate(date).stream()
+                .map(this::toResponse)
+                .toList();
     }
 
+    // ✅ Orari disponibili per una data
+    public List<String> getAvailableTimes(String dateString) {
+        LocalDate date = LocalDate.parse(dateString);
+        LocalDate today = LocalDate.now();
+
+        if (date.isBefore(today)) {
+            return List.of(); // nessuna prenotazione per date passate
+        }
+
+        List<Reservation> reservations = reservationRepository.findAllByDate(date);
+
+        // Orari prenotati
+        Map<String, Long> countMap = reservations.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getTime().toString(),
+                        Collectors.counting()
+                ));
+
+        List<String> available = new ArrayList<>();
+        LocalTime start = LocalTime.of(20, 0);
+        LocalTime end = LocalTime.of(23, 0);
+        LocalTime now = LocalTime.now();
+
+        while (!start.isAfter(end)) {
+            String timeStr = start.toString();
+
+            // ⚠️ Se la data è oggi, salta orari già passati
+            if (date.equals(today) && start.isBefore(now)) {
+                start = start.plusMinutes(30);
+                continue;
+            }
+
+            long count = countMap.getOrDefault(timeStr, 0L);
+            if (count < 12) {
+                available.add(timeStr);
+            }
+            start = start.plusMinutes(30);
+        }
+
+        return available;
+    }
+
+
+    // ✅ Solo prenotazioni future per un numero
+    public List<ReservationResponse> getFutureReservationsByPhone(String phone) {
+        LocalDate today = LocalDate.now();
+        return reservationRepository.findAllByUser_Phone(phone).stream()
+                .filter(r -> !r.getDate().isBefore(today))
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ✅ Mapping da entity a response
     private ReservationResponse toResponse(Reservation r) {
         ReservationResponse resp = new ReservationResponse();
         resp.setId(r.getId());
@@ -117,42 +182,4 @@ public class ReservationService {
         resp.setNote(r.getNote());
         return resp;
     }
-    public List<String> getAvailableTimes(String dateString) {
-        LocalDate date = LocalDate.parse(dateString);
-        List<Reservation> reservations = reservationRepository.findAllByDate(date);
-
-        // Mappa: orario → numero prenotazioni
-        Map<String, Long> countMap = reservations.stream()
-                .collect(Collectors.groupingBy(
-                        r -> r.getTime().toString(),
-                        Collectors.counting()
-                ));
-
-        List<String> available = new ArrayList<>();
-        LocalTime start = LocalTime.of(20, 0);
-        LocalTime end = LocalTime.of(23, 0);
-
-        while (!start.isAfter(end)) {
-            String timeStr = start.toString(); // es: "20:00"
-            long count = countMap.getOrDefault(timeStr, 0L);
-            if (count < 12) {
-                available.add(timeStr);
-            }
-            start = start.plusMinutes(30);
-        }
-
-        return available;
-    }
-
-    public List<ReservationResponse> getFutureReservationsByPhone(String phone) {
-        LocalDate today = LocalDate.now();
-        List<Reservation> list = reservationRepository.findAllByUser_Phone(phone);
-
-        return list.stream()
-                .filter(r -> !r.getDate().isBefore(today)) // solo oggi o dopo
-                .map(this::toResponse)
-                .toList();
-    }
-
-
 }

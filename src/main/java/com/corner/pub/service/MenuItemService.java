@@ -1,6 +1,7 @@
 package com.corner.pub.service;
 
-import com.cloudinary.Transformation;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.corner.pub.dto.request.MenuItemRequest;
 import com.corner.pub.dto.response.MenuItemResponse;
 import com.corner.pub.exception.conflictexception.MenuItemDuplicateException;
@@ -9,11 +10,11 @@ import com.corner.pub.model.MenuItem;
 import com.corner.pub.repository.MenuItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.cloudinary.Cloudinary;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.text.Normalizer;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +30,7 @@ public class MenuItemService {
     }
 
     /**
-     * Restituisce tutti gli item del menù.
+     * Restituisce l’intero menu.
      */
     public List<MenuItemResponse> getAllMenuItems() {
         return menuItemRepository.findAll().stream()
@@ -38,35 +39,48 @@ public class MenuItemService {
     }
 
     /**
-     * Crea un nuovo piatto. Lancia MenuItemDuplicateException se titolo già presente.
+     * Aggiunge un nuovo piatto e carica l’immagine su Cloudinary.
      */
-    public MenuItemResponse createMenuItem(MenuItemRequest request) {
+    public MenuItemResponse addMenuItem(MenuItemRequest request, MultipartFile image) {
         String categoria = request.getCategoria().trim();
         String titolo = request.getTitolo().trim();
 
-        // duplicato su titolo e categoria?
         boolean exists = menuItemRepository.findAll().stream()
-                .anyMatch(i ->
-                        i.getCategoria().equalsIgnoreCase(categoria)
-                                && i.getTitolo().equalsIgnoreCase(titolo)
-                );
-        if (exists) {
-            throw new MenuItemDuplicateException(titolo);
-        }
+                .anyMatch(i -> i.getCategoria().equalsIgnoreCase(categoria)
+                        && i.getTitolo().equalsIgnoreCase(titolo));
+        if (exists) throw new MenuItemDuplicateException(titolo);
 
         MenuItem item = new MenuItem();
-        item.setCategoria(categoria);                  // ← set category
+        item.setCategoria(categoria);
         item.setTitolo(titolo);
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
+        item.setVisibile(true);
 
+        // ⚠️ Prima salvo per ottenere l'ID
         MenuItem saved = menuItemRepository.save(item);
-        return mapToResponse(saved);
+
+        // 📤 Upload immagine con nome = id
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            try {
+                Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
+                        ObjectUtils.asMap(
+                                "folder", "prodotti/",
+                                "public_id", String.valueOf(saved.getId()),
+                                "overwrite", true,
+                                "resource_type", "image"
+                        ));
+                imageUrl = (String) uploadResult.get("secure_url");
+            } catch (Exception e) {
+                throw new RuntimeException("Errore durante il caricamento immagine su Cloudinary", e);
+            }
+        }
+
+        return mapToResponse(saved, imageUrl);
     }
 
-    /**
-     * Recupera un item per ID. Lancia MenuItemNotFoundException se non trovato.
-     */
+
     public MenuItemResponse getMenuItemById(Long id) {
         MenuItem item = menuItemRepository.findById(id)
                 .orElseThrow(() -> new MenuItemNotFoundException(id));
@@ -74,7 +88,39 @@ public class MenuItemService {
     }
 
     /**
-     * Elimina un item per ID. Lancia MenuItemNotFoundException se non trovato.
+     * Modifica un piatto esistente, ricarica immagine se presente.
+     */
+    public MenuItemResponse updateMenuItem(Long id, MenuItemRequest request, MultipartFile image) {
+        MenuItem item = menuItemRepository.findById(id)
+                .orElseThrow(() -> new MenuItemNotFoundException(id));
+
+        item.setCategoria(request.getCategoria().trim());
+        item.setTitolo(request.getTitolo().trim());
+        item.setDescrizione(request.getDescrizione());
+        item.setPrezzo(request.getPrezzo());
+
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            try {
+                Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
+                        ObjectUtils.asMap(
+                                "folder", "prodotti/",
+                                "public_id", String.valueOf(item.getId()),
+                                "overwrite", true,
+                                "resource_type", "image"
+                        ));
+                imageUrl = (String) uploadResult.get("secure_url");
+            } catch (Exception e) {
+                throw new RuntimeException("Errore nel caricamento immagine Cloudinary", e);
+            }
+        }
+
+        MenuItem updated = menuItemRepository.save(item);
+        return mapToResponse(updated, imageUrl);
+    }
+
+    /**
+     * Elimina un piatto per ID.
      */
     public void deleteMenuItem(Long id) {
         if (!menuItemRepository.existsById(id)) {
@@ -83,29 +129,47 @@ public class MenuItemService {
         menuItemRepository.deleteById(id);
     }
 
+    /**
+     * Inverte la visibilità (true/false).
+     */
+    public MenuItemResponse toggleVisibility(Long id) {
+        MenuItem item = menuItemRepository.findById(id)
+                .orElseThrow(() -> new MenuItemNotFoundException(id));
+        item.setVisibile(!item.isVisibile());
+        MenuItem updated = menuItemRepository.save(item);
+        return mapToResponse(updated);
+    }
+
+    /**
+     * Mappa MenuItem → Response con immagine ricostruita
+     */
     private MenuItemResponse mapToResponse(MenuItem item) {
+        String generatedUrl = cloudinary.url()
+                .secure(true)
+                .generate("prodotti/" + item.getId());
+        return mapToResponse(item, generatedUrl);
+    }
+
+
+
+    /**
+     * Mappa MenuItem → Response con immagine personalizzata
+     */
+    private MenuItemResponse mapToResponse(MenuItem item, String imageUrl) {
         MenuItemResponse response = new MenuItemResponse();
         response.setId(item.getId());
         response.setCategoria(item.getCategoria());
         response.setTitolo(item.getTitolo());
         response.setDescrizione(item.getDescrizione());
         response.setPrezzo(item.getPrezzo());
-
-        String imageName = toImageName(item.getTitolo()) + ".png";
-
-        String imageUrl = cloudinary.url()
-                .secure(true)
-                .version(null)
-                .generate(imageName);
-
-        response.setImageUrl(imageUrl);
-
-
-
+        response.setVisibile(item.isVisibile());
         response.setImageUrl(imageUrl);
         return response;
     }
 
+    /**
+     * Utility: genera nome sicuro per Cloudinary.
+     */
     private String toImageName(String text) {
         return Normalizer.normalize(text, Normalizer.Form.NFD)
                 .replaceAll("[^\\p{ASCII}]", "")
@@ -114,5 +178,13 @@ public class MenuItemService {
                 .toLowerCase()
                 .replace(" ", "_");
     }
+
+    public List<MenuItemResponse> getVisibleMenuItems() {
+        return menuItemRepository.findAll().stream()
+                .filter(MenuItem::isVisibile)
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
 
 }

@@ -3,6 +3,7 @@ C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\badrequest\InvalidPhoneException.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\response\ReservationResponse.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\resourcenotfound\MenuItemNotFoundException.java
+C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\service\EmailService.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\controller\ReservationController.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\badrequest\CapacityExceededException.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\request\CancelReservationRequest.java
@@ -11,11 +12,15 @@ C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\reques
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\resourcenotfound\ResourceNotFoundException.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\resourcenotfound\ReservationNotFoundException.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\repository\ReservationRepository.java
+C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\config\SecurityConfig.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\conflictexception\MenuItemDuplicateException.java
+C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\config\CloudinaryConfig.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\GlobalExceptionHandler.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\model\MenuItem.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\request\ReservationRequest.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\badrequest\BadRequestException.java
+C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\config\WebConfig.java
+C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\controller\admin\AdminReservationController.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\badrequest\ValidationException.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\ForbiddenException.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\request\UserRequest.java

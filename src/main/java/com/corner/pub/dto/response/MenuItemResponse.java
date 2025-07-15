@@ -7,6 +7,9 @@ public class MenuItemResponse {
     private String descrizione;
     private double prezzo;
     private String imageUrl;
+    private boolean visibile;
+    public boolean isVisibile() { return visibile; }
+    public void setVisibile(boolean visibile) { this.visibile = visibile; }
 
 
 
@@ -29,4 +32,6 @@ public class MenuItemResponse {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+
 }

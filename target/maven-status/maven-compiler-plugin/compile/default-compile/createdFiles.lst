@@ -11,10 +11,13 @@ com\corner\pub\exception\GlobalExceptionHandler.class
 com\corner\pub\dto\response\UserResponse.class
 com\corner\pub\repository\MenuItemRepository.class
 com\corner\pub\dto\request\CancelReservationRequest.class
+com\corner\pub\service\EmailService.class
 com\corner\pub\model\User.class
 com\corner\pub\dto\request\ReservationRequest.class
 com\corner\pub\dto\response\CancelReservationResponse.class
 com\corner\pub\dto\response\MenuItemResponse.class
+com\corner\pub\config\SecurityConfig.class
+com\corner\pub\controller\admin\AdminReservationController.class
 com\corner\pub\dto\response\ErrorResponse.class
 com\corner\pub\exception\resourcenotfound\MenuItemNotFoundException.class
 com\corner\pub\controller\ReservationController.class
@@ -22,6 +25,7 @@ com\corner\pub\exception\conflictexception\ReservationAlreadyExistsException.cla
 com\corner\pub\model\Reservation.class
 com\corner\pub\controller\MenuItemController.class
 com\corner\pub\repository\UserRepository.class
+com\corner\pub\config\CloudinaryConfig.class
 com\corner\pub\exception\resourcenotfound\ResourceNotFoundException.class
 com\corner\pub\service\ReservationService.class
 com\corner\pub\PubApplication.class
@@ -35,3 +39,4 @@ com\corner\pub\dto\request\UserRequest.class
 com\corner\pub\exception\conflictexception\MenuItemDuplicateException.class
 com\corner\pub\controller\UserController.class
 com\corner\pub\exception\badrequest\ValidationException.class
+com\corner\pub\config\WebConfig.class

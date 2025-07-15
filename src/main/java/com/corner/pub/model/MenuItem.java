@@ -17,6 +17,9 @@ public class MenuItem {
     private String descrizione;
     private double prezzo;
 
+    @Column(nullable = false)
+    private boolean visibile = true; // default true
+
     // Getters & Setters
 
     public Long getId() { return id; }
@@ -33,4 +36,7 @@ public class MenuItem {
 
     public double getPrezzo() { return prezzo; }
     public void setPrezzo(double prezzo) { this.prezzo = prezzo; }
+
+    public boolean isVisibile() { return visibile; }
+    public void setVisibile(boolean visibile) { this.visibile = visibile; }
 }

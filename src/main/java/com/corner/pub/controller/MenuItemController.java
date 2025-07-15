@@ -4,7 +4,6 @@ import com.corner.pub.dto.request.MenuItemRequest;
 import com.corner.pub.dto.response.MenuItemResponse;
 import com.corner.pub.service.MenuItemService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,28 +20,29 @@ public class MenuItemController {
         this.menuItemService = menuItemService;
     }
 
+    /**
+     * Endpoint pubblico – restituisce solo i piatti visibili.
+     * GET /api/menu
+     */
     @GetMapping
+    public ResponseEntity<List<MenuItemResponse>> getVisibleMenuItems() {
+        return ResponseEntity.ok(menuItemService.getVisibleMenuItems());
+    }
+
+    /**
+     * Endpoint da back office – restituisce tutto il menu, anche i piatti non visibili.
+     * GET /api/menu/all
+     */
+    @GetMapping("/all")
     public ResponseEntity<List<MenuItemResponse>> getAll() {
         return ResponseEntity.ok(menuItemService.getAllMenuItems());
     }
 
+    /**
+     * Recupera un piatto per ID.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<MenuItemResponse> getById(@PathVariable Long id) {
-        // se non trovato, MenuItemNotFoundException → 404 gestita globalmente
-        MenuItemResponse dto = menuItemService.getMenuItemById(id);
-        return ResponseEntity.ok(dto);
-    }
-
-    @PostMapping
-    public ResponseEntity<MenuItemResponse> create(@RequestBody MenuItemRequest request) {
-        MenuItemResponse dto = menuItemService.createMenuItem(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        // se non trovato, MenuItemNotFoundException → 404 gestita globalmente
-        menuItemService.deleteMenuItem(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(menuItemService.getMenuItemById(id));
     }
 }
