@@ -1,4 +1,4 @@
-\package com.corner.pub.config;
+package com.corner.pub.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
