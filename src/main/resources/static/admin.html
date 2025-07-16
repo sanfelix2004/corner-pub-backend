@@ -20,12 +20,15 @@
     <div class="mb-4 text-center">
         <button class="btn btn-outline-primary btn-switch" onclick="showSection('prenotazioni')">Prenotazioni</button>
         <button class="btn btn-outline-secondary btn-switch" onclick="showSection('menu')">Modifica Menu</button>
+        <button class="btn btn-outline-success btn-switch" onclick="showSection('evidenza')">Contenuti in Evidenza</button>
     </div>
 
+    <!-- Sezione Prenotazioni -->
     <div id="sectionPrenotazioni" class="hidden">
         <div id="reservationsByDateContainer"></div>
     </div>
 
+    <!-- Sezione Menu -->
     <div id="sectionMenu" class="hidden">
         <h5 class="mb-3">➕ Aggiungi nuovo piatto</h5>
         <form id="formAddNewItem">
@@ -34,7 +37,7 @@
                     <input type="text" name="titolo" class="form-control" placeholder="Titolo" required />
                 </div>
                 <div class="form-group col-md-2">
-                    <select name="categoria" class="form-control" id="categoriaSelect" required>
+                    <select name="categoria" class="form-control" id="categoriaSelectMenu" required>
                         <option value="">Seleziona Categoria</option>
                     </select>
                 </div>
@@ -63,246 +66,280 @@
         <h4 class="mb-3">🍔 Menu Attuale</h4>
         <div id="menuTablesContainer"></div>
     </div>
+
+    <!-- Sezione Evidenza -->
+    <div id="sectionEvidenza" class="hidden">
+        <h5 class="mb-3">⭐ Aggiungi Contenuto in Evidenza</h5>
+        <form id="formAddHighlight">
+            <div class="form-row">
+                <div class="form-group col-md-4">
+                    <select id="categoriaSelectEvidenza" class="form-control" required>
+                        <option value="">Seleziona Categoria</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-4">
+                    <select id="prodottoSelectEvidenza" class="form-control" disabled required>
+                        <option value="">Seleziona Prodotto</option>
+                    </select>
+                </div>
+                <div class="form-group col-md-2">
+                    <button type="submit" class="btn btn-success">Aggiungi</button>
+                </div>
+            </div>
+        </form>
+
+        <hr class="my-4" />
+
+        <h4 class="mb-3">📌 Contenuti in Evidenza</h4>
+        <div id="highlightsContainer"></div>
+    </div>
 </div>
 
 <script>
     function showSection(section) {
-        document.getElementById("sectionPrenotazioni").classList.add("hidden");
-        document.getElementById("sectionMenu").classList.add("hidden");
-        if (section === "prenotazioni") {
-            document.getElementById("sectionPrenotazioni").classList.remove("hidden");
+        ['prenotazioni','menu','evidenza'].forEach(s => {
+            document.getElementById('section' + capitalize(s)).classList.add('hidden');
+        });
+        if (section === 'prenotazioni') {
+            document.getElementById('sectionPrenotazioni').classList.remove('hidden');
             loadReservations();
-        } else {
-            document.getElementById("sectionMenu").classList.remove("hidden");
+        } else if (section === 'menu') {
+            document.getElementById('sectionMenu').classList.remove('hidden');
             loadMenuItems();
+        } else if (section === 'evidenza') {
+            document.getElementById('sectionEvidenza').classList.remove('hidden');
+            loadInEvidenza();
         }
     }
 
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    // Prenotazioni
     async function loadReservations() {
-        const res = await fetch("/admin/reservations");
+        const res = await fetch('/admin/reservations');
         const data = await res.json();
         const grouped = {};
         data.forEach(r => {
             if (!grouped[r.date]) grouped[r.date] = [];
             grouped[r.date].push(r);
         });
-
-        const container = document.getElementById("reservationsByDateContainer");
-        container.innerHTML = "";
-        const sortedDates = Object.keys(grouped).sort();
-
-        sortedDates.forEach(date => {
-            const section = document.createElement("div");
-            section.classList.add("mb-5");
+        const container = document.getElementById('reservationsByDateContainer');
+        container.innerHTML = '';
+        Object.keys(grouped).sort().forEach(date => {
+            const section = document.createElement('div');
+            section.classList.add('mb-5');
             const rows = grouped[date].map(r => `
-        <tr>
-          <td>${r.name}</td>
-          <td>${r.phone}</td>
-          <td>${r.time}</td>
-          <td>${r.people}</td>
-          <td>${r.note || ''}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="deleteReservation(${r.id})">Elimina</button></td>
-        </tr>
-      `).join("");
-
+                <tr>
+                  <td>${r.name}</td>
+                  <td>${r.phone}</td>
+                  <td>${r.time}</td>
+                  <td>${r.people}</td>
+                  <td>${r.note || ''}</td>
+                  <td><button class="btn btn-danger btn-sm" onclick="deleteReservation(${r.id})">Elimina</button></td>
+                </tr>
+            `).join('');
             section.innerHTML = `
-        <h5>📅 ${formatDate(date)}</h5>
-        <table class="table table-bordered table-hover">
-          <thead class="thead-dark">
-            <tr>
-              <th>Nome</th>
-              <th>Telefono</th>
-              <th>Ora</th>
-              <th>Persone</th>
-              <th>Note</th>
-              <th>Azioni</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+                <h5>📅 ${formatDate(date)}</h5>
+                <table class="table table-bordered table-hover">
+                  <thead class="thead-dark">
+                    <tr><th>Nome</th><th>Telefono</th><th>Ora</th><th>Persone</th><th>Note</th><th>Azioni</th></tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+            `;
             container.appendChild(section);
         });
     }
-
     async function deleteReservation(id) {
-        if (!confirm("Vuoi davvero eliminare questa prenotazione?")) return;
-        const res = await fetch(`/admin/reservations/${id}`, { method: "DELETE" });
-        if (res.ok) loadReservations();
-        else alert("Errore durante l'eliminazione.");
+        if (!confirm('Vuoi davvero eliminare questa prenotazione?')) return;
+        const res = await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
+        if (res.ok) loadReservations(); else alert('Errore durante l\'eliminazione.');
     }
-
     function formatDate(dateStr) {
         const d = new Date(dateStr);
-        return d.toLocaleDateString("it-IT", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+        return d.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    function escape(str) {
-        return str
-            .replace(/\\/g, "\\\\")
-            .replace(/`/g, "\\`")
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, "&#039;");
-    }
-
+    // Menu
     async function loadMenuItems() {
-        const res = await fetch("/admin/menu");
+        const res = await fetch('/admin/menu');
         const data = await res.json();
         const grouped = {};
         data.forEach(item => {
             if (!grouped[item.categoria]) grouped[item.categoria] = [];
             grouped[item.categoria].push(item);
         });
-
-        populateCategorySelect(Object.keys(grouped));
-
-        const container = document.getElementById("menuTablesContainer");
-        container.innerHTML = "";
-        const sortedCategories = Object.keys(grouped).sort();
-
-        sortedCategories.forEach(cat => {
-            const section = document.createElement("div");
-            section.classList.add("mb-5");
-
+        populateSelect('Menu', Object.keys(grouped));
+        const container = document.getElementById('menuTablesContainer');
+        container.innerHTML = '';
+        Object.keys(grouped).sort().forEach(cat => {
+            const section = document.createElement('div');
+            section.classList.add('mb-5');
             const rows = grouped[cat].map(item => {
-                const fallbackImage = `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${item.id}.png`;
+                const imgSrc = item.imageUrl && item.imageUrl.trim() !== '' ? item.imageUrl :
+                    `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${item.id}.png`;
                 return `
-        <tr id="menu-row-${item.id}">
-<td><img src="${(item.imageUrl && item.imageUrl.trim() !== '') ? item.imageUrl : `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${item.id}.png`}"
-         onerror="this.onerror=null;this.src='/img/placeholder.png'"
-         class="thumb" /></td>
-          <td>${escape(item.titolo)}</td>
-          <td>${escape(item.descrizione || '')}</td>
-          <td>€${item.prezzo.toFixed(2)}</td>
-          <td>
-            <button class="btn btn-sm btn-outline-${item.visibile ? 'success' : 'secondary'}"
-              onclick="toggleVisibility(${item.id})">${item.visibile ? '✅' : '❌'}</button>
-          </td>
-          <td>
-            <button class="btn btn-sm btn-warning" onclick="makeEditable(${item.id}, '${escape(item.titolo)}', '${escape(item.categoria)}', '${escape(item.descrizione || '')}', ${item.prezzo})">Modifica</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${item.id})">Elimina</button>
-          </td>
-        </tr>
-      `;
-            }).join("");
-
+                    <tr id="menu-row-${item.id}">
+                      <td><img src="${imgSrc}" onerror="this.onerror=null;this.src='/img/placeholder.png'" class="thumb" /></td>
+                      <td>${escape(item.titolo)}</td>
+                      <td>${escape(item.descrizione || '')}</td>
+                      <td>€${item.prezzo.toFixed(2)}</td>
+                      <td><button class="btn btn-sm btn-outline-${item.visibile ? 'success' : 'secondary'}" onclick="toggleVisibility(${item.id})">${item.visibile ? '✅' : '❌'}</button></td>
+                      <td>
+                        <button class="btn btn-sm btn-warning" onclick="makeEditable(${item.id}, '${escape(item.titolo)}', '${escape(item.categoria)}', '${escape(item.descrizione || '')}', ${item.prezzo})">Modifica</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${item.id})">Elimina</button>
+                      </td>
+                    </tr>
+                `;
+            }).join('');
             section.innerHTML = `
-        <h5>🍽️ Categoria: <strong>${escape(cat)}</strong></h5>
-        <div class="table-responsive">
-          <table class="table table-bordered table-hover">
-            <thead class="thead-dark">
-              <tr>
-                <th>Foto</th>
-                <th>Titolo</th>
-                <th>Descrizione</th>
-                <th>Prezzo</th>
-                <th>Visibile</th>
-                <th>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
+                <h5>🍽️ Categoria: <strong>${escape(cat)}</strong></h5>
+                <div class="table-responsive">
+                  <table class="table table-bordered table-hover">
+                    <thead class="thead-dark">
+                      <tr><th>Foto</th><th>Titolo</th><th>Descrizione</th><th>Prezzo</th><th>Visibile</th><th>Azioni</th></tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                  </table>
+                </div>
+            `;
             container.appendChild(section);
         });
     }
-
-    function populateCategorySelect(categories) {
-        const select = document.getElementById("categoriaSelect");
-        select.innerHTML = `<option value="">Seleziona Categoria</option>`;
-        categories.sort().forEach(cat => {
-            const option = document.createElement("option");
-            option.value = cat;
-            option.textContent = cat;
-            select.appendChild(option);
-        });
-    }
-
-    async function toggleVisibility(id) {
-        await fetch(`/admin/menu/${id}/toggle`, { method: "PATCH" });
-        loadMenuItems();
-    }
-
-    async function deleteMenuItem(id) {
-        if (!confirm("Eliminare questo piatto?")) return;
-        await fetch(`/admin/menu/${id}`, { method: "DELETE" });
-        loadMenuItems();
-    }
-
+    document.getElementById('formAddNewItem').addEventListener('submit', async e => {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            titolo: form.titolo.value,
+            categoria: form.categoria.value,
+            descrizione: form.descrizione.value,
+            prezzo: parseFloat(form.prezzo.value),
+            visibile: form.visibile.value === 'true'
+        };
+        const formData = new FormData();
+        formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+        if (form.image.files[0]) formData.append('image', form.image.files[0]);
+        const res = await fetch('/admin/menu', { method: 'POST', body: formData });
+        if (res.ok) { alert('✅ Piatto aggiunto!'); form.reset(); loadMenuItems(); }
+        else alert('❌ Errore nell\'aggiunta');
+    });
+    async function toggleVisibility(id) { await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' }); loadMenuItems(); }
+    async function deleteMenuItem(id) { if (!confirm('Eliminare questo piatto?')) return; await fetch(`/admin/menu/${id}`, { method: 'DELETE' }); loadMenuItems(); }
     function makeEditable(id, titolo, categoria, descrizione, prezzo) {
         const row = document.getElementById(`menu-row-${id}`);
         row.innerHTML = `
-      <td><input type="file" id="edit-image-${id}" accept="image/*" /></td>
-      <td><input type="text" id="edit-titolo-${id}" value="${titolo}" /></td>
-      <td><input type="text" id="edit-desc-${id}" value="${descrizione}" /></td>
-      <td><input type="number" id="edit-prezzo-${id}" value="${prezzo}" step="0.01" /></td>
-      <td><input type="text" id="edit-cat-${id}" value="${categoria}" /></td>
-      <td>
-        <button class="btn btn-sm btn-success" onclick="submitEdit(${id})">Salva</button>
-        <button class="btn btn-sm btn-secondary" onclick="loadMenuItems()">Annulla</button>
-      </td>
-    `;
+          <td><input type="file" id="edit-image-${id}" accept="image/*" /></td>
+          <td><input type="text" id="edit-titolo-${id}" value="${titolo}" /></td>
+          <td><input type="text" id="edit-desc-${id}" value="${descrizione}" /></td>
+          <td><input type="number" id="edit-prezzo-${id}" value="${prezzo}" step="0.01" /></td>
+          <td><input type="text" id="edit-cat-${id}" value="${categoria}" /></td>
+          <td>
+            <button class="btn btn-sm btn-success" onclick="submitEdit(${id})">Salva</button>
+            <button class="btn btn-sm btn-secondary" onclick="loadMenuItems()">Annulla</button>
+          </td>
+        `;
     }
-
     async function submitEdit(id) {
         const titolo = document.getElementById(`edit-titolo-${id}`).value;
         const descrizione = document.getElementById(`edit-desc-${id}`).value;
         const prezzo = parseFloat(document.getElementById(`edit-prezzo-${id}`).value);
         const categoria = document.getElementById(`edit-cat-${id}`).value;
         const imageInput = document.getElementById(`edit-image-${id}`);
-
         const data = { titolo, descrizione, prezzo, categoria };
         const formData = new FormData();
-        formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }));
-
-        if (imageInput.files.length > 0) {
-            formData.append("image", imageInput.files[0]);
-        }
-
-        await fetch(`/admin/menu/${id}`, {
-            method: "PUT",
-            body: formData
-        });
-
+        formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+        if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
+        await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
         loadMenuItems();
     }
 
-    document.getElementById("formAddNewItem").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const formData = new FormData();
+    // Evidenza
+    async function loadInEvidenza() {
+        // Recupera piatti e contenuti in evidenza
+        const [menuRes, evidenzaRes] = await Promise.all([
+            fetch('/admin/menu'),
+            fetch('/admin/in_evidenza')
+        ]);
+        const menuData = await menuRes.json();
+        const evidenzaData = await evidenzaRes.json();
 
-        const data = {
-            titolo: form.titolo.value,
-            categoria: form.categoria.value,
-            descrizione: form.descrizione.value,
-            prezzo: parseFloat(form.prezzo.value),
-            visibile: form.visibile.value === "true"
-        };
-
-        formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }));
-        if (form.image.files[0]) {
-            formData.append("image", form.image.files[0]);
-        }
-
-        const res = await fetch("/admin/menu", {
-            method: "POST",
-            body: formData
+        // Mappa ID piatto -> Titolo
+        const idToTitolo = {};
+        menuData.forEach(item => {
+            idToTitolo[item.id] = item.titolo;
         });
 
-        if (res.ok) {
-            alert("✅ Piatto aggiunto!");
-            form.reset();
-            loadMenuItems();
-        } else {
-            alert("❌ Errore nell'aggiunta");
-        }
-    });
+        // Popola categorie
+        const categories = [...new Set(menuData.map(i => i.categoria))].sort();
+        populateSelect('Evidenza', categories);
 
-    document.addEventListener("DOMContentLoaded", () => {
-        showSection("prenotazioni");
+        // Contenitore HTML
+        const container = document.getElementById('highlightsContainer');
+        container.innerHTML = '';
+        if (evidenzaData.length === 0) {
+            container.innerHTML = '<p>Nessun contenuto in evidenza.</p>';
+            return;
+        }
+
+        // Renderizza
+        evidenzaData.forEach(h => {
+            const itemId = h.itemId || h.item_id;
+            const titolo = idToTitolo[itemId] || 'Titolo non disponibile';
+            const div = document.createElement('div');
+            div.classList.add('mb-2');
+            div.innerHTML = `
+            <span>⭐ [${h.categoria}] ${titolo}</span>
+            <button class="btn btn-sm btn-danger ml-2" onclick="deleteInEvidenza(${h.id})">Rimuovi</button>
+        `;
+            container.appendChild(div);
+        });
+    }
+    document.getElementById('categoriaSelectEvidenza').addEventListener('change', async e => {
+        const cat = e.target.value;
+        const prodSelect = document.getElementById('prodottoSelectEvidenza');
+        prodSelect.innerHTML = '<option value="">Seleziona Prodotto</option>';
+        if (!cat) { prodSelect.disabled = true; return; }
+        const res = await fetch('/admin/menu');
+        const items = (await res.json()).filter(i => i.categoria === cat);
+        items.forEach(i => {
+            const opt = document.createElement('option'); opt.value = i.id; opt.textContent = i.titolo;
+            prodSelect.appendChild(opt);
+        });
+        prodSelect.disabled = false;
     });
+    document.getElementById('formAddHighlight').addEventListener('submit', async e => {
+        e.preventDefault();
+        const cat = document.getElementById('categoriaSelectEvidenza').value;
+        const prodId = document.getElementById('prodottoSelectEvidenza').value;
+        if (!cat || !prodId) return alert('Seleziona categoria e prodotto.');
+        const res = await fetch('/admin/in_evidenza', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ categoria: cat, itemId: prodId })
+        });
+        if (res.ok) { loadInEvidenza(); e.target.reset(); document.getElementById('prodottoSelectEvidenza').disabled = true; }
+        else alert('Errore nell\'aggiunta del contenuto in evidenza.');
+    });
+    async function deleteInEvidenza(id) {
+        if (!confirm('Rimuovere questo contenuto in evidenza?')) return;
+        const res = await fetch(`/admin/in_evidenza/${id}`, { method: 'DELETE' });
+        if (res.ok) loadInEvidenza(); else alert('Errore durante la rimozione.');
+    }
+
+    // Utility
+    function populateSelect(context, categories) {
+        const select = document.getElementById(`categoriaSelect${context}`);
+        select.innerHTML = '<option value="">Seleziona Categoria</option>';
+        categories.forEach(cat => {
+            const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+            select.appendChild(opt);
+        });
+    }
+    function escape(str) {
+        return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    document.addEventListener('DOMContentLoaded', () => { showSection('prenotazioni'); });
 </script>
 </body>
 </html>
