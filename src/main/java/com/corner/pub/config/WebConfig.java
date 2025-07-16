@@ -23,6 +23,9 @@ public class WebConfig implements WebMvcConfigurer {
                 .setViewName("forward:/admin.html");
         registry.addViewController("/admin/")
                 .setViewName("forward:/admin.html");
+        registry.addViewController("/login")
+                .setViewName("forward:/login.html");
+
         // Non mappare /admin/**, così /admin/in_evidenza resta sui controller REST
     }
 
@@ -36,4 +39,6 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/img/**")
                 .addResourceLocations("classpath:/static/img/");
     }
+
+
 }
