@@ -10,22 +10,23 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors() // 🔥 AGGIUNGI QUESTA LINEA
-                .and()
+                .cors(withDefaults()) // ✅ ATTIVAZIONE CORS CON CONFIG PERSONALIZZATA
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**", "/admin.html").authenticated()
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
-                        .loginPage("/login.html")      // tua pagina custom
-                        .loginProcessingUrl("/login")  // dove invia il form
-                        .defaultSuccessUrl("/admin.html", true) // dove va dopo il login
+                        .loginPage("/login.html")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/admin.html", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
