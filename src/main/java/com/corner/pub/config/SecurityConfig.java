@@ -23,9 +23,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(withDefaults())  // ✅ attiva i CORS globali
+                .cors(withDefaults())
                 .authorizeHttpRequests(auth -> auth
+                        // 🔓 endpoint pubblici
+                        .requestMatchers(
+                                "/",                    // root
+                                "/login",              // POST login
+                                "/login.html",         // pagina login
+                                "/api/menu",
+                                "/api/in_evidenza",
+                                "/api/reservations/**",
+                                "/css/**", "/js/**", "/images/**", "/img/**"
+                        ).permitAll()
+                        // 🔒 solo l'area admin è protetta
                         .requestMatchers("/admin/**", "/admin.html").authenticated()
+                        // fallback
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form
@@ -43,7 +55,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ CORS globale con dominio frontend
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
