@@ -1,5 +1,5 @@
 # 1. Usa immagine base con Java 17
-FROM eclipse-temurin:17-jdk
+FROM eclipse-temurin:21-jdk
   
   # 2. Imposta cartella di lavoro
 WORKDIR /app
