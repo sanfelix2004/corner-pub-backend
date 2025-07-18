@@ -26,16 +26,26 @@ public class InEvidenzaService {
 
     @Transactional(readOnly = true)
     public List<InEvidenzaResponse> listAll() {
-        return repo.findAll().stream().map(e -> {
-            InEvidenzaResponse r = new InEvidenzaResponse();
-            r.setId(e.getId());
-            r.setCategoria(e.getCategoria());
-            r.setItemId(e.getProdotto().getId());
-            r.setTitolo(e.getProdotto().getTitolo());
-            r.setCreatedAt(e.getCreatedAt());
-            return r;
-        }).collect(Collectors.toList());
+        return repo.findAll().stream()
+                .filter(e -> e.getProdotto() != null) // ⛑️ sicurezza extra
+                .map(e -> {
+                    InEvidenzaResponse r = new InEvidenzaResponse();
+                    r.setId(e.getId());
+                    r.setCategoria(e.getCategoria());
+
+                    if (e.getProdotto() != null) {
+                        r.setItemId(e.getProdotto().getId());
+                        r.setTitolo(e.getProdotto().getTitolo());
+                    } else {
+                        r.setItemId(null);
+                        r.setTitolo("PRODOTTO MANCANTE");
+                    }
+
+                    r.setCreatedAt(e.getCreatedAt());
+                    return r;
+                }).collect(Collectors.toList());
     }
+
 
     @Transactional
     public void add(InEvidenzaRequest req) {
