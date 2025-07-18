@@ -25,15 +25,12 @@ public class SecurityConfig {
         http
                 .cors(withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        // 🔓 endpoint pubblici
+                        // 🔓 endpoint pubblici (inclusi per CORS preflight e frontend)
                         .requestMatchers(
-                                "/",                    // root
-                                "/login",              // POST login
-                                "/login.html",         // pagina login
-                                "/api/menu",
-                                "/api/in_evidenza",
-                                "/api/reservations/**",
-                                "/css/**", "/js/**", "/images/**", "/img/**"
+                                "/", "/login", "/login.html",
+                                "/api/menu", "/api/in_evidenza", "/api/reservations/**",
+                                "/css/**", "/js/**", "/images/**", "/img/**",
+                                "/api/**", "/favicon.ico", "/**/*.js", "/**/*.css", "/**/*.html"
                         ).permitAll()
                         // 🔒 solo l'area admin è protetta
                         .requestMatchers("/admin/**", "/admin.html").authenticated()
@@ -58,9 +55,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("https://corner-frontend.onrender.com"));
+        config.setAllowedOrigins(List.of("https://corner-frontend.onrender.com", "http://localhost:3000"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "*"));
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
