@@ -8,10 +8,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-@CrossOrigin(
-        origins = "https://corner-frontend.onrender.com",
-        allowCredentials = "true"
-)
 @RestController
 @RequestMapping("/api/in_evidenza")
 public class InEvidenzaController {

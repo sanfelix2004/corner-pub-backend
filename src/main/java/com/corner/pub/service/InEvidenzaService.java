@@ -26,25 +26,22 @@ public class InEvidenzaService {
 
     @Transactional(readOnly = true)
     public List<InEvidenzaResponse> listAll() {
-        return repo.findAll().stream()
-                .filter(e -> e.getProdotto() != null) // ⛑️ sicurezza extra
-                .map(e -> {
-                    InEvidenzaResponse r = new InEvidenzaResponse();
-                    r.setId(e.getId());
-                    r.setCategoria(e.getCategoria());
+        return repo.findAll().stream().map(e -> {
+            // forza inizializzazione LAZY durante la transazione
+            MenuItem prodotto = e.getProdotto();
+            prodotto.getId();   // ⚠️ forza il fetch LAZY qui
+            prodotto.getTitolo();
 
-                    if (e.getProdotto() != null) {
-                        r.setItemId(e.getProdotto().getId());
-                        r.setTitolo(e.getProdotto().getTitolo());
-                    } else {
-                        r.setItemId(null);
-                        r.setTitolo("PRODOTTO MANCANTE");
-                    }
-
-                    r.setCreatedAt(e.getCreatedAt());
-                    return r;
-                }).collect(Collectors.toList());
+            InEvidenzaResponse r = new InEvidenzaResponse();
+            r.setId(e.getId());
+            r.setCategoria(e.getCategoria());
+            r.setItemId(prodotto.getId());
+            r.setTitolo(prodotto.getTitolo());
+            r.setCreatedAt(e.getCreatedAt());
+            return r;
+        }).collect(Collectors.toList());
     }
+
 
 
     @Transactional

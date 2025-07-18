@@ -8,10 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-@CrossOrigin(
-        origins = "https://corner-frontend.onrender.com",
-        allowCredentials = "true"
-)
 @RestController
 @RequestMapping("/api/menu")
 public class MenuItemController {
