@@ -1,4 +1,4 @@
-# 1. Usa immagine base con Java 17
+# 1. Usa immagine base con Java 21
 FROM eclipse-temurin:21-jdk
   
   # 2. Imposta cartella di lavoro
@@ -11,4 +11,4 @@ COPY target/*.jar app.jar
 EXPOSE 8080
   
   # 5. Comando di avvio
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-Dlogging.level.root=DEBUG", "-jar", "app.jar"]
