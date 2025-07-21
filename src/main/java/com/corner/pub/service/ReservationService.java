@@ -2,6 +2,7 @@ package com.corner.pub.service;
 
 import com.corner.pub.dto.request.ReservationRequest;
 import com.corner.pub.dto.response.ReservationResponse;
+import com.corner.pub.exception.badrequest.BadRequestException;
 import com.corner.pub.exception.conflictexception.ReservationAlreadyExistsException;
 import com.corner.pub.exception.resourcenotfound.ReservationNotFoundException;
 import com.corner.pub.model.Reservation;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,7 +83,12 @@ public class ReservationService {
 
     // ✅ Cancella prenotazione per telefono + data
     public void deleteReservationByPhoneAndDate(String phone, String dateString) {
-        LocalDate date = LocalDate.parse(dateString);
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
+        }
         Reservation reservation = reservationRepository
                 .findByUser_PhoneAndDate(phone, date)
                 .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
@@ -96,7 +104,12 @@ public class ReservationService {
 
     // ✅ Cerca prenotazione per telefono + data
     public ReservationResponse getReservation(String phone, String dateString) {
-        LocalDate date = LocalDate.parse(dateString);
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
+        }
         Reservation reservation = reservationRepository
                 .findByUser_PhoneAndDate(phone, date)
                 .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
@@ -112,7 +125,12 @@ public class ReservationService {
 
     // ✅ Trova tutte le prenotazioni per una data specifica
     public List<ReservationResponse> getReservationsByDate(String dateString) {
-        LocalDate date = LocalDate.parse(dateString);
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
+        }
         return reservationRepository.findAllByDate(date).stream()
                 .map(this::toResponse)
                 .toList();
@@ -120,7 +138,12 @@ public class ReservationService {
 
     // ✅ Orari disponibili per una data
     public List<String> getAvailableTimes(String dateString) {
-        LocalDate date = LocalDate.parse(dateString);
+        LocalDate date;
+        try {
+            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
+        }
         LocalDate today = LocalDate.now();
 
         if (date.isBefore(today)) {
