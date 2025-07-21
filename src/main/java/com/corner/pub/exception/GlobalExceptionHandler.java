@@ -46,8 +46,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
+        ex.printStackTrace(); // 🔥 così lo vedi su Render
         return buildErrorResponse("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(String message, HttpStatus status) {
         return new ResponseEntity<>(new ErrorResponse(message), status);
