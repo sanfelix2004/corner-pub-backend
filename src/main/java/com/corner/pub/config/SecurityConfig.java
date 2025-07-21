@@ -1,9 +1,12 @@
 package com.corner.pub.config;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -14,13 +17,29 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(withDefaults())
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
+                .headers(AbstractHttpConfigurer::disable // disabilita tutti gli headers di sicurezza (solo se necessario)
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**", "/admin/**").permitAll() // ✅ ACCESSO PUBBLICO
+                        .requestMatchers("/api/**", "/admin/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .httpBasic(withDefaults()); // o .formLogin(withDefaults())
+                .httpBasic(withDefaults());
 
         return http.build();
     }
+
+
+    @Bean
+    public FilterRegistrationBean<CommonsRequestLoggingFilter> logFilter() {
+        CommonsRequestLoggingFilter filter = new CommonsRequestLoggingFilter();
+        filter.setIncludeQueryString(true);
+        filter.setIncludePayload(true);
+        filter.setMaxPayloadLength(10000);
+        filter.setIncludeHeaders(false);
+        FilterRegistrationBean<CommonsRequestLoggingFilter> registrationBean = new FilterRegistrationBean<>(filter);
+        registrationBean.setOrder(1);
+        return registrationBean;
+    }
+
 }

@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
-        ex.printStackTrace(); // ✅ Stampa errore reale nei log Render
+        log.error("🔥 Errore interno non gestito", ex); // ✅ Log visibile in Render
         return buildErrorResponse("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
