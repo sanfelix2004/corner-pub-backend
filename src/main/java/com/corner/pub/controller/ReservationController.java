@@ -13,13 +13,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/api/reservations")
 public class ReservationController {
 
     private final ReservationService reservationService;
-
     private final EmailService emailService;
 
     @Autowired
@@ -28,52 +26,53 @@ public class ReservationController {
         this.emailService = emailService;
     }
 
-
-    // ReservationController → crea con 201
+    // POST: crea prenotazione
     @PostMapping
-    public ResponseEntity<ReservationResponse> create(
-            @RequestBody ReservationRequest request) {
+    public ResponseEntity<ReservationResponse> create(@RequestBody ReservationRequest request) {
         ReservationResponse dto = reservationService.createReservation(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-
-    @DeleteMapping("/delete")
+    // DELETE: cancella prenotazione via path
+    @DeleteMapping("/delete/{phone}/{date}")
     public ResponseEntity<Void> deleteByParams(
-            @RequestParam String phone,
-            @RequestParam String date) {
+            @PathVariable String phone,
+            @PathVariable String date) {
         reservationService.deleteReservation(phone, date);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping
+    // GET: ottieni singola prenotazione via path
+    @GetMapping("/{phone}/{date}")
     public ResponseEntity<ReservationResponse> getReservation(
-            @RequestParam String phone,
-            @RequestParam String date) {
+            @PathVariable String phone,
+            @PathVariable String date) {
         ReservationResponse response = reservationService.getReservation(phone, date);
         return ResponseEntity.ok(response);
     }
 
-    // ✅ GET per data
+    // GET: per data
     @GetMapping("/date/{date}")
     public ResponseEntity<List<ReservationResponse>> getByDate(@PathVariable String date) {
         List<ReservationResponse> list = reservationService.getReservationsByDate(date);
         return ResponseEntity.ok(list);
     }
 
-    // ✅ GET per numero di telefono
+    // GET: per telefono
     @GetMapping("/phone/{phone}")
     public ResponseEntity<List<ReservationResponse>> getByPhone(@PathVariable String phone) {
         List<ReservationResponse> list = reservationService.getReservationsByPhone(phone);
         return ResponseEntity.ok(list);
     }
 
-    @GetMapping("/available-times")
-    public ResponseEntity<List<String>> getAvailableTimes(@RequestParam String date) {
+    // GET: orari disponibili via path
+    @GetMapping("/available-times/{date}")
+    public ResponseEntity<List<String>> getAvailableTimes(@PathVariable String date) {
         List<String> available = reservationService.getAvailableTimes(date);
         return ResponseEntity.ok(available);
     }
 
+    // POST: solo telefono (richiesta contatto)
     @PostMapping("/notify-phone-only")
     public ResponseEntity<Void> notifyPhoneOnly(@RequestBody Map<String, String> body) {
         String phone = body.get("phone");
@@ -87,6 +86,7 @@ public class ReservationController {
         }
     }
 
+    // GET: prenotazioni future per telefono
     @GetMapping("/by-phone/{phone}")
     public ResponseEntity<List<ReservationResponse>> getFutureReservations(@PathVariable String phone) {
         List<ReservationResponse> list = reservationService.getFutureReservationsByPhone(phone);
