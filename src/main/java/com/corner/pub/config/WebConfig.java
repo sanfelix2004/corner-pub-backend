@@ -10,17 +10,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // ✅ CORS flessibile: frontend locale e deploy su Render
         registry.addMapping("/**")
-                .allowedOrigins(
-                        "http://localhost:3000",               // dev locale
-                        "http://localhost:5500",               // dev frontend statico
-                        "https://corner-frontend.onrender.com" // produzione
-                )
+                .allowedOriginPatterns("*") // 🧠 accetta tutte, anche wildcard HTTPS
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(true); // se usi cookie/sessione
+                .allowCredentials(true);
     }
+
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
