@@ -1,16 +1,86 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="UTF-8" />
     <title>Corner – Back Office</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <style>
+        body {
+            padding: 15px;
+        }
         body { background-color: #f8f9fa; }
         .container { margin-top: 40px; }
         .hidden { display: none; }
         img.thumb { max-width: 80px; height: auto; border-radius: 6px; }
         .btn-switch { margin-right: 10px; }
         td input, td select { width: 100%; }
+        /* Migliora margini e padding delle sezioni */
+        .container {
+            margin-top: 40px;
+            margin-bottom: 60px;
+        }
+
+        /* Uniforma lo stile delle tabelle menu */
+        #menuTablesContainer .table {
+            background-color: #fff;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* Stile celle */
+        #menuTablesContainer th,
+        #menuTablesContainer td {
+            vertical-align: middle;
+            text-align: center;
+            padding: 12px;
+        }
+
+        /* Migliora il layout dei titoli delle categorie */
+        #menuTablesContainer h5 {
+            margin-bottom: 20px;
+            margin-top: 40px;
+            padding-left: 10px;
+            font-weight: bold;
+            border-left: 4px solid #007bff;
+            color: #333;
+        }
+        @media (max-width: 768px) {
+            h5 {
+                font-size: 1rem;
+            }
+
+            .btn-switch {
+                margin-bottom: 8px;
+                width: 100%;
+            }
+
+            .form-row {
+                display: block;
+            }
+
+            .form-group {
+                width: 100% !important;
+                margin-bottom: 15px;
+            }
+
+            .table th,
+            .table td {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .thumb {
+                width: 60px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -132,8 +202,45 @@
 
     <hr class="my-4" />
 
-    <h4 class="mb-3">📦 Promozioni Attive</h4>
-    <div id="promozioniContainer"></div>
+    <h4 class="mb-3">Promozioni</h4>
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered table-hover table-sm promozione-table">
+        <thead class="thead-light">
+          <tr>
+            <th style="width: 40px;">✔️</th>
+            <th>Categoria</th>
+            <th>Prodotto</th>
+            <th>Prezzo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-center"><input type="checkbox" checked></td>
+            <td>Bevande</td>
+            <td>Acqua Naturale</td>
+            <td>€1.00</td>
+          </tr>
+          <tr>
+            <td class="text-center"><input type="checkbox"></td>
+            <td>Bevande</td>
+            <td>Coca-Cola</td>
+            <td>€2.00</td>
+          </tr>
+          <tr>
+            <td class="text-center"><input type="checkbox" checked></td>
+            <td>Birre</td>
+            <td>Birra Moretti</td>
+            <td>€3.50</td>
+          </tr>
+          <tr>
+            <td class="text-center"><input type="checkbox"></td>
+            <td>Carne</td>
+            <td>Hamburger</td>
+            <td>€5.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 </div>
 
 
@@ -395,7 +502,7 @@
         const menuData = await menuRes.json();
         const promoData = await promoRes.json();
 
-        // Organizza i piatti per categoria
+        // Organizza i piatti per categoria (per la checklist creazione promo)
         const grouped = {};
         menuData.forEach(item => {
             if (!grouped[item.categoria]) grouped[item.categoria] = [];
@@ -425,94 +532,88 @@
       </table>
     </div>
   `;
-
             checklist.appendChild(section);
         });
 
-        // Stampa promozioni attive
-        const container = document.getElementById('promozioniContainer');
-        container.innerHTML = '';
+        // Tabella promozioni (stile tabellare come richiesto)
+        const promozioniTableBody = document.getElementById('promozioniTableBody');
+        promozioniTableBody.innerHTML = '';
         promoData
             .sort((a, b) => new Date(a.dataInizio) - new Date(b.dataInizio))
-            .forEach(p => {
+            .forEach(promo => {
+                // Calcola prezzo totale e scontato
                 let prezzoTotale = 0;
                 let prezzoScontato = 0;
-                const lista = p.items.map(el => {
-                    const prodotto = menuData.find(m => m.id === el.menuItem.id);
-                    if (!prodotto) return '';
-                    const sconto = el.scontoPercentuale;
-                    const originale = prodotto.prezzo;
-                    const scontato = originale * (1 - sconto / 100);
-                    prezzoTotale += originale;
-                    prezzoScontato += scontato;
-                    return `<li>${prodotto.titolo} - €${originale.toFixed(2)} → <strong>-${sconto}%</strong> = €${scontato.toFixed(2)}</li>`;
-                }).join('');
-
-                const bottone = `
-                       ${p.attiva
-                    ? `<button class="btn btn-sm btn-secondary mr-2" onclick="disattivaPromozione(${p.id})">Disattiva</button>`
-                    : `<button class="btn btn-sm btn-success mr-2" onclick="riattivaPromozione(${p.id})">Riattiva</button>`}
-    <button class="btn btn-sm btn-danger" onclick="eliminaPromozione(${p.id})">Elimina</button>
-`;
-
-
-                container.innerHTML += `
-            <div class="card mb-3">
-                <div class="card-header ${p.attiva ? 'bg-danger' : 'bg-secondary'} text-white">
-                    <strong>${p.nome}</strong><br />
-                    <small>${p.descrizione || ''}</small><br />
-                    🗓️ ${p.dataInizio} → ${p.dataFine}
-                </div>
-                <div class="card-body">
-                    <ul>${lista}</ul>
-                    <p>💰 Totale: <del>€${prezzoTotale.toFixed(2)}</del> → <strong>€${prezzoScontato.toFixed(2)}</strong></p>
-                    ${bottone}
-                </div>
-            </div>
-        `;
+                let descrizioneEstesa = '';
+                if (promo.items && promo.items.length > 0) {
+                    descrizioneEstesa = '<ul style="margin-bottom:0">';
+                    promo.items.forEach(el => {
+                        const prodotto = menuData.find(m => m.id === el.menuItem.id);
+                        if (!prodotto) return;
+                        const sconto = el.scontoPercentuale;
+                        const originale = prodotto.prezzo;
+                        const scontato = originale * (1 - sconto / 100);
+                        prezzoTotale += originale;
+                        prezzoScontato += scontato;
+                        descrizioneEstesa += `<li>${prodotto.titolo} - €${originale.toFixed(2)} → <strong>-${sconto}%</strong> = €${scontato.toFixed(2)}</li>`;
+                    });
+                    descrizioneEstesa += '</ul>';
+                }
+                // <td>Nome</td>, <td>Descrizione</td>, <td>Prezzo</td>, <td>Attiva</td>
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                  <td>${promo.nome}</td>
+                  <td>
+                    ${promo.descrizione ? `<div>${promo.descrizione}</div>` : ''}
+                    <div><small>🗓️ ${promo.dataInizio} → ${promo.dataFine}</small></div>
+                    ${descrizioneEstesa}
+                  </td>
+                  <td>
+                    ${prezzoTotale > 0 ? `<del>€${prezzoTotale.toFixed(2)}</del> → <strong>€${prezzoScontato.toFixed(2)}</strong>` : '--'}
+                  </td>
+                  <td>
+                    <input type="checkbox" ${promo.attiva ? 'checked' : ''} onchange="togglePromoAttiva(${promo.id}, this.checked)">
+                    <button class="btn btn-sm btn-danger ml-2" onclick="eliminaPromozione(${promo.id})">Elimina</button>
+                  </td>
+                `;
+                promozioniTableBody.appendChild(tr);
             });
 
-
+        // Gestione submit creazione promozione
         document.getElementById('formAddPromozione').addEventListener('submit', async e => {
-        e.preventDefault();
-        const nome = e.target.nome.value;
-        const sconto = parseFloat(e.target.sconto.value);
-        const descrizione = e.target.descrizione.value;
-        const dataInizio = e.target.dataInizio.value;
-        const dataFine = e.target.dataFine.value;
-        const selectedCheckboxes = Array.from(document.querySelectorAll('#checklistProdottiPromozione input[type="checkbox"]:checked'));
-        if (selectedCheckboxes.length === 0) return alert("Seleziona almeno un prodotto!");
-
-        const items = selectedCheckboxes.map(cb => ({
-            menuItemId: parseInt(cb.value),
-            scontoPercentuale: sconto
-        }));
-
-        const payload = {
-            nome,
-            descrizione,
-            dataInizio,
-            dataFine,
-            attiva: true,
-            items
-        };
-
-
-        const res = await fetch('/api/admin/promotions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-            alert("✅ Promozione creata!");
-            e.target.reset();
-            loadPromozioni();
-        } else {
-            alert("❌ Errore nella creazione.");
-        }
-    });
-
+            e.preventDefault();
+            const nome = e.target.nome.value;
+            const sconto = parseFloat(e.target.sconto.value);
+            const descrizione = e.target.descrizione.value;
+            const dataInizio = e.target.dataInizio.value;
+            const dataFine = e.target.dataFine.value;
+            const selectedCheckboxes = Array.from(document.querySelectorAll('#checklistProdottiPromozione input[type="checkbox"]:checked'));
+            if (selectedCheckboxes.length === 0) return alert("Seleziona almeno un prodotto!");
+            const items = selectedCheckboxes.map(cb => ({
+                menuItemId: parseInt(cb.value),
+                scontoPercentuale: sconto
+            }));
+            const payload = {
+                nome,
+                descrizione,
+                dataInizio,
+                dataFine,
+                attiva: true,
+                items
+            };
+            const res = await fetch('/api/admin/promotions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                alert("✅ Promozione creata!");
+                e.target.reset();
+                loadPromozioni();
+            } else {
+                alert("❌ Errore nella creazione.");
+            }
+        }, { once: true });
 
         document.querySelectorAll('.promo-checkbox').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -527,7 +628,15 @@
                 }
             });
         });
+    }
 
+    // Funzione per attivare/disattivare promozione via checkbox
+    function togglePromoAttiva(id, checked) {
+        if (checked) {
+            riattivaPromozione(id);
+        } else {
+            disattivaPromozione(id);
+        }
     }
     function disattivaPromozione(id) {
         if (!confirm("Disattivare questa promozione?")) return;
