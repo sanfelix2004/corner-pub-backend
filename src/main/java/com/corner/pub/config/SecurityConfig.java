@@ -22,24 +22,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors().and()
-                .csrf().disable()
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login.html", "/login", "/css/**", "/js/**", "/images/**").permitAll()
-                        .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/admin/**", "/admin.html").authenticated()
-                        .anyRequest().permitAll()
-                )
-                .formLogin(form -> form
-                        .loginPage("/login.html")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/admin.html", true)
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/login.html?logout")
-                        .permitAll()
-                );
+            .cors(withDefaults())
+            .csrf().disable()
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/",
+                    "/index.html",
+                    "/menu.html",
+                    "/api/menu",
+                    "/api/in_evidenza",
+                    "/api/reservations",
+                    "/api/reservations/**",
+                    "/js/**", "/css/**", "/img/**", "/favicon.ico"
+                ).permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin().disable();
 
         return http.build();
     }
