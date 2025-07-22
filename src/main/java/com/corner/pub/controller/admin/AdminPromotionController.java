@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.http.ResponseEntity;
 
 @RestController
 @RequestMapping("/api/admin/promotions")
@@ -18,45 +19,47 @@ public class AdminPromotionController {
     private PromotionService promotionService;
 
     @GetMapping
-    public List<PromotionResponse> getAll() {
-        return promotionService.getAllPromotions().stream()
+    public ResponseEntity<List<PromotionResponse>> getAll() {
+        List<PromotionResponse> responses = promotionService.getAllPromotions().stream()
                 .map(promotionService::toResponse)
                 .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
     }
 
     @PutMapping("/{id}")
-    public PromotionResponse update(@PathVariable Long id, @RequestBody PromotionRequest promotionRequest) {
+    public ResponseEntity<PromotionResponse> update(@PathVariable Long id, @RequestBody PromotionRequest promotionRequest) {
         Promotion updated = promotionService.update(id, promotionRequest);
-        return promotionService.toResponse(updated);
+        return ResponseEntity.ok(promotionService.toResponse(updated));
     }
 
     @PostMapping
-    public PromotionResponse create(@RequestBody PromotionRequest promotionRequest) {
+    public ResponseEntity<PromotionResponse> create(@RequestBody PromotionRequest promotionRequest) {
         Promotion saved = promotionService.create(promotionRequest);
-        return promotionService.toResponse(saved);
+        return ResponseEntity.ok(promotionService.toResponse(saved));
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         promotionService.delete(id);
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/{id}")
-    public PromotionResponse getById(@PathVariable Long id) {
+    public ResponseEntity<PromotionResponse> getById(@PathVariable Long id) {
         Promotion promo = promotionService.getById(id);
-        return promotionService.toResponse(promo);
+        return ResponseEntity.ok(promotionService.toResponse(promo));
     }
 
     @PutMapping("/{id}/disattiva")
-    public PromotionResponse disattiva(@PathVariable Long id) {
+    public ResponseEntity<PromotionResponse> disattiva(@PathVariable Long id) {
         Promotion promozione = promotionService.disattiva(id);
-        return promotionService.toResponse(promozione);
+        return ResponseEntity.ok(promotionService.toResponse(promozione));
     }
 
     @PutMapping("/{id}/attiva")
-    public PromotionResponse riattiva(@PathVariable Long id) {
+    public ResponseEntity<PromotionResponse> riattiva(@PathVariable Long id) {
         Promotion promozione = promotionService.riattiva(id);
-        return promotionService.toResponse(promozione);
+        return ResponseEntity.ok(promotionService.toResponse(promozione));
     }
 
 

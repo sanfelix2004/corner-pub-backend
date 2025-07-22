@@ -35,7 +35,8 @@ public class ReservationController {
     // ✅ GET: singola prenotazione (ATTENTO: DEVE STARE PRIMA DI /{phone})
     @GetMapping("/{phone}/{date}")
     public ResponseEntity<ReservationResponse> getReservation(@PathVariable String phone, @PathVariable String date) {
-        return ResponseEntity.ok(reservationService.getReservation(phone, date));
+        ReservationResponse response = reservationService.getReservation(phone, date);
+        return ResponseEntity.ok(response);
     }
 
     // ✅ DELETE: cancella prenotazione

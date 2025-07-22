@@ -3,9 +3,8 @@ package com.corner.pub.controller.admin;
 import com.corner.pub.dto.request.InEvidenzaRequest;
 import com.corner.pub.dto.response.InEvidenzaResponse;
 import com.corner.pub.service.InEvidenzaService;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -23,9 +22,9 @@ public class AdminInEvidenzaController {
      * POST /admin/in_evidenza
      */
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public void addHighlight(@RequestBody InEvidenzaRequest request) {
+    public ResponseEntity<Void> addHighlight(@RequestBody InEvidenzaRequest request) {
         inEvidenzaService.add(request);
+        return ResponseEntity.status(201).build();
     }
 
     /**
@@ -33,13 +32,13 @@ public class AdminInEvidenzaController {
      * DELETE /admin/in_evidenza/{id}
      */
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteHighlight(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteHighlight(@PathVariable Long id) {
         inEvidenzaService.remove(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public List<InEvidenzaResponse> listAll() {
-        return inEvidenzaService.listAll();
+    public ResponseEntity<List<InEvidenzaResponse>> listAll() {
+        return ResponseEntity.ok(inEvidenzaService.listAll());
     }
 }
