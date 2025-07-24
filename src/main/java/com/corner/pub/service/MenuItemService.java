@@ -67,10 +67,12 @@ public class MenuItemService {
                 Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
                         ObjectUtils.asMap(
                                 "folder", "prodotti/",
-                                "public_id", String.valueOf(saved.getId()),
+                                "public_id", String.valueOf(saved.getId()), // o item.getId()
                                 "overwrite", true,
+                                "invalidate", true,  // 🔁 forza aggiornamento cache
                                 "resource_type", "image"
                         ));
+
                 imageUrl = (String) uploadResult.get("secure_url");
             } catch (Exception e) {
                 throw new RuntimeException("Errore durante il caricamento immagine su Cloudinary", e);
@@ -146,9 +148,11 @@ public class MenuItemService {
     private MenuItemResponse mapToResponse(MenuItem item) {
         String generatedUrl = cloudinary.url()
                 .secure(true)
+                .version(System.currentTimeMillis() / 1000) // 🔁 versione dinamica
                 .generate("prodotti/" + item.getId());
         return mapToResponse(item, generatedUrl);
     }
+
 
 
 

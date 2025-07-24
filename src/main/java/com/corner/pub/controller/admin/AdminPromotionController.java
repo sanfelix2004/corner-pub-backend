@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 
 @RestController
-@RequestMapping("/api/admin/promotions")
+@RequestMapping("/admin/promotions")
 public class AdminPromotionController {
 
     @Autowired
