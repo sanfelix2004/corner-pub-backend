@@ -5,353 +5,660 @@
     <meta charset="UTF-8" />
     <title>Corner – Back Office</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --dark: #212529;
+            --light: #f8f9fa;
+        }
+
         body {
             padding: 15px;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        body { background-color: #f8f9fa; }
-        .container { margin-top: 40px; }
-        .hidden { display: none; }
-        img.thumb { max-width: 80px; height: auto; border-radius: 6px; }
-        .btn-switch { margin-right: 10px; }
-        td input, td select { width: 100%; }
-        /* Migliora margini e padding delle sezioni */
+
         .container {
             margin-top: 40px;
             margin-bottom: 60px;
+            max-width: 1600px;
         }
 
-        /* Uniforma lo stile delle tabelle menu */
-        #menuTablesContainer .table {
-            background-color: #fff;
+        .hidden { display: none; }
+
+        /* Header styles */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .page-header h2 {
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Section switcher */
+        .section-switcher {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .section-btn {
+            flex: 1;
+            min-width: 160px;
+            max-width: 220px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .section-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Card styles */
+        .card-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card-section h4 {
+            color: var(--primary);
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Tables */
+        .custom-table {
             border-collapse: separate;
             border-spacing: 0;
-            border-radius: 8px;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            box-shadow: 0 0 10px rgba(0,0,0,0.03);
         }
 
-        /* Stile celle */
-        #menuTablesContainer th,
-        #menuTablesContainer td {
+        .custom-table th {
+            background-color: #f1f5fd;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .custom-table th,
+        .custom-table td {
             vertical-align: middle;
-            text-align: center;
-            padding: 12px;
+            padding: 15px;
+            border-top: 1px solid #e9ecef;
         }
 
-        /* Migliora il layout dei titoli delle categorie */
-        #menuTablesContainer h5 {
-            margin-bottom: 20px;
-            margin-top: 40px;
-            padding-left: 10px;
-            font-weight: bold;
-            border-left: 4px solid #007bff;
-            color: #333;
+        .custom-table tr:last-child td {
+            border-bottom: 1px solid #e9ecef;
         }
+
+        /* Images */
+        img.thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        /* Forms */
+        .form-card {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Buttons */
+        .btn-action {
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Promotions */
+        .promo-card {
+            background: #fff9f9;
+            border-left: 4px solid var(--danger);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            h5 {
-                font-size: 1rem;
+            .section-btn {
+                min-width: 140px;
+                padding: 10px 12px;
+                font-size: 0.9rem;
             }
 
-            .btn-switch {
-                margin-bottom: 8px;
-                width: 100%;
+            .page-header {
+                padding: 20px;
             }
 
-            .form-row {
-                display: block;
+            .page-header h2 {
+                font-size: 1.5rem;
             }
 
-            .form-group {
-                width: 100% !important;
-                margin-bottom: 15px;
+            .card-section {
+                padding: 20px 15px;
             }
 
-            .table th,
-            .table td {
-                font-size: 14px;
-                padding: 8px;
-            }
-
-            .thumb {
-                width: 60px;
-            }
-
-            .container {
+            .custom-table th,
+            .custom-table td {
                 padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            .form-card {
+                padding: 15px;
             }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h2 class="text-center mb-4">📋 Back Office – Corner</h2>
-
-    <div class="mb-4 text-center">
-        <button class="btn btn-outline-primary btn-switch" onclick="showSection('prenotazioni')">Prenotazioni</button>
-        <button class="btn btn-outline-secondary btn-switch" onclick="showSection('menu')">Modifica Menu</button>
-        <button class="btn btn-outline-success btn-switch" onclick="showSection('evidenza')">Contenuti in Evidenza</button>
-        <button class="btn btn-outline-danger btn-switch" onclick="showSection('promozioni')">Promozioni</button>
-        <button class="btn btn-outline-dark btn-switch" onclick="showSection('utenti')">Utenti</button>
-
+    <!-- Header -->
+    <div class="page-header">
+        <h2><i class="fas fa-cogs"></i> Back Office – Corner</h2>
     </div>
 
-    <!-- Sezione Prenotazioni -->
-    <div id="sectionPrenotazioni" class="hidden">
+    <!-- Section Switcher -->
+    <div class="section-switcher">
+        <button class="btn btn-primary section-btn" onclick="showSection('prenotazioni')">
+            <i class="fas fa-calendar-alt"></i> Prenotazioni
+        </button>
+        <button class="btn btn-info section-btn" onclick="showSection('menu')">
+            <i class="fas fa-utensils"></i> Menu
+        </button>
+        <button class="btn btn-warning section-btn" onclick="showSection('evidenza')">
+            <i class="fas fa-star"></i> In Evidenza
+        </button>
+        <button class="btn btn-danger section-btn" onclick="showSection('promozioni')">
+            <i class="fas fa-tag"></i> Promozioni
+        </button>
+        <button class="btn btn-dark section-btn" onclick="showSection('utenti')">
+            <i class="fas fa-users"></i> Utenti
+        </button>
+    </div>
+
+    <!-- Prenotazioni Section -->
+    <div id="sectionPrenotazioni" class="card-section">
+        <h4><i class="fas fa-calendar-alt"></i> Gestione Prenotazioni</h4>
         <div id="reservationsByDateContainer"></div>
     </div>
 
-    <!-- Sezione Menu -->
-    <div id="sectionMenu" class="hidden">
-        <h5 class="mb-3">➕ Aggiungi nuovo piatto</h5>
-        <form id="formAddNewItem">
-            <div class="form-row">
-                <div class="form-group col-md-3">
-                    <input type="text" name="titolo" class="form-control" placeholder="Titolo" required />
-                </div>
-                <div class="form-group col-md-2">
-                    <select name="categoria" class="form-control" id="categoriaSelectMenu" required>
-                        <option value="">Seleziona Categoria</option>
-                    </select>
-                </div>
-                <div class="form-group col-md-3">
-                    <input type="text" name="descrizione" class="form-control" placeholder="Descrizione" />
-                </div>
-                <div class="form-group col-md-2">
-                    <input type="number" step="0.01" name="prezzo" class="form-control" placeholder="Prezzo (€)" required />
-                </div>
-                <div class="form-group col-md-2">
-                    <input type="file" name="image" accept="image/*" class="form-control-file" required />
-                </div>
-            </div>
-            <div class="form-group col-md-2">
-                <label>Visibile:</label>
-                <select name="visibile" class="form-control">
-                    <option value="true">✅ Sì</option>
-                    <option value="false">❌ No</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-success">Salva Piatto</button>
-        </form>
+    <!-- Menu Section -->
+    <div id="sectionMenu" class="card-section hidden">
+        <h4><i class="fas fa-utensils"></i> Gestione Menu</h4>
 
-        <hr class="my-4" />
+        <!-- Add New Item -->
+        <div class="form-card mb-5">
+            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi nuovo piatto</h5>
+            <form id="formAddNewItem">
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Titolo</label>
+                        <input type="text" name="titolo" class="form-control" placeholder="Nome del piatto" required />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Categoria</label>
+                        <select name="categoria" class="form-control" id="categoriaSelectMenu" required>
+                            <option value="">Seleziona Categoria</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Descrizione</label>
+                        <input type="text" name="descrizione" class="form-control" placeholder="Descrizione" />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Prezzo (€)</label>
+                        <input type="number" step="0.01" name="prezzo" class="form-control" placeholder="0.00" required />
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label>Immagine</label>
+                        <input type="file" name="image" accept="image/*" class="form-control-file" required />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-2">
+                        <label>Visibile</label>
+                        <select name="visibile" class="form-control">
+                            <option value="true">✅ Sì</option>
+                            <option value="false">❌ No</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3 mt-4 pt-2">
+                        <button type="submit" class="btn btn-success btn-action">
+                            <i class="fas fa-save"></i> Salva Piatto
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-        <h4 class="mb-3">🍔 Menu Attuale</h4>
-        <div id="menuTablesContainer"></div>
+        <!-- Menu List -->
+        <div class="mt-4">
+            <h5 class="mb-3"><i class="fas fa-list"></i> Menu Attuale</h5>
+            <div id="menuTablesContainer"></div>
+        </div>
     </div>
 
-    <!-- Sezione Evidenza -->
-    <div id="sectionEvidenza" class="hidden">
-        <h5 class="mb-3">⭐ Aggiungi Contenuto in Evidenza</h5>
-        <form id="formAddHighlight">
-            <div class="form-row">
-                <div class="form-group col-md-4">
-                    <select id="categoriaSelectEvidenza" class="form-control" required>
-                        <option value="">Seleziona Categoria</option>
-                    </select>
-                </div>
-                <div class="form-group col-md-4">
-                    <select id="prodottoSelectEvidenza" class="form-control" disabled required>
-                        <option value="">Seleziona Prodotto</option>
-                    </select>
-                </div>
-                <div class="form-group col-md-2">
-                    <button type="submit" class="btn btn-success">Aggiungi</button>
-                </div>
-            </div>
-        </form>
+    <!-- Evidenza Section -->
+    <div id="sectionEvidenza" class="card-section hidden">
+        <h4><i class="fas fa-star"></i> Contenuti in Evidenza</h4>
 
-        <hr class="my-4" />
+        <!-- Add Highlight -->
+        <div class="form-card mb-5">
+            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi Contenuto</h5>
+            <form id="formAddHighlight">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Categoria</label>
+                        <select id="categoriaSelectEvidenza" class="form-control" required>
+                            <option value="">Seleziona Categoria</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Prodotto</label>
+                        <select id="prodottoSelectEvidenza" class="form-control" disabled required>
+                            <option value="">Seleziona Prodotto</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-2 mt-4 pt-2">
+                        <button type="submit" class="btn btn-warning btn-action">
+                            <i class="fas fa-plus"></i> Aggiungi
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-        <h4 class="mb-3">📌 Contenuti in Evidenza</h4>
-        <div id="highlightsContainer"></div>
+        <!-- Highlights List -->
+        <div class="mt-4">
+            <h5 class="mb-3"><i class="fas fa-list"></i> Contenuti Attivi</h5>
+            <div id="highlightsContainer" class="mt-3"></div>
+        </div>
     </div>
-</div>
 
-<!-- Sezione Promozioni -->
-<div id="sectionPromozioni" class="hidden">
-    <h5 class="mb-3">🎯 Crea Promozione</h5>
-    <form id="formAddPromozione">
-        <div class="form-row">
-            <div class="form-group col-md-4">
-                <input type="text" class="form-control" name="nome" placeholder="Nome Promozione" required>
-            </div>
-            <div class="form-group col-md-12">
-                <textarea name="descrizione" class="form-control" placeholder="Descrizione promozione" rows="2"></textarea>
-            </div>
-            <div class="form-group col-md-4">
-                <label>Data Inizio:</label>
-                <input type="date" name="dataInizio" class="form-control" required />
-            </div>
-            <div class="form-group col-md-4">
-                <label>Data Fine:</label>
-                <input type="date" name="dataFine" class="form-control" required />
-            </div>
+    <!-- Promozioni Section -->
+    <div id="sectionPromozioni" class="card-section hidden">
+        <h4><i class="fas fa-tag"></i> Gestione Promozioni</h4>
 
-            <div class="form-group col-md-2">
-                <input type="number" step="1" min="1" max="100" name="sconto" class="form-control" placeholder="% Sconto" required>
-            </div>
-            <div class="form-group col-md-12">
-                <label>Prodotti da includere:</label>
-                <div id="checklistProdottiPromozione" class="row"></div>
+        <!-- Add Promotion -->
+        <div class="form-card mb-5">
+            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Crea Nuova Promozione</h5>
+            <form id="formAddPromozione">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Nome Promozione</label>
+                        <input type="text" class="form-control" name="nome" placeholder="Nome della promozione" required>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Sconto (%)</label>
+                        <input type="number" step="1" min="1" max="100" name="sconto" class="form-control" placeholder="%" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Descrizione</label>
+                        <textarea name="descrizione" class="form-control" placeholder="Descrizione promozione" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        <label>Data Inizio</label>
+                        <input type="date" name="dataInizio" class="form-control" required />
+                    </div>
+                    <div class="form-group col-md-3">
+                        <label>Data Fine</label>
+                        <input type="date" name="dataFine" class="form-control" required />
+                    </div>
+                </div>
+
+                <div class="form-row mt-3">
+                    <div class="form-group col-md-12">
+                        <label><i class="fas fa-list"></i> Prodotti inclusi</label>
+                        <div id="checklistProdottiPromozione" class="row mt-2"></div>
+                    </div>
+                </div>
+
+                <div class="form-row mt-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-info" id="selectedPromoSummary" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row mt-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-danger btn-action">
+                            <i class="fas fa-fire"></i> Crea Promozione
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Promotions List -->
+        <div class="mt-4">
+            <h5 class="mb-3"><i class="fas fa-list"></i> Promozioni Attive</h5>
+            <div class="table-responsive">
+                <table class="table custom-table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Descrizione</th>
+                        <th>Periodo</th>
+                        <th>Sconto</th>
+                        <th>Stato</th>
+                        <th>Azioni</th>
+                    </tr>
+                    </thead>
+                    <tbody id="promozioniTableBody"></tbody>
+                </table>
             </div>
         </div>
-        <div class="col-md-12 mt-3">
-            <div class="alert alert-info" id="selectedPromoSummary" style="display: none;"></div>
-        </div>
-        <button type="submit" class="btn btn-danger">Crea Promozione</button>
-    </form>
-    <h4 class="mb-3">📜 Tutte le Promozioni</h4>
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="thead-dark">
-            <tr>
-                <th>Nome</th>
-                <th>Descrizione</th>
-                <th>Prezzo Totale</th>
-                <th>Attiva</th>
-            </tr>
-            </thead>
-            <tbody id="promozioniTableBody"></tbody>
-        </table>
     </div>
 
+    <!-- Utenti Section -->
+    <div id="sectionUtenti" class="card-section hidden">
+        <h4><i class="fas fa-users"></i> Gestione Utenti</h4>
 
-</div>
-
-<div id="sectionUtenti" class="hidden">
-    <h5 class="mb-3">👥 Lista Utenti</h5>
-    <div class="table-responsive">
-        <table class="table table-bordered table-hover">
-            <thead class="thead-dark">
-            <tr><th>ID</th><th>Nome</th><th>Telefono</th><th>Azioni</th></tr>
-            </thead>
-            <tbody id="utentiTableBody"></tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table custom-table">
+                <thead class="thead-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Telefono</th>
+                    <th>Email</th>
+                    <th>Registrazione</th>
+                    <th>Azioni</th>
+                </tr>
+                </thead>
+                <tbody id="utentiTableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
-    function showSection(section) {
-        ['prenotazioni','menu','evidenza','promozioni'].forEach(s => {
-            document.getElementById('section' + capitalize(s)).classList.add('hidden');
-        });
-        if (section === 'prenotazioni') {
-            document.getElementById('sectionPrenotazioni').classList.remove('hidden');
-            loadReservations();
-        } else if (section === 'menu') {
-            document.getElementById('sectionMenu').classList.remove('hidden');
-            loadMenuItems();
-        } else if (section === 'evidenza') {
-            document.getElementById('sectionEvidenza').classList.remove('hidden');
-            loadInEvidenza();
-        } else if (section === 'promozioni') {
-            document.getElementById('sectionPromozioni').classList.remove('hidden');
-            loadPromozioni();
-        } else if (section === 'utenti') {
-            document.getElementById('sectionUtenti').classList.remove('hidden');
-            loadUtenti();
-        }
-
-
-    }
-
+    // Utility functions
     function capitalize(str) {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
-    // Prenotazioni
-    async function loadReservations() {
-        const res = await fetch('/admin/reservations');
-        const data = await res.json();
-        const grouped = {};
-        data.forEach(r => {
-            if (!grouped[r.date]) grouped[r.date] = [];
-            grouped[r.date].push(r);
-        });
-        const container = document.getElementById('reservationsByDateContainer');
-        container.innerHTML = '';
-        Object.keys(grouped).sort().forEach(date => {
-            const section = document.createElement('div');
-            section.classList.add('mb-5');
-            const rows = grouped[date].map(r => `
-                <tr>
-                  <td>${r.name}</td>
-                  <td>${r.phone}</td>
-                  <td>${r.time}</td>
-                  <td>${r.people}</td>
-                  <td>${r.note || ''}</td>
-                  <td><button class="btn btn-danger btn-sm" onclick="deleteReservation(${r.id})">Elimina</button></td>
-                </tr>
-            `).join('');
-            section.innerHTML = `
-                <h5>📅 ${formatDate(date)}</h5>
-                <table class="table table-bordered table-hover">
-                  <thead class="thead-dark">
-                    <tr><th>Nome</th><th>Telefono</th><th>Ora</th><th>Persone</th><th>Note</th><th>Azioni</th></tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                </table>
-            `;
-            container.appendChild(section);
-        });
+    function escape(str) {
+        if (!str) return '';
+        return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
-    async function deleteReservation(id) {
-        if (!confirm('Vuoi davvero eliminare questa prenotazione?')) return;
-        const res = await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
-        if (res.ok) loadReservations(); else alert('Errore durante l\'eliminazione.');
-    }
+
     function formatDate(dateStr) {
+        if (!dateStr) return '';
         const d = new Date(dateStr);
         return d.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    // Menu
-    async function loadMenuItems() {
-        const res = await fetch('/admin/menu');
-        const data = await res.json();
-        const grouped = {};
-        data.forEach(item => {
-            if (!grouped[item.categoria]) grouped[item.categoria] = [];
-            grouped[item.categoria].push(item);
+    function formatDateTime(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleString('it-IT');
+    }
+
+    // Section management
+    function showSection(section) {
+        ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti'].forEach(s => {
+            document.getElementById('section' + capitalize(s)).classList.add('hidden');
         });
-        populateSelect('Menu', Object.keys(grouped));
-        const container = document.getElementById('menuTablesContainer');
-        container.innerHTML = '';
-        Object.keys(grouped).sort().forEach(cat => {
-            const section = document.createElement('div');
-            section.classList.add('mb-5');
-            const rows = grouped[cat].map(item => {
-                const imgSrc = item.imageUrl && item.imageUrl.trim() !== '' ? item.imageUrl :
-                    `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${item.id}.png`;
-                return `
-                    <tr id="menu-row-${item.id}">
-                      <td><img src="${imgSrc}" onerror="this.onerror=null;this.src='/img/placeholder.png'" class="thumb" /></td>
-                      <td>${escape(item.titolo)}</td>
-                      <td>${escape(item.descrizione || '')}</td>
-                      <td>€${item.prezzo.toFixed(2)}</td>
-                      <td><button class="btn btn-sm btn-outline-${item.visibile ? 'success' : 'secondary'}" onclick="toggleVisibility(${item.id})">${item.visibile ? '✅' : '❌'}</button></td>
-                      <td>
-                        <button class="btn btn-sm btn-warning" onclick="makeEditable(${item.id}, '${escape(item.titolo)}', '${escape(item.categoria)}', '${escape(item.descrizione || '')}', ${item.prezzo})">Modifica</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${item.id})">Elimina</button>
-                      </td>
-                    </tr>
+        document.getElementById('section' + capitalize(section)).classList.remove('hidden');
+
+        if (section === 'prenotazioni') {
+            loadReservations();
+        } else if (section === 'menu') {
+            loadMenuItems();
+        } else if (section === 'evidenza') {
+            loadInEvidenza();
+        } else if (section === 'promozioni') {
+            loadPromozioni();
+        } else if (section === 'utenti') {
+            loadUtenti();
+        }
+    }
+
+    // Prenotazioni functions
+    async function loadReservations() {
+        try {
+            const res = await fetch('/admin/reservations');
+            const data = await res.json();
+            const grouped = {};
+            data.forEach(r => {
+                if (!grouped[r.date]) grouped[r.date] = [];
+                grouped[r.date].push(r);
+            });
+
+            const container = document.getElementById('reservationsByDateContainer');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h4>Nessuna prenotazione trovata</h4>
+                        <p>Non ci sono prenotazioni registrate al momento</p>
+                    </div>
                 `;
-            }).join('');
-            section.innerHTML = `
-                <h5>🍽️ Categoria: <strong>${escape(cat)}</strong></h5>
-                <div class="table-responsive">
-                  <table class="table table-bordered table-hover">
-                    <thead class="thead-dark">
-                      <tr><th>Foto</th><th>Titolo</th><th>Descrizione</th><th>Prezzo</th><th>Visibile</th><th>Azioni</th></tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                  </table>
+                return;
+            }
+
+            Object.keys(grouped).sort().forEach(date => {
+                const section = document.createElement('div');
+                section.classList.add('mb-5');
+
+                const rows = grouped[date].map(r => `
+                    <tr>
+                        <td>${r.name}</td>
+                        <td>${r.phone}</td>
+                        <td>${r.time}</td>
+                        <td>${r.people}</td>
+                        <td>${r.note || '-'}</td>
+                        <td class="text-nowrap">
+                            <button class="btn btn-sm btn-danger btn-action" onclick="deleteReservation(${r.id})">
+                                <i class="fas fa-trash-alt"></i> Elimina
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                section.innerHTML = `
+                    <h5 class="d-flex align-items-center">
+                        <i class="fas fa-calendar-day me-2"></i> ${formatDate(date)}
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefono</th>
+                                    <th>Ora</th>
+                                    <th>Persone</th>
+                                    <th>Note</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        } catch (error) {
+            console.error('Error loading reservations:', error);
+            document.getElementById('reservationsByDateContainer').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento delle prenotazioni
                 </div>
             `;
-            container.appendChild(section);
+        }
+    }
+
+    async function deleteReservation(id) {
+        if (!confirm('Vuoi davvero eliminare questa prenotazione?')) return;
+        try {
+            const res = await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadReservations();
+            } else {
+                alert('Errore durante l\'eliminazione.');
+            }
+        } catch (error) {
+            console.error('Error deleting reservation:', error);
+            alert('Errore durante l\'eliminazione.');
+        }
+    }
+
+    // Menu functions
+    function populateSelect(context, categories) {
+        const select = document.getElementById(`categoriaSelect${context}`);
+        select.innerHTML = '<option value="">Seleziona Categoria</option>';
+        categories.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            select.appendChild(opt);
         });
     }
+
+    async function loadMenuItems() {
+        try {
+            const res = await fetch('/admin/menu');
+            const data = await res.json();
+            const grouped = {};
+            data.forEach(item => {
+                if (!grouped[item.categoria]) grouped[item.categoria] = [];
+                grouped[item.categoria].push(item);
+            });
+
+            populateSelect('Menu', Object.keys(grouped));
+            const container = document.getElementById('menuTablesContainer');
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <h4>Menu vuoto</h4>
+                        <p>Non ci sono piatti nel menu al momento</p>
+                    </div>
+                `;
+                return;
+            }
+
+            Object.keys(grouped).sort().forEach(cat => {
+                const section = document.createElement('div');
+                section.classList.add('mb-5');
+
+                const rows = grouped[cat].map(item => {
+                    const imgSrc = item.imageUrl && item.imageUrl.trim() !== '' ?
+                        item.imageUrl : `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${item.id}.png`;
+
+                    return `
+                        <tr id="menu-row-${item.id}">
+                            <td><img src="${imgSrc}" onerror="this.onerror=null;this.src='/img/placeholder.png'" class="thumb" /></td>
+                            <td>${escape(item.titolo)}</td>
+                            <td>${escape(item.descrizione || '-')}</td>
+                            <td>€${item.prezzo.toFixed(2)}</td>
+                            <td>
+                                <span class="status-badge ${item.visibile ? 'bg-success' : 'bg-secondary'}">
+                                    ${item.visibile ? 'Visibile' : 'Nascosto'}
+                                </span>
+                            </td>
+                            <td class="text-nowrap">
+                                <button class="btn btn-sm btn-warning btn-action" onclick="makeEditable(${item.id}, '${escape(item.titolo)}', '${escape(item.categoria)}', '${escape(item.descrizione || '')}', ${item.prezzo})">
+                                    <i class="fas fa-edit"></i> Modifica
+                                </button>
+                                <button class="btn btn-sm btn-danger btn-action" onclick="deleteMenuItem(${item.id})">
+                                    <i class="fas fa-trash-alt"></i> Elimina
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                section.innerHTML = `
+                    <h5 class="d-flex align-items-center">
+                        <i class="fas fa-utensils me-2"></i> ${escape(cat)}
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table custom-table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Titolo</th>
+                                    <th>Descrizione</th>
+                                    <th>Prezzo</th>
+                                    <th>Stato</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        } catch (error) {
+            console.error('Error loading menu items:', error);
+            document.getElementById('menuTablesContainer').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento del menu
+                </div>
+            `;
+        }
+    }
+
     document.getElementById('formAddNewItem').addEventListener('submit', async e => {
         e.preventDefault();
         const form = e.target;
@@ -362,141 +669,370 @@
             prezzo: parseFloat(form.prezzo.value),
             visibile: form.visibile.value === 'true'
         };
+
         const formData = new FormData();
         formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
         if (form.image.files[0]) formData.append('image', form.image.files[0]);
-        const res = await fetch('/admin/menu', { method: 'POST', body: formData });
-        if (res.ok) { alert('✅ Piatto aggiunto!'); form.reset(); loadMenuItems(); }
-        else alert('❌ Errore nell\'aggiunta');
+
+        try {
+            const res = await fetch('/admin/menu', { method: 'POST', body: formData });
+            if (res.ok) {
+                alert('✅ Piatto aggiunto con successo!');
+                form.reset();
+                loadMenuItems();
+            } else {
+                alert('❌ Errore durante l\'aggiunta del piatto');
+            }
+        } catch (error) {
+            console.error('Error adding menu item:', error);
+            alert('❌ Errore durante l\'aggiunta del piatto');
+        }
     });
-    async function toggleVisibility(id) { await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' }); loadMenuItems(); }
-    async function deleteMenuItem(id) { if (!confirm('Eliminare questo piatto?')) return; await fetch(`/admin/menu/${id}`, { method: 'DELETE' }); loadMenuItems(); }
+
+    async function toggleVisibility(id) {
+        try {
+            await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
+            loadMenuItems();
+        } catch (error) {
+            console.error('Error toggling visibility:', error);
+            alert('Errore durante l\'aggiornamento dello stato');
+        }
+    }
+
+    async function deleteMenuItem(id) {
+        if (!confirm('Sei sicuro di voler eliminare questo piatto?')) return;
+        try {
+            await fetch(`/admin/menu/${id}`, { method: 'DELETE' });
+            loadMenuItems();
+        } catch (error) {
+            console.error('Error deleting menu item:', error);
+            alert('Errore durante l\'eliminazione del piatto');
+        }
+    }
+
     function makeEditable(id, titolo, categoria, descrizione, prezzo) {
         const row = document.getElementById(`menu-row-${id}`);
         row.innerHTML = `
-          <td><input type="file" id="edit-image-${id}" accept="image/*" /></td>
-          <td><input type="text" id="edit-titolo-${id}" value="${titolo}" /></td>
-          <td><input type="text" id="edit-desc-${id}" value="${descrizione}" /></td>
-          <td><input type="number" id="edit-prezzo-${id}" value="${prezzo}" step="0.01" /></td>
-          <td><input type="text" id="edit-cat-${id}" value="${categoria}" /></td>
-          <td>
-            <button class="btn btn-sm btn-success" onclick="submitEdit(${id})">Salva</button>
-            <button class="btn btn-sm btn-secondary" onclick="loadMenuItems()">Annulla</button>
-          </td>
+            <td><input type="file" id="edit-image-${id}" accept="image/*" class="form-control-file" /></td>
+            <td><input type="text" id="edit-titolo-${id}" value="${titolo}" class="form-control" /></td>
+            <td><input type="text" id="edit-desc-${id}" value="${descrizione}" class="form-control" /></td>
+            <td><input type="number" id="edit-prezzo-${id}" value="${prezzo}" step="0.01" class="form-control" /></td>
+            <td><input type="text" id="edit-cat-${id}" value="${categoria}" class="form-control" /></td>
+            <td class="text-nowrap">
+                <button class="btn btn-sm btn-success btn-action" onclick="submitEdit(${id})">
+                    <i class="fas fa-check"></i> Salva
+                </button>
+                <button class="btn btn-sm btn-secondary btn-action" onclick="loadMenuItems()">
+                    <i class="fas fa-times"></i> Annulla
+                </button>
+            </td>
         `;
     }
+
     async function submitEdit(id) {
         const titolo = document.getElementById(`edit-titolo-${id}`).value;
         const descrizione = document.getElementById(`edit-desc-${id}`).value;
         const prezzo = parseFloat(document.getElementById(`edit-prezzo-${id}`).value);
         const categoria = document.getElementById(`edit-cat-${id}`).value;
         const imageInput = document.getElementById(`edit-image-${id}`);
+
         const data = { titolo, descrizione, prezzo, categoria };
         const formData = new FormData();
         formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
         if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
-        await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
-        loadMenuItems();
-    }
 
-    // Evidenza
-    async function loadInEvidenza() {
-        // Recupera piatti e contenuti in evidenza
-        const [menuRes, evidenzaRes] = await Promise.all([
-            fetch('/admin/menu'),
-            fetch('/admin/in_evidenza')
-        ]);
-        const menuData = await menuRes.json();
-        const evidenzaData = await evidenzaRes.json();
-
-        // Mappa ID piatto -> Titolo
-        const idToTitolo = {};
-        menuData.forEach(item => {
-            idToTitolo[item.id] = item.titolo;
-        });
-
-        // Popola categorie
-        const categories = [...new Set(menuData.map(i => i.categoria))].sort();
-        populateSelect('Evidenza', categories);
-
-        // Contenitore HTML
-        const container = document.getElementById('highlightsContainer');
-        container.innerHTML = '';
-        if (evidenzaData.length === 0) {
-            container.innerHTML = '<p>Nessun contenuto in evidenza.</p>';
-            return;
+        try {
+            await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
+            loadMenuItems();
+        } catch (error) {
+            console.error('Error updating menu item:', error);
+            alert('Errore durante l\'aggiornamento del piatto');
         }
-
-        // Renderizza
-        evidenzaData.forEach(h => {
-            const itemId = h.itemId || h.item_id;
-            const titolo = idToTitolo[itemId] || 'Titolo non disponibile';
-            const div = document.createElement('div');
-            div.classList.add('mb-2');
-            div.innerHTML = `
-            <span>⭐ [${h.categoria}] ${titolo}</span>
-            <button class="btn btn-sm btn-danger ml-2" onclick="deleteInEvidenza(${h.id})">Rimuovi</button>
-        `;
-            container.appendChild(div);
-        });
     }
+
+    // Evidenza functions
+    async function loadInEvidenza() {
+        try {
+            const [menuRes, evidenzaRes] = await Promise.all([
+                fetch('/admin/menu'),
+                fetch('/admin/in_evidenza')
+            ]);
+
+            const menuData = await menuRes.json();
+            const evidenzaData = await evidenzaRes.json();
+
+            const idToTitolo = {};
+            menuData.forEach(item => {
+                idToTitolo[item.id] = item.titolo;
+            });
+
+            const categories = [...new Set(menuData.map(i => i.categoria))].sort();
+            populateSelect('Evidenza', categories);
+
+            const container = document.getElementById('highlightsContainer');
+            container.innerHTML = '';
+
+            if (evidenzaData.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Nessun contenuto in evidenza al momento
+                    </div>
+                `;
+                return;
+            }
+
+            evidenzaData.forEach(h => {
+                const itemId = h.itemId || h.item_id;
+                const titolo = idToTitolo[itemId] || 'Titolo non disponibile';
+
+                const div = document.createElement('div');
+                div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'border-bottom', 'pb-2', 'mb-3');
+                div.innerHTML = `
+                    <div>
+                        <span class="badge bg-primary me-2">${h.categoria}</span>
+                        <strong>${titolo}</strong>
+                    </div>
+                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteInEvidenza(${h.id})">
+                        <i class="fas fa-times"></i> Rimuovi
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        } catch (error) {
+            console.error('Error loading highlights:', error);
+            document.getElementById('highlightsContainer').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento dei contenuti in evidenza
+                </div>
+            `;
+        }
+    }
+
     document.getElementById('categoriaSelectEvidenza').addEventListener('change', async e => {
         const cat = e.target.value;
         const prodSelect = document.getElementById('prodottoSelectEvidenza');
         prodSelect.innerHTML = '<option value="">Seleziona Prodotto</option>';
-        if (!cat) { prodSelect.disabled = true; return; }
-        const res = await fetch('/admin/menu');
-        const items = (await res.json()).filter(i => i.categoria === cat);
-        items.forEach(i => {
-            const opt = document.createElement('option'); opt.value = i.id; opt.textContent = i.titolo;
-            prodSelect.appendChild(opt);
-        });
-        prodSelect.disabled = false;
+
+        if (!cat) {
+            prodSelect.disabled = true;
+            return;
+        }
+
+        try {
+            const res = await fetch('/admin/menu');
+            const items = (await res.json()).filter(i => i.categoria === cat);
+
+            items.forEach(i => {
+                const opt = document.createElement('option');
+                opt.value = i.id;
+                opt.textContent = i.titolo;
+                prodSelect.appendChild(opt);
+            });
+
+            prodSelect.disabled = false;
+        } catch (error) {
+            console.error('Error loading products:', error);
+        }
     });
+
     document.getElementById('formAddHighlight').addEventListener('submit', async e => {
         e.preventDefault();
         const cat = document.getElementById('categoriaSelectEvidenza').value;
         const prodId = document.getElementById('prodottoSelectEvidenza').value;
-        if (!cat || !prodId) return alert('Seleziona categoria e prodotto.');
-        const res = await fetch('/admin/in_evidenza', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ categoria: cat, itemId: prodId })
-        });
-        if (res.ok) { loadInEvidenza(); e.target.reset(); document.getElementById('prodottoSelectEvidenza').disabled = true; }
-        else alert('Errore nell\'aggiunta del contenuto in evidenza.');
+
+        if (!cat || !prodId) {
+            alert('Seleziona sia la categoria che il prodotto');
+            return;
+        }
+
+        try {
+            const res = await fetch('/admin/in_evidenza', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ categoria: cat, itemId: prodId })
+            });
+
+            if (res.ok) {
+                loadInEvidenza();
+                e.target.reset();
+                document.getElementById('prodottoSelectEvidenza').disabled = true;
+            } else {
+                alert('Errore durante l\'aggiunta del contenuto in evidenza');
+            }
+        } catch (error) {
+            console.error('Error adding highlight:', error);
+            alert('Errore durante l\'aggiunta del contenuto in evidenza');
+        }
     });
+
     async function deleteInEvidenza(id) {
-        if (!confirm('Rimuovere questo contenuto in evidenza?')) return;
-        const res = await fetch(`/admin/in_evidenza/${id}`, { method: 'DELETE' });
-        if (res.ok) loadInEvidenza(); else alert('Errore durante la rimozione.');
+        if (!confirm('Sei sicuro di voler rimuovere questo contenuto in evidenza?')) return;
+
+        try {
+            const res = await fetch(`/admin/in_evidenza/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadInEvidenza();
+            } else {
+                alert('Errore durante la rimozione');
+            }
+        } catch (error) {
+            console.error('Error deleting highlight:', error);
+            alert('Errore durante la rimozione');
+        }
     }
 
-    // Utility
-    function populateSelect(context, categories) {
-        const select = document.getElementById(`categoriaSelect${context}`);
-        select.innerHTML = '<option value="">Seleziona Categoria</option>';
-        categories.forEach(cat => {
-            const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
-            select.appendChild(opt);
-        });
+    // Promozioni functions
+    async function loadPromozioni() {
+        try {
+            const [menuRes, promoRes] = await Promise.all([
+                fetch('/admin/menu'),
+                fetch('/admin/promotions')
+            ]);
+
+            const menuData = await menuRes.json();
+            const promoData = await promoRes.json();
+
+            // Checklist for new promotion
+            const grouped = {};
+            menuData.forEach(item => {
+                if (!grouped[item.categoria]) grouped[item.categoria] = [];
+                grouped[item.categoria].push(item);
+            });
+
+            const checklist = document.getElementById('checklistProdottiPromozione');
+            checklist.innerHTML = '';
+
+            Object.keys(grouped).sort().forEach(categoria => {
+                const section = document.createElement('div');
+                section.classList.add('col-md-6', 'mb-4');
+
+                const items = grouped[categoria].map(item => `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input promo-checkbox" type="checkbox" value="${item.id}" id="prod-${item.id}" data-title="${item.titolo}">
+                        <label class="form-check-label" for="prod-${item.id}">
+                            ${item.titolo} <span class="text-muted">(€${item.prezzo.toFixed(2)})</span>
+                        </label>
+                    </div>
+                `).join('');
+
+                section.innerHTML = `
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <strong>${categoria}</strong>
+                        </div>
+                        <div class="card-body">
+                            ${items}
+                        </div>
+                    </div>
+                `;
+                checklist.appendChild(section);
+            });
+
+            // Promotions list
+            const promozioniTableBody = document.getElementById('promozioniTableBody');
+            promozioniTableBody.innerHTML = '';
+
+            if (promoData.length === 0) {
+                promozioniTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="fas fa-tag fa-2x mb-3 text-muted"></i>
+                            <p class="mb-0">Nessuna promozione attiva</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            promoData.sort((a, b) => new Date(a.dataInizio) - new Date(b.dataFine)).forEach(promo => {
+                const today = new Date();
+                const startDate = new Date(promo.dataInizio);
+                const endDate = new Date(promo.dataFine);
+                const isActive = today >= startDate && today <= endDate;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>
+                        <strong>${promo.nome}</strong>
+                        <div class="small text-muted">${promo.descrizione || 'Nessuna descrizione'}</div>
+                    </td>
+                    <td>${promo.descrizione || '-'}</td>
+                    <td>
+                        ${formatDate(promo.dataInizio)}<br>
+                        <span class="text-muted small">al</span><br>
+                        ${formatDate(promo.dataFine)}
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-danger p-2">${promo.items[0]?.scontoPercentuale || 0}%</span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+                            ${isActive ? 'Attiva' : 'Scaduta'}
+                        </span>
+                    </td>
+                    <td class="text-nowrap">
+                        <button class="btn btn-sm btn-danger btn-action" onclick="eliminaPromozione(${promo.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                promozioniTableBody.appendChild(tr);
+            });
+
+            // Add event listeners to checkboxes
+            document.querySelectorAll('.promo-checkbox').forEach(cb => {
+                cb.addEventListener('change', updatePromoSummary);
+            });
+
+        } catch (error) {
+            console.error('Error loading promotions:', error);
+            document.getElementById('promozioniTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <p>Errore durante il caricamento delle promozioni</p>
+                    </td>
+                </tr>
+            `;
+        }
     }
-    function escape(str) {
-        return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
+    function updatePromoSummary() {
+        const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
+        const summary = checked.map(c => c.dataset.title).join(', ');
+        const box = document.getElementById('selectedPromoSummary');
+
+        if (checked.length > 0) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>${checked.length} prodotti selezionati:</strong> ${summary}
+            `;
+        } else {
+            box.style.display = 'none';
+        }
     }
-    document.addEventListener('DOMContentLoaded', () => { showSection('prenotazioni'); });
+
     document.getElementById('formAddPromozione').addEventListener('submit', async e => {
         e.preventDefault();
-        const nome = e.target.nome.value;
-        const sconto = parseFloat(e.target.sconto.value);
-        const descrizione = e.target.descrizione.value;
-        const dataInizio = e.target.dataInizio.value;
-        const dataFine = e.target.dataFine.value;
-        const selectedCheckboxes = Array.from(document.querySelectorAll('#checklistProdottiPromozione input[type="checkbox"]:checked'));
-        if (selectedCheckboxes.length === 0) return alert("Seleziona almeno un prodotto!");
+        const form = e.target;
+        const nome = form.nome.value;
+        const sconto = parseFloat(form.sconto.value);
+        const descrizione = form.descrizione.value;
+        const dataInizio = form.dataInizio.value;
+        const dataFine = form.dataFine.value;
+
+        const selectedCheckboxes = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
+        if (selectedCheckboxes.length === 0) {
+            alert("Seleziona almeno un prodotto!");
+            return;
+        }
+
         const items = selectedCheckboxes.map(cb => ({
             menuItemId: parseInt(cb.value),
             scontoPercentuale: sconto
         }));
+
         const payload = {
             nome,
             descrizione,
@@ -505,184 +1041,114 @@
             attiva: true,
             items
         };
-        const res = await fetch('/admin/promotions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-            alert("✅ Promozione creata!");
-            e.target.reset();
-            loadPromozioni();
-        } else {
-            alert("❌ Errore nella creazione.");
+
+        try {
+            const res = await fetch('/admin/promotions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert("✅ Promozione creata con successo!");
+                form.reset();
+                document.getElementById('selectedPromoSummary').style.display = 'none';
+                loadPromozioni();
+            } else {
+                alert("❌ Errore durante la creazione della promozione");
+            }
+        } catch (error) {
+            console.error('Error creating promotion:', error);
+            alert("❌ Errore durante la creazione della promozione");
         }
     });
 
-    // PROMOZIONI
-    async function loadPromozioni() {
-        const [menuRes, promoRes] = await Promise.all([
-            fetch('/admin/menu'),
-            fetch('/admin/promotions')
-        ]);
-        const menuData = await menuRes.json();
-        const promoData = await promoRes.json();
+    async function eliminaPromozione(id) {
+        if (!confirm("Sei sicuro di voler eliminare questa promozione?")) return;
 
-        // Organizza i piatti per categoria (per la checklist creazione promo)
-        const grouped = {};
-        menuData.forEach(item => {
-            if (!grouped[item.categoria]) grouped[item.categoria] = [];
-            grouped[item.categoria].push(item);
-        });
-
-        const checklist = document.getElementById('checklistProdottiPromozione');
-        checklist.innerHTML = '';
-        Object.keys(grouped).sort().forEach(categoria => {
-            const section = document.createElement('div');
-            section.classList.add('col-md-12', 'mb-3');
-
-            let rows = grouped[categoria].map(item => `
-    <tr>
-      <td><input class="form-check-input promo-checkbox" type="checkbox" value="${item.id}" data-title="${item.titolo}"></td>
-      <td>${item.titolo}</td>
-      <td>€${item.prezzo.toFixed(2)}</td>
-    </tr>
-  `).join('');
-
-            section.innerHTML = `
-    <h6><strong>${categoria}</strong></h6>
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm">
-        <thead><tr><th>✓</th><th>Prodotto</th><th>Prezzo</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
-            checklist.appendChild(section);
-        });
-
-        // Tabella promozioni (stile tabellare come richiesto)
-        const promozioniTableBody = document.getElementById('promozioniTableBody');
-        promozioniTableBody.innerHTML = '';
-        promoData
-            .sort((a, b) => new Date(a.dataInizio) - new Date(b.dataInizio))
-            .forEach(promo => {
-                // Calcola prezzo totale e scontato
-                let prezzoTotale = 0;
-                let prezzoScontato = 0;
-                let descrizioneEstesa = '';
-                if (promo.items && promo.items.length > 0) {
-                    descrizioneEstesa = '<ul style="margin-bottom:0">';
-                    promo.items.forEach(el => {
-                        const prodotto = menuData.find(m => m.id === el.menuItem.id);
-                        if (!prodotto) return;
-                        const sconto = el.scontoPercentuale;
-                        const originale = prodotto.prezzo;
-                        const scontato = originale * (1 - sconto / 100);
-                        prezzoTotale += originale;
-                        prezzoScontato += scontato;
-                        descrizioneEstesa += `<li>${prodotto.titolo} - €${originale.toFixed(2)} → <strong>-${sconto}%</strong> = €${scontato.toFixed(2)}</li>`;
-                    });
-                    descrizioneEstesa += '</ul>';
-                }
-                // <td>Nome</td>, <td>Descrizione</td>, <td>Prezzo</td>, <td>Attiva</td>
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                  <td>${promo.nome}</td>
-                  <td>
-                    ${promo.descrizione ? `<div>${promo.descrizione}</div>` : ''}
-                    <div><small>🗓️ ${promo.dataInizio} → ${promo.dataFine}</small></div>
-                    ${descrizioneEstesa}
-                  </td>
-                  <td>
-                    ${prezzoTotale > 0 ? `<del>€${prezzoTotale.toFixed(2)}</del> → <strong>€${prezzoScontato.toFixed(2)}</strong>` : '--'}
-                  </td>
-                  <td>
-                    <input type="checkbox" ${promo.attiva ? 'checked' : ''} onchange="togglePromoAttiva(${promo.id}, this.checked)">
-                    <button class="btn btn-sm btn-danger ml-2" onclick="eliminaPromozione(${promo.id})">Elimina</button>
-                  </td>
-                `;
-                promozioniTableBody.appendChild(tr);
-            });
-
-        document.querySelectorAll('.promo-checkbox').forEach(cb => {
-            cb.addEventListener('change', () => {
-                const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
-                const summary = checked.map(c => c.dataset.title).join(', ');
-                const box = document.getElementById('selectedPromoSummary');
-                if (checked.length > 0) {
-                    box.style.display = 'block';
-                    box.innerHTML = `<strong>Prodotti selezionati:</strong> ${summary}`;
-                } else {
-                    box.style.display = 'none';
-                }
-            });
-        });
-    }
-
-    // Funzione per attivare/disattivare promozione via checkbox
-    function togglePromoAttiva(id, checked) {
-        if (checked) {
-            riattivaPromozione(id);
-        } else {
-            disattivaPromozione(id);
+        try {
+            const res = await fetch(`/admin/promotions/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadPromozioni();
+            } else {
+                alert("Errore durante l'eliminazione della promozione");
+            }
+        } catch (error) {
+            console.error('Error deleting promotion:', error);
+            alert("Errore durante l'eliminazione della promozione");
         }
     }
-    function disattivaPromozione(id) {
-        if (!confirm("Disattivare questa promozione?")) return;
-        fetch(`/admin/promotions/${id}/disattiva`, { method: 'PUT' })
-            .then(r => r.ok ? location.reload() : alert("Errore durante la disattivazione."));
-    }
 
-    function riattivaPromozione(id) {
-        if (!confirm("Riattivare questa promozione?")) return;
-        fetch(`/admin/promotions/${id}/attiva`, { method: 'PUT' })
-            .then(r => r.ok ? location.reload() : alert("Errore durante la riattivazione."));
-    }
-
-    function eliminaPromozione(id) {
-        if (!confirm("Eliminare questa promozione?")) return;
-
-        fetch(`/admin/promotions/${id}`, {
-            method: 'DELETE'
-        })
-            .then(res => {
-                if (!res.ok) throw new Error();
-                location.reload();
-            })
-            .catch(() => alert("Errore durante l'eliminazione."));
-    }
+    // Utenti functions
     async function loadUtenti() {
-        const res = await fetch('/api/users');
-        const utenti = await res.json();
-        const tbody = document.getElementById('utentiTableBody');
-        tbody.innerHTML = '';
-        utenti.forEach(u => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-            <td>${u.id}</td>
-            <td>${u.name}</td>
-            <td>${u.phone}</td>
-            <td>
-                <button class="btn btn-sm btn-danger" onclick="eliminaUtente(${u.id})">Elimina</button>
-            </td>`;
-            tbody.appendChild(tr);
-        });
+        try {
+            const res = await fetch('/api/users');
+            const utenti = await res.json();
+            const tbody = document.getElementById('utentiTableBody');
+            tbody.innerHTML = '';
+
+            if (utenti.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="fas fa-user-slash fa-2x mb-3 text-muted"></i>
+                            <p class="mb-0">Nessun utente registrato</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            utenti.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${u.id}</td>
+                    <td>${u.name || '-'}</td>
+                    <td>${u.phone || '-'}</td>
+                    <td>${u.email || '-'}</td>
+                    <td>${u.createdAt ? formatDateTime(u.createdAt) : '-'}</td>
+                    <td class="text-nowrap">
+                        <button class="btn btn-sm btn-danger btn-action" onclick="eliminaUtente(${u.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error('Error loading users:', error);
+            document.getElementById('utentiTableBody').innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center py-4 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <p>Errore durante il caricamento degli utenti</p>
+                    </td>
+                </tr>
+            `;
+        }
     }
+
     async function eliminaUtente(id) {
         if (!confirm("Sei sicuro di voler eliminare questo utente?")) return;
-        const res = await fetch(`/api/users/${id}`, {
-            method: 'DELETE'
-        });
-        if (res.ok) {
-            alert("✅ Utente eliminato.");
-            loadUtenti();
-        } else {
-            alert("❌ Errore durante l'eliminazione.");
+
+        try {
+            const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert("✅ Utente eliminato con successo");
+                loadUtenti();
+            } else {
+                alert("❌ Errore durante l'eliminazione dell'utente");
+            }
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            alert("❌ Errore durante l'eliminazione dell'utente");
         }
     }
 
-
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        showSection('prenotazioni');
+    });
 </script>
 </body>
 </html>
