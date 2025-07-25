@@ -1,5 +1,6 @@
 package com.corner.pub.controller;
 
+import com.corner.pub.dto.response.PromotionResponse;
 import com.corner.pub.model.Promotion;
 import com.corner.pub.service.PromotionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,11 @@ public class PromotionController {
     private PromotionService promotionService;
 
     @GetMapping("/attive")
-    public ResponseEntity<List<Promotion>> getActivePromotions() {
-        List<Promotion> attive = promotionService.getAllPromotions().stream()
+    public ResponseEntity<List<PromotionResponse>> getActivePromotions() {
+        List<PromotionResponse> activePromotions = promotionService.getAllPromotions().stream()
                 .filter(Promotion::isAttiva)
+                .map(promotionService::toResponse)
                 .collect(Collectors.toList());
-        return ResponseEntity.ok(attive);
+        return ResponseEntity.ok(activePromotions);
     }
 }

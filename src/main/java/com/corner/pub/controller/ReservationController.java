@@ -42,7 +42,7 @@ public class ReservationController {
     // ✅ DELETE: cancella prenotazione
     @DeleteMapping("/{phone}/{date}")
     public ResponseEntity<Void> delete(@PathVariable String phone, @PathVariable String date) {
-        reservationService.deleteReservation(phone, date);
+        reservationService.deleteReservationByPhoneAndDate(phone, date);
         return ResponseEntity.ok().build();
     }
 

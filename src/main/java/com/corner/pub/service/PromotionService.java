@@ -1,6 +1,8 @@
 package com.corner.pub.service;
 
+import com.cloudinary.Cloudinary;
 import com.corner.pub.dto.response.MenuItemResponse;
+import com.corner.pub.dto.response.PromotionItemDetail;
 import com.corner.pub.dto.response.PromotionMenuItemResponse;
 import com.corner.pub.dto.response.PromotionResponse;
 import com.corner.pub.exception.resourcenotfound.ResourceNotFoundException;
@@ -26,6 +28,9 @@ public class PromotionService {
 
     @Autowired
     private MenuItemRepository menuItemRepository;
+
+    @Autowired
+    private Cloudinary cloudinary;
 
     /**
      * Recupera tutte le promozioni presenti nel database.
@@ -126,25 +131,41 @@ public class PromotionService {
         response.setId(promo.getId());
         response.setNome(promo.getNome());
         response.setAttiva(promo.isAttiva());
+        response.setDescrizione(promo.getDescrizione());
         response.setDataInizio(promo.getDataInizio());
         response.setDataFine(promo.getDataFine());
-        response.setDescrizione(promo.getDescrizione());
 
-        List<PromotionMenuItemResponse> itemResponses = promo.getItems().stream().map(item -> {
-            PromotionMenuItemResponse itemResp = new PromotionMenuItemResponse();
-            itemResp.setScontoPercentuale(item.getScontoPercentuale().doubleValue());
+        List<PromotionItemDetail> itemDetails = promo.getItems().stream()
+                .map(item -> {
+                    MenuItem menuItem = menuItemRepository.findById(item.getMenuItem().getId())
+                            .orElseThrow(() -> new ResourceNotFoundException("Menu item non trovato"));
 
-            MenuItemResponse menuItem = new MenuItemResponse();
-            menuItem.setId(item.getMenuItem().getId());
-            menuItem.setTitolo(item.getMenuItem().getTitolo());
-            menuItem.setPrezzo(item.getMenuItem().getPrezzo());
-            menuItem.setCategoria(item.getMenuItem().getCategoria());
+                    // Converti MenuItem in MenuItemResponse per ottenere l'imageUrl
+                    MenuItemResponse menuItemResponse = mapToMenuItemResponse(menuItem);
 
-            itemResp.setMenuItem(menuItem);
-            return itemResp;
-        }).toList();
+                    return new PromotionItemDetail(menuItemResponse, item.getScontoPercentuale().doubleValue());
+                })
+                .collect(Collectors.toList());
 
-        response.setItems(itemResponses);
+        response.setItems(itemDetails);
+        return response;
+    }
+
+    private MenuItemResponse mapToMenuItemResponse(MenuItem item) {
+        MenuItemResponse response = new MenuItemResponse();
+        response.setId(item.getId());
+        response.setTitolo(item.getTitolo());
+        response.setCategoria(item.getCategoria());
+        response.setPrezzo(item.getPrezzo());
+
+        // Genera URL immagine da Cloudinary
+        String imageUrl = cloudinary.url()
+                .secure(true)
+                .version(System.currentTimeMillis() / 1000)
+                .generate("prodotti/" + item.getId());
+
+        response.setImageUrl(imageUrl);
+        response.setVisibile(item.isVisibile());
         return response;
     }
 

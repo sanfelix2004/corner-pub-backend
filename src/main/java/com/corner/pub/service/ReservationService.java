@@ -15,7 +15,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,7 +27,6 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final UserService userService;
 
-    // ✅ Crea una nuova prenotazione (con check duplicato)
     public ReservationResponse createReservation(ReservationRequest request) {
         User user = userService.findOrCreate(request.getName(), request.getPhone());
         LocalDate date = LocalDate.parse(request.getDate());
@@ -44,26 +45,22 @@ public class ReservationService {
         return toResponse(reservationRepository.save(reservation));
     }
 
-    // ✅ Elenco completo delle prenotazioni
     public List<ReservationResponse> getAllReservations() {
         return reservationRepository.findAll().stream()
                 .map(this::toResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    // ✅ Trova una prenotazione specifica (per ID)
     public ReservationResponse getReservationById(Long id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
         return toResponse(reservation);
     }
 
-    // ✅ Modifica una prenotazione esistente (per ID)
     public ReservationResponse updateReservation(Long id, ReservationRequest request) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
 
-        // aggiorna l'utente o crealo se nuovo
         User user = userService.findOrCreate(request.getName(), request.getPhone());
         reservation.setUser(user);
         reservation.setDate(LocalDate.parse(request.getDate()));
@@ -74,86 +71,51 @@ public class ReservationService {
         return toResponse(reservationRepository.save(reservation));
     }
 
-    // ✅ Cancella prenotazione per ID
     public void deleteById(Long id) {
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
-        reservationRepository.delete(reservation);
+        if (!reservationRepository.existsById(id)) {
+            throw new ReservationNotFoundException("ID", id.toString());
+        }
+        reservationRepository.deleteById(id);
     }
 
-    // ✅ Cancella prenotazione per telefono + data
     public void deleteReservationByPhoneAndDate(String phone, String dateString) {
-        LocalDate date;
-        try {
-            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
-        }
-        Reservation reservation = reservationRepository
-                .findByUser_PhoneAndDate(phone, date)
-                .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
-        reservationRepository.delete(reservation);
-    }
-    public void deleteReservation(String phone, String dateString) {
-        LocalDate date = LocalDate.parse(dateString);
+        LocalDate date = parseDate(dateString);
         Reservation reservation = reservationRepository
                 .findByUser_PhoneAndDate(phone, date)
                 .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
         reservationRepository.delete(reservation);
     }
 
-    // ✅ Cerca prenotazione per telefono + data
     public ReservationResponse getReservation(String phone, String dateString) {
-        LocalDate date;
-        try {
-            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
-        }
+        LocalDate date = parseDate(dateString);
         Reservation reservation = reservationRepository
                 .findByUser_PhoneAndDate(phone, date)
                 .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
         return toResponse(reservation);
     }
 
-    // ✅ Trova tutte le prenotazioni per numero
     public List<ReservationResponse> getReservationsByPhone(String phone) {
         return reservationRepository.findAllByUser_Phone(phone).stream()
                 .map(this::toResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    // ✅ Trova tutte le prenotazioni per una data specifica
     public List<ReservationResponse> getReservationsByDate(String dateString) {
-        LocalDate date;
-        try {
-            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
-        }
+        LocalDate date = parseDate(dateString);
         return reservationRepository.findAllByDate(date).stream()
                 .map(this::toResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    // ✅ Orari disponibili per una data
     public List<String> getAvailableTimes(String dateString) {
-        LocalDate date;
-        try {
-            date = LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
-        }
+        LocalDate date = parseDate(dateString);
         LocalDate today = LocalDate.now();
 
         if (date.isBefore(today)) {
-            return List.of(); // nessuna prenotazione per date passate
+            return List.of();
         }
 
-        List<Reservation> reservations = reservationRepository.findAllByDate(date);
-
-        // Orari prenotati
-        Map<String, Long> countMap = reservations.stream()
+        Map<String, Long> countMap = reservationRepository.findAllByDate(date).stream()
                 .collect(Collectors.groupingBy(
                         r -> r.getTime().toString(),
                         Collectors.counting()
@@ -167,14 +129,12 @@ public class ReservationService {
         while (!start.isAfter(end)) {
             String timeStr = start.toString();
 
-            // ⚠️ Se la data è oggi, salta orari già passati
             if (date.equals(today) && start.isBefore(now)) {
                 start = start.plusMinutes(30);
                 continue;
             }
 
-            long count = countMap.getOrDefault(timeStr, 0L);
-            if (count < 12) {
+            if (countMap.getOrDefault(timeStr, 0L) < 12) {
                 available.add(timeStr);
             }
             start = start.plusMinutes(30);
@@ -183,26 +143,29 @@ public class ReservationService {
         return available;
     }
 
-
-    // ✅ Solo prenotazioni future per un numero
     public List<ReservationResponse> getFutureReservationsByPhone(String phone) {
-        LocalDate today = LocalDate.now();
-        return reservationRepository.findAllByUser_Phone(phone).stream()
-                .filter(r -> !r.getDate().isBefore(today))
+        return reservationRepository.findByUser_PhoneAndDate(phone, LocalDate.now()).stream()
                 .map(this::toResponse)
-                .toList();
+                .collect(Collectors.toList());
     }
 
-    // ✅ Mapping da entity a response
-    private ReservationResponse toResponse(Reservation r) {
-        ReservationResponse resp = new ReservationResponse();
-        resp.setId(r.getId());
-        resp.setName(r.getUser().getName());
-        resp.setPhone(r.getUser().getPhone());
-        resp.setDate(r.getDate().toString());
-        resp.setTime(r.getTime().toString());
-        resp.setPeople(r.getPeople());
-        resp.setNote(r.getNote());
-        return resp;
+    private LocalDate parseDate(String dateString) {
+        try {
+            return LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
+        }
+    }
+
+    public ReservationResponse toResponse(Reservation reservation) {
+        ReservationResponse response = new ReservationResponse();
+        response.setId(reservation.getId());
+        response.setName(reservation.getUser().getName());
+        response.setPhone(reservation.getUser().getPhone());
+        response.setDate(reservation.getDate());
+        response.setTime(reservation.getTime());
+        response.setPeople(reservation.getPeople());
+        response.setNote(reservation.getNote());
+        return response;
     }
 }

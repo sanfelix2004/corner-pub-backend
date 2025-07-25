@@ -1,18 +1,22 @@
 package com.corner.pub.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDate;
 import java.util.List;
 
 public class PromotionResponse {
-
     private Long id;
     private String nome;
     private String descrizione;
-    private LocalDate dataInizio;
-    private LocalDate dataFine;
-    private boolean attiva;
 
-    private List<PromotionMenuItemResponse> items;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate dataInizio;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate dataFine;
+
+    private boolean attiva;
+    private List<PromotionItemDetail> items; // Modificato da PromotionMenuItemResponse
 
     public Long getId() {
         return id;
@@ -62,11 +66,11 @@ public class PromotionResponse {
         this.attiva = attiva;
     }
 
-    public List<PromotionMenuItemResponse> getItems() {
+    public List<PromotionItemDetail> getItems() {
         return items;
     }
 
-    public void setItems(List<PromotionMenuItemResponse> items) {
+    public void setItems(List<PromotionItemDetail> items) {
         this.items = items;
     }
 }

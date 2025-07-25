@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta charset="UTF-8" />
     <title>Corner – Back Office</title>
@@ -195,6 +197,28 @@
                 padding: 15px;
             }
         }
+        /* Eventi styles */
+        .event-status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .event-status-available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .event-status-full {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .event-status-unlimited {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
     </style>
 </head>
 <body>
@@ -220,6 +244,10 @@
         </button>
         <button class="btn btn-dark section-btn" onclick="showSection('utenti')">
             <i class="fas fa-users"></i> Utenti
+        </button>
+        <!-- Nella sezione dei pulsanti di navigazione, aggiungi questo nuovo pulsante -->
+        <button class="btn btn-success section-btn" onclick="showSection('eventi')">
+            <i class="fas fa-calendar-check"></i> Eventi
         </button>
     </div>
 
@@ -423,6 +451,96 @@
             </table>
         </div>
     </div>
+
+    <!-- Eventi Section -->
+    <div id="sectionEventi" class="card-section hidden">
+        <h4><i class="fas fa-calendar-check"></i> Gestione Eventi</h4>
+
+        <!-- Add New Event -->
+        <div class="form-card mb-5">
+            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Crea Nuovo Evento</h5>
+            <form id="formAddEvento">
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        <label>Titolo</label>
+                        <input type="text" name="titolo" class="form-control" placeholder="Titolo evento" required />
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Data e Ora</label>
+                        <input type="datetime-local" name="data" class="form-control" required />
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label>Posti Totali (lasciare vuoto per illimitati)</label>
+                        <input type="number" name="postiTotali" class="form-control" placeholder="Numero posti" min="1" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Descrizione</label>
+                        <textarea name="descrizione" class="form-control" placeholder="Descrizione evento" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="form-row mt-3">
+                    <div class="form-group col-md-12">
+                        <button type="submit" class="btn btn-success btn-action">
+                            <i class="fas fa-save"></i> Crea Evento
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Events List -->
+        <div class="mt-4">
+            <h5 class="mb-3"><i class="fas fa-list"></i> Eventi Programmati</h5>
+            <div class="table-responsive">
+                <table class="table custom-table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>Titolo</th>
+                        <th>Descrizione</th>
+                        <th>Data</th>
+                        <th>Posti</th>
+                        <th>Azioni</th>
+                    </tr>
+                    </thead>
+                    <tbody id="eventiTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Iscritti Modal -->
+        <div class="modal fade" id="iscrittiModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Iscritti all'evento</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Telefono</th>
+                                    <th>Email</th>
+                                    <th>Data Iscrizione</th>
+                                </tr>
+                                </thead>
+                                <tbody id="iscrittiModalBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -450,7 +568,7 @@
 
     // Section management
     function showSection(section) {
-        ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti'].forEach(s => {
+        ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti', 'eventi'].forEach(s => {
             document.getElementById('section' + capitalize(s)).classList.add('hidden');
         });
         document.getElementById('section' + capitalize(section)).classList.remove('hidden');
@@ -465,6 +583,8 @@
             loadPromozioni();
         } else if (section === 'utenti') {
             loadUtenti();
+        } else if (section === 'eventi') {
+            loadEventi();
         }
     }
 
@@ -1148,6 +1268,144 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         showSection('prenotazioni');
+    });
+
+    // Eventi functions
+    async function loadEventi() {
+        try {
+            const res = await fetch('/admin/events');
+            const eventi = await res.json();
+            const tbody = document.getElementById('eventiTableBody');
+            tbody.innerHTML = '';
+
+            if (eventi.length === 0) {
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-2x mb-3 text-muted"></i>
+                        <p class="mb-0">Nessun evento programmato</p>
+                    </td>
+                </tr>
+            `;
+                return;
+            }
+
+            eventi.forEach(evento => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td><strong>${escape(evento.titolo)}</strong></td>
+                <td>${escape(evento.descrizione || '-')}</td>
+                <td>${formatDateTime(evento.data)}</td>
+                <td>
+                    ${evento.postiTotali ?
+                    `${evento.postiOccupati}/${evento.postiTotali} (${evento.postiDisponibili} disponibili)` :
+                    'Illimitati'}
+                </td>
+                <td class="text-nowrap">
+                    <button class="btn btn-sm btn-info btn-action" onclick="viewIscritti(${evento.id})">
+                        <i class="fas fa-users"></i> Iscritti
+                    </button>
+                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteEvento(${evento.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error('Error loading events:', error);
+            document.getElementById('eventiTableBody').innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-4 text-danger">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                    <p>Errore durante il caricamento degli eventi</p>
+                </td>
+            </tr>
+        `;
+        }
+    }
+
+    async function viewIscritti(eventId) {
+        try {
+            const res = await fetch(`/admin/events/${eventId}/attendees`);
+            const iscritti = await res.json();
+
+            const modalBody = document.getElementById('iscrittiModalBody');
+            modalBody.innerHTML = '';
+
+            if (iscritti.length === 0) {
+                modalBody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        <i class="fas fa-user-slash fa-2x mb-3 text-muted"></i>
+                        <p class="mb-0">Nessun iscritto a questo evento</p>
+                    </td>
+                </tr>
+            `;
+            } else {
+                iscritti.forEach(iscritto => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                    <td>${escape(iscritto.name || '-')}</td>
+                    <td>${escape(iscritto.phone || '-')}</td>
+                    <td>${escape(iscritto.email || '-')}</td>
+                    <td>${formatDateTime(iscritto.createdAt)}</td>
+                `;
+                    modalBody.appendChild(tr);
+                });
+            }
+
+            $('#iscrittiModal').modal('show');
+        } catch (error) {
+            console.error('Error loading registrations:', error);
+            alert('Errore durante il caricamento degli iscritti');
+        }
+    }
+
+    async function deleteEvento(id) {
+        if (!confirm('Sei sicuro di voler eliminare questo evento?')) return;
+
+        try {
+            const res = await fetch(`/admin/events/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                loadEventi();
+            } else {
+                alert('Errore durante l\'eliminazione dell\'evento');
+            }
+        } catch (error) {
+            console.error('Error deleting event:', error);
+            alert('Errore durante l\'eliminazione dell\'evento');
+        }
+    }
+
+    document.getElementById('formAddEvento').addEventListener('submit', async e => {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            titolo: form.titolo.value,
+            descrizione: form.descrizione.value,
+            data: form.data.value,
+            postiTotali: form.postiTotali.value ? parseInt(form.postiTotali.value) : null
+        };
+
+        try {
+            const res = await fetch('/admin/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('✅ Evento creato con successo!');
+                form.reset();
+                loadEventi();
+            } else {
+                alert('❌ Errore durante la creazione dell\'evento');
+            }
+        } catch (error) {
+            console.error('Error creating event:', error);
+            alert('❌ Errore durante la creazione dell\'evento');
+        }
     });
 </script>
 </body>

@@ -25,13 +25,31 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/api/**", "/js/**", "/css/**", "/img/**", "/login.html").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/api/**",
+                                "/js/**",
+                                "/css/**",
+                                "/img/**",
+                                "/fonts/**",
+                                "/images/**",
+                                "/login.html",
+                                "/index.html",
+                                "/menu/**",      // Add your menu endpoint
+                                "/events/**"       // Add your events endpoint
+                        ).permitAll()
                         .requestMatchers("/admin/**", "/admin.html").authenticated()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated() // Changed from permitAll for better security
                 )
-                .httpBasic(withDefaults())
                 .formLogin(form -> form
+                        .loginPage("/login.html")
+                        .loginProcessingUrl("/login")
                         .defaultSuccessUrl("/admin.html", true)
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("/login.html")
                         .permitAll()
                 );
 
@@ -60,7 +78,8 @@ public class SecurityConfig {
         filter.setIncludeQueryString(true);
         filter.setIncludePayload(true);
         filter.setMaxPayloadLength(10000);
-        filter.setIncludeHeaders(false);
+        filter.setIncludeHeaders(true); // Changed to true to see headers
+        filter.setAfterMessagePrefix("REQUEST DATA: ");
 
         FilterRegistrationBean<CommonsRequestLoggingFilter> registrationBean =
                 new FilterRegistrationBean<>(filter);

@@ -1,5 +1,8 @@
 package com.corner.pub.config;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
@@ -9,10 +12,12 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://cornerpubgiovinazzo.onrender.com")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedOrigins("http://localhost:5501", "http://127.0.0.1:5501")
+                .allowedMethods("*")
                 .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowCredentials(true)
+                .exposedHeaders("Authorization") // Add this if you use JWT
+                .maxAge(3600);
     }
 
     @Override
@@ -34,4 +39,5 @@ public class WebConfig implements WebMvcConfigurer {
                         "classpath:/static/img/",
                         "classpath:/static/fonts/");
     }
+
 }
