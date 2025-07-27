@@ -731,9 +731,11 @@
                             <td>${escape(item.descrizione || '-')}</td>
                             <td>€${item.prezzo.toFixed(2)}</td>
                             <td>
-                                <span class="status-badge ${item.visibile ? 'bg-success' : 'bg-secondary'}">
+                                <button class="status-badge btn btn-sm ${item.visibile ? 'bg-success' : 'bg-secondary'}"
+                                        onclick="toggleVisibility(${item.id})"
+                                        title="Clicca per cambiare stato">
                                     ${item.visibile ? 'Visibile' : 'Nascosto'}
-                                </span>
+                                </button>
                             </td>
                             <td class="text-nowrap">
                                 <button class="btn btn-sm btn-warning btn-action" onclick="makeEditable(${item.id}, '${escape(item.titolo)}', '${escape(item.categoria)}', '${escape(item.descrizione || '')}', ${item.prezzo})">
