@@ -4,7 +4,9 @@ import com.corner.pub.dto.request.EventRequest;
 import com.corner.pub.dto.request.EventRegistrationRequest;
 import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.EventResponse;
+import com.corner.pub.dto.response.UserResponse;
 import com.corner.pub.model.Event;
+import com.corner.pub.model.EventRegistration;
 import com.corner.pub.repository.EventRepository;
 import com.corner.pub.service.EventRegistrationService;
 import jakarta.validation.Valid;
@@ -98,6 +100,11 @@ public class AdminEventController {
     @GetMapping("/{eventId}/attendees")
     public ResponseEntity<List<EventRegistrationResponse>> getAttendees(@PathVariable Long eventId) {
         return ResponseEntity.ok(registrationService.getRegistrationsByEventId(eventId));
+    }
+
+    @GetMapping("/registrations")
+    public ResponseEntity<List<EventRegistrationResponse>> getAllRegistrations() {
+        return ResponseEntity.ok(registrationService.getAllRegistrations());
     }
 
 }

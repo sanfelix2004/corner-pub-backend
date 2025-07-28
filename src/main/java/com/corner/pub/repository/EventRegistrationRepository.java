@@ -3,6 +3,8 @@ package com.corner.pub.repository;
 import com.corner.pub.model.EventRegistration;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -10,7 +12,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     boolean existsByUserIdAndEventId(Long userId, Long eventId);
 
-    long countByEventId(Long eventId); // 👉 questo conta il numero di iscritti all'evento
+    @Query("SELECT COUNT(e) FROM EventRegistration e WHERE e.event.id = :eventId")
+    long countByEventId(@Param("eventId") Long eventId);
 
     @Transactional
     void deleteByEventId(Long eventId);

@@ -2,6 +2,8 @@ package com.corner.pub.service;
 
 import com.corner.pub.dto.request.EventRegistrationRequest;
 import com.corner.pub.dto.response.EventRegistrationResponse;
+import com.corner.pub.dto.response.EventResponse;
+import com.corner.pub.dto.response.UserResponse;
 import com.corner.pub.exception.CornerPubException;
 import com.corner.pub.model.Event;
 import com.corner.pub.model.EventRegistration;
@@ -76,12 +78,44 @@ public class EventRegistrationService {
 
     public List<EventRegistrationResponse> getRegistrationsByEventId(Long eventId) {
         return registrationRepository.findByEventId(eventId).stream()
-                .map(reg -> new EventRegistrationResponse(
-                        reg.getUser().getName(),
-                        reg.getUser().getPhone(),
-                        reg.getCreatedAt() // deve esistere nella entity
-                ))
+                .map(EventRegistrationResponse::new)
                 .collect(Collectors.toList());
     }
+
+
+
+
+    public List<EventRegistrationResponse> getAllRegistrations() {
+        return registrationRepository.findAll().stream()
+                .map(reg -> {
+                    EventResponse eventResponse = null;
+                    if (reg.getEvent() != null) {
+                        eventResponse = new EventResponse(reg.getEvent(),
+                                registrationRepository.countByEventId(reg.getEvent().getId()));
+                    }
+
+                    UserResponse userResponse = null;
+                    if (reg.getUser() != null) {
+                        userResponse = new UserResponse(reg.getUser());
+                    }
+
+                    EventRegistrationResponse resp = new EventRegistrationResponse(
+                            reg.getId(),
+                            reg.getCreatedAt(),
+                            eventResponse,
+                            userResponse
+                    );
+
+                    // valorizza anche i campi name e phone
+                    if (userResponse != null) {
+                        resp.setName(userResponse.getName());
+                        resp.setPhone(userResponse.getPhone());
+                    }
+
+                    return resp;
+                })
+                .collect(Collectors.toList());
+    }
+
 
 }

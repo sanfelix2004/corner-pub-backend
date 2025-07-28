@@ -1,5 +1,6 @@
 package com.corner.pub.service;
 
+import com.corner.pub.dto.request.EventRegistrationRequest;
 import com.corner.pub.dto.request.ReservationRequest;
 import com.corner.pub.dto.response.ReservationResponse;
 import com.corner.pub.exception.badrequest.BadRequestException;
@@ -7,6 +8,7 @@ import com.corner.pub.exception.conflictexception.ReservationAlreadyExistsExcept
 import com.corner.pub.exception.resourcenotfound.ReservationNotFoundException;
 import com.corner.pub.model.Reservation;
 import com.corner.pub.model.User;
+import com.corner.pub.repository.EventRepository;
 import com.corner.pub.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,8 @@ public class ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final UserService userService;
+    private final EventRepository eventRepository;
+    private final EventRegistrationService eventRegistrationService;
 
     public ReservationResponse createReservation(ReservationRequest request) {
         User user = userService.findOrCreate(request.getName(), request.getPhone());
@@ -43,6 +47,32 @@ public class ReservationService {
         reservation.setNote(request.getNote());
 
         return toResponse(reservationRepository.save(reservation));
+    }
+
+    public ReservationResponse createAdminReservation(ReservationRequest request) {
+        if (request.getEventId() != null) {
+            // Crea sia la registrazione all'evento che la prenotazione
+            EventRegistrationRequest eventRegRequest = new EventRegistrationRequest();
+            eventRegRequest.setName(request.getName());
+            eventRegRequest.setPhone(request.getPhone());
+
+            eventRegistrationService.register(request.getEventId(), eventRegRequest);
+
+            // Crea anche la prenotazione associata all'evento
+            User user = userService.findOrCreate(request.getName(), request.getPhone());
+            Reservation reservation = new Reservation();
+            reservation.setUser(user);
+            reservation.setDate(LocalDate.parse(request.getDate()));
+            reservation.setTime(LocalTime.parse(request.getTime()));
+            reservation.setPeople(request.getPeople());
+            reservation.setNote(request.getNote());
+            reservation.setEvent(eventRepository.findById(request.getEventId()).orElse(null));
+
+            return toResponse(reservationRepository.save(reservation));
+        } else {
+            // Prenotazione normale
+            return createReservation(request);
+        }
     }
 
     public List<ReservationResponse> getAllReservations() {
@@ -166,6 +196,22 @@ public class ReservationService {
         response.setTime(reservation.getTime());
         response.setPeople(reservation.getPeople());
         response.setNote(reservation.getNote());
+        response.setEventId(reservation.getEvent() != null ? reservation.getEvent().getId() : null);
+        response.setIsEventRegistration(reservation.getEvent() != null);
         return response;
     }
+
+    public List<ReservationResponse> getReservationsWithEvents(LocalDate date) {
+        return reservationRepository.findAllByDate(date).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ReservationResponse> getTodayReservations() {
+        return reservationRepository.findAllFromToday(LocalDate.now()).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+
 }

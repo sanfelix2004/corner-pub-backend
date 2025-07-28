@@ -28,6 +28,15 @@ public class EventResponse {
 
     }
 
+    public EventResponse(EventResponse event, long iscritti) {
+        this.id = event.getId();
+        this.titolo = event.getTitolo();
+    }
+
+    public EventResponse(Event event) {
+        this.id = event.getId();
+    }
+
     public static EventResponse from(Event event, long iscritti) {
         EventResponse response = new EventResponse();
         response.id = event.getId();

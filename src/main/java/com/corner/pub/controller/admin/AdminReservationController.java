@@ -16,38 +16,32 @@ public class AdminReservationController {
 
     private final ReservationService reservationService;
 
-    // ✅ Leggi tutte le prenotazioni
     @GetMapping
-    public ResponseEntity<List<ReservationResponse>> getAllReservations() {
+    public ResponseEntity<List<ReservationResponse>> getAllTableReservations() {
         return ResponseEntity.ok(reservationService.getAllReservations());
     }
 
-    // ✅ Leggi una prenotazione specifica (opzionale)
     @GetMapping("/{id}")
     public ResponseEntity<ReservationResponse> getReservationById(@PathVariable Long id) {
         return ResponseEntity.ok(reservationService.getReservationById(id));
     }
 
-    // ✅ Crea una nuova prenotazione
     @PostMapping
-    public ResponseEntity<ReservationResponse> createReservation(@RequestBody ReservationRequest request) {
-        return ResponseEntity.ok(reservationService.createReservation(request));
+    public ResponseEntity<ReservationResponse> createTableReservation(@RequestBody ReservationRequest request) {
+        return ResponseEntity.ok(reservationService.createAdminReservation(request));
     }
 
-    // ✅ Modifica una prenotazione esistente
     @PutMapping("/{id}")
     public ResponseEntity<ReservationResponse> updateReservation(@PathVariable Long id, @RequestBody ReservationRequest request) {
         return ResponseEntity.ok(reservationService.updateReservation(id, request));
     }
 
-    // ✅ Cancella una prenotazione (con ID o data+telefono)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
         reservationService.deleteById(id);
         return ResponseEntity.ok().build();
     }
 
-    // ❗ Alternativa: cancella per telefono + data (già esistente)
     @DeleteMapping
     public ResponseEntity<Void> deleteByPhoneAndDate(@RequestParam String phone, @RequestParam String date) {
         reservationService.deleteReservationByPhoneAndDate(phone, date);

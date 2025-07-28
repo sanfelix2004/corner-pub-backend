@@ -24,6 +24,10 @@ public class Reservation {
     private LocalDateTime createdAt;
 
     @ManyToOne
+    @JoinColumn(name = "event_id")
+    private Event event; // Aggiungi questa relazione
+
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -53,4 +57,12 @@ public class Reservation {
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public Event getEvent() {
+        return event;
+    }
+
+    public void setEvent(Event event) {
+        this.event = event;
+    }
 }

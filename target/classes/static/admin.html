@@ -9,6 +9,27 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
+        /* Aggiungi alla sezione style */
+        #eventRegAvailable.text-danger {
+            font-weight: bold;
+            color: #dc3545 !important;
+        }
+
+        #eventRegAvailable.text-success {
+            font-weight: bold;
+            color: #28a745 !important;
+        }
+
+        .event-registration-card {
+            border-left: 4px solid var(--success);
+            margin-bottom: 20px;
+        }
+
+        .event-registration-header {
+            background-color: #f8f9fa;
+            padding: 10px 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
@@ -254,7 +275,119 @@
     <!-- Prenotazioni Section -->
     <div id="sectionPrenotazioni" class="card-section">
         <h4><i class="fas fa-calendar-alt"></i> Gestione Prenotazioni</h4>
-        <div id="reservationsByDateContainer"></div>
+
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="table-tab" data-toggle="tab" href="#tableBookings" role="tab">
+                    <i class="fas fa-utensils"></i> Prenotazioni Tavolo
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="event-tab" data-toggle="tab" href="#eventRegistrations" role="tab">
+                    <i class="fas fa-calendar-check"></i> Registrazioni Eventi
+                </a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- TAB 1: Prenotazioni Tavolo -->
+            <div class="tab-pane fade show active" id="tableBookings" role="tabpanel">
+                <!-- Form nuova prenotazione tavolo -->
+                <div class="form-card mb-4">
+                    <h5><i class="fas fa-plus-circle"></i> Nuova Prenotazione Tavolo</h5>
+                    <form id="formTableBooking">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Nome</label>
+                                <input type="text" id="tableBookingName" class="form-control" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Telefono</label>
+                                <input type="tel" id="tableBookingPhone" class="form-control" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Note</label>
+                                <input type="text" id="tableBookingNote" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Data</label>
+                                <input type="date" id="tableBookingDate" class="form-control" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Ora</label>
+                                <select id="tableBookingTime" class="form-control" required>
+                                    <option value="20:00">20:00</option>
+                                    <option value="20:30">20:30</option>
+                                    <option value="21:00">21:00</option>
+                                    <option value="21:30">21:30</option>
+                                    <option value="22:00">22:00</option>
+                                    <option value="22:30">22:30</option>
+                                    <option value="23:00">23:00</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Numero Persone</label>
+                                <input type="number" id="tableBookingPeople" class="form-control" min="1" value="2" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Salva Prenotazione
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Lista prenotazioni tavolo -->
+                <h5><i class="fas fa-list"></i> Prenotazioni Tavolo</h5>
+                <div id="tableBookingsContainer" class="mt-3"></div>
+            </div>
+
+            <!-- TAB 2: Registrazioni Eventi -->
+            <div class="tab-pane fade" id="eventRegistrations" role="tabpanel">
+                <!-- Form nuova registrazione evento -->
+                <div class="form-card mb-4">
+                    <h5><i class="fas fa-plus-circle"></i> Nuova Registrazione Evento</h5>
+                    <form id="formEventRegistration">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Nome</label>
+                                <input type="text" id="eventRegName" class="form-control" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Telefono</label>
+                                <input type="tel" id="eventRegPhone" class="form-control" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Note</label>
+                                <input type="text" id="eventRegNote" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-8">
+                                <label>Evento</label>
+                                <select id="eventRegEvent" class="form-control" required>
+                                    <option value="">Caricamento eventi...</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Posti Disponibili</label>
+                                <input type="text" id="eventRegAvailable" class="form-control" readonly>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Registra Partecipante
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Lista eventi con iscritti -->
+                <h5><i class="fas fa-list"></i> Eventi e Iscritti</h5>
+                <div id="eventsRegistrationsContainer" class="mt-3"></div>
+            </div>
+        </div>
     </div>
 
     <!-- Menu Section -->
@@ -1409,6 +1542,391 @@
             alert('❌ Errore durante la creazione dell\'evento');
         }
     });
+    // Gestione Tab Prenotazioni
+    document.addEventListener('DOMContentLoaded', function() {
+        // Imposta data di default per prenotazioni tavolo
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('tableBookingDate').value = today;
+        document.getElementById('tableBookingDate').min = today;
+
+        // Carica gli eventi per la registrazione
+        loadEventsForRegistration();
+
+        // Mostra tab prenotazioni all'inizio
+        loadTableBookings();
+
+        // Gestione cambio tab
+        $('#bookingTabs a').on('click', function(e) {
+            e.preventDefault();
+            $(this).tab('show');
+
+            if (this.getAttribute('href') === '#eventRegistrations') {
+                loadEventRegistrations();
+            } else {
+                loadTableBookings();
+            }
+        });
+    });
+
+    // Carica gli eventi per il form di registrazione
+    // Carica gli eventi per il form di registrazione
+    async function loadEventsForRegistration() {
+        try {
+            const res = await fetch('/admin/events');
+            const eventi = await res.json();
+            const select = document.getElementById('eventRegEvent');
+
+            select.innerHTML = eventi.length > 0
+                ? '<option value="">Seleziona Evento</option>'
+                : '<option value="">Nessun evento disponibile</option>';
+
+            eventi.forEach(evento => {
+                // Calcola posti disponibili
+                const postiDisponibili = evento.postiTotali
+                    ? evento.postiTotali - (evento.postiOccupati || 0)
+                    : null;
+
+                const opt = document.createElement('option');
+                opt.value = evento.id;
+                opt.textContent = `${evento.titolo} (${formatDate(evento.data)})`;
+                opt.dataset.available = postiDisponibili !== null ? postiDisponibili : 'Illimitati';
+                select.appendChild(opt);
+            });
+
+            // Aggiorna posti disponibili quando cambia evento
+            select.addEventListener('change', function() {
+                const selected = this.options[this.selectedIndex];
+                const available = selected.dataset.available;
+
+                const availableInput = document.getElementById('eventRegAvailable');
+                availableInput.value = available;
+
+                // Aggiungi classe CSS in base alla disponibilità
+                if (available === '0') {
+                    availableInput.classList.add('text-danger');
+                    availableInput.classList.remove('text-success');
+                } else if (available === 'Illimitati') {
+                    availableInput.classList.remove('text-danger', 'text-success');
+                } else {
+                    availableInput.classList.add('text-success');
+                    availableInput.classList.remove('text-danger');
+                }
+            });
+        } catch (error) {
+            console.error('Error loading events:', error);
+            alert('Errore nel caricamento degli eventi');
+        }
+    }
+
+    // Carica prenotazioni tavolo
+    async function loadTableBookings() {
+        try {
+            const res = await fetch('/admin/reservations?type=table');
+            const bookings = await res.json();
+            const container = document.getElementById('tableBookingsContainer');
+
+            if (bookings.length === 0) {
+                container.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Nessuna prenotazione tavolo trovata
+                </div>
+            `;
+                return;
+            }
+
+            // Raggruppa per data
+            const grouped = {};
+            bookings.forEach(b => {
+                if (!grouped[b.date]) grouped[b.date] = [];
+                grouped[b.date].push(b);
+            });
+
+            // Crea le sezioni per data
+            container.innerHTML = '';
+            Object.keys(grouped).sort().forEach(date => {
+                const section = document.createElement('div');
+                section.classList.add('mb-4');
+
+                const rows = grouped[date].map(b => `
+                <tr>
+                    <td>${b.name}</td>
+                    <td>${b.phone}</td>
+                    <td>${b.time} - ${b.people} pers.</td>
+                    <td>${b.note || '-'}</td>
+                    <td class="text-nowrap">
+                        <button class="btn btn-sm btn-danger" onclick="deleteTableBooking(${b.id})">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+                section.innerHTML = `
+                <h6 class="text-primary">
+                    <i class="fas fa-calendar-day"></i> ${formatDate(date)}
+                </h6>
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefono</th>
+                                <th>Orario</th>
+                                <th>Note</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+                container.appendChild(section);
+            });
+        } catch (error) {
+            console.error('Error loading table bookings:', error);
+            document.getElementById('tableBookingsContainer').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> Errore nel caricamento
+            </div>
+        `;
+        }
+    }
+
+    // Carica registrazioni eventi
+    async function loadEventRegistrations() {
+        try {
+            const res = await fetch('/admin/events/registrations');
+            const registrations = await res.json();
+            const container = document.getElementById('eventsRegistrationsContainer');
+
+            container.innerHTML = '';
+
+            if (registrations.length === 0) {
+                container.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Nessun evento con iscritti
+                </div>
+            `;
+                return;
+            }
+
+            // Group registrations by event
+            const eventsMap = new Map();
+            registrations.forEach(reg => {
+                if (!eventsMap.has(reg.event.id)) {
+                    eventsMap.set(reg.event.id, {
+                        event: reg.event,
+                        attendees: []
+                    });
+                }
+                eventsMap.get(reg.event.id).attendees.push(reg);
+            });
+
+            // Create cards for each event with its attendees
+            eventsMap.forEach((eventData, eventId) => {
+                const eventCard = document.createElement('div');
+                eventCard.className = 'card event-registration-card mb-4';
+
+                // Event header
+                const header = document.createElement('div');
+                header.className = 'event-registration-header';
+                header.innerHTML = `
+                <div class="d-flex justify-content-between">
+                    <h5>${escape(eventData.event.titolo)}</h5>
+                    <span class="badge ${eventData.event.postiDisponibili === 0 ? 'bg-danger' : 'bg-success'}">
+                        ${eventData.event.postiTotali
+                    ? `${eventData.attendees.length}/${eventData.event.postiTotali} iscritti`
+                    : `${eventData.attendees.length} iscritti`}
+                    </span>
+                </div>
+                <div class="text-muted small">
+                    ${formatDateTime(eventData.event.data)} |
+                    ${eventData.event.postiDisponibili !== null
+                    ? `${eventData.event.postiDisponibili} posti disponibili`
+                    : 'Posti illimitati'}
+                </div>
+            `;
+
+                // Attendees table
+                const tableDiv = document.createElement('div');
+                tableDiv.className = 'table-responsive';
+
+                if (eventData.attendees.length === 0) {
+                    tableDiv.innerHTML = `
+                    <div class="alert alert-warning m-3">
+                        Nessun iscritto a questo evento
+                    </div>
+                `;
+                } else {
+                    const rows = eventData.attendees.map(attendee => `
+                    <tr>
+                        <td>${escape(attendee.user.name)}</td>
+                        <td>${escape(attendee.user.phone)}</td>
+                        <td>${formatDateTime(attendee.createdAt)}</td>
+                        <td>${escape(attendee.note || '-')}</td>
+                        <td class="text-nowrap">
+                            <button class="btn btn-sm btn-danger"
+                                    onclick="unregisterFromEvent(${eventId}, ${attendee.user.id})">
+                                <i class="fas fa-user-times"></i> Rimuovi
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                    tableDiv.innerHTML = `
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefono</th>
+                                <th>Data Registrazione</th>
+                                <th>Note</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+                }
+
+                eventCard.appendChild(header);
+                eventCard.appendChild(tableDiv);
+                container.appendChild(eventCard);
+            });
+        } catch (error) {
+            console.error('Error loading event registrations:', error);
+            document.getElementById('eventsRegistrationsContainer').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i> Errore nel caricamento delle registrazioni
+            </div>
+        `;
+        }
+    }
+
+    // Gestione form prenotazione tavolo
+    document.getElementById('formTableBooking').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const payload = {
+            name: document.getElementById('tableBookingName').value,
+            phone: document.getElementById('tableBookingPhone').value,
+            note: document.getElementById('tableBookingNote').value || null,
+            date: document.getElementById('tableBookingDate').value,
+            time: document.getElementById('tableBookingTime').value,
+            people: parseInt(document.getElementById('tableBookingPeople').value)
+        };
+
+        try {
+            const res = await fetch('/admin/reservations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('Prenotazione salvata!');
+                this.reset();
+                document.getElementById('tableBookingDate').value = new Date().toISOString().split('T')[0];
+                loadTableBookings();
+            } else {
+                const error = await res.json();
+                alert(error.message || 'Errore durante il salvataggio');
+            }
+        } catch (error) {
+            console.error('Error saving table booking:', error);
+            alert('Errore durante il salvataggio');
+        }
+    });
+
+    // Gestione form registrazione evento
+    document.getElementById('formEventRegistration').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const eventId = document.getElementById('eventRegEvent').value;
+        if (!eventId) {
+            alert('Seleziona un evento');
+            return;
+        }
+
+        const payload = {
+            name: document.getElementById('eventRegName').value,
+            phone: document.getElementById('eventRegPhone').value,
+            note: document.getElementById('eventRegNote').value || null
+        };
+
+        try {
+            const res = await fetch(`/admin/events/${eventId}/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('Registrazione salvata!');
+                this.reset();
+                loadEventRegistrations();
+                loadEventsForRegistration(); // Ricarica disponibilità posti
+            } else {
+                const error = await res.json();
+                alert(error.message || 'Errore durante il salvataggio');
+            }
+        } catch (error) {
+            console.error('Error saving event registration:', error);
+            alert('Errore durante il salvataggio');
+        }
+    });
+
+    // Elimina prenotazione tavolo
+    async function deleteTableBooking(id) {
+        if (!confirm('Eliminare questa prenotazione?')) return;
+
+        try {
+            await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
+            loadTableBookings();
+        } catch (error) {
+            console.error('Error deleting booking:', error);
+            alert('Errore durante l\'eliminazione');
+        }
+    }
+
+    // Disiscrivi da evento
+    async function unregisterFromEvent(eventId, userId) {
+        if (!confirm('Rimuovere questo partecipante?')) return;
+
+        try {
+            await fetch(`/admin/events/${eventId}/unregister/${userId}`, { method: 'DELETE' });
+            loadEventRegistrations();
+            loadEventsForRegistration(); // Ricarica disponibilità posti
+        } catch (error) {
+            console.error('Error unregistering:', error);
+            alert('Errore durante la rimozione');
+        }
+    }
+
+    // Mostra la tab selezionata
+    $('#bookingTabs a').on('click', function(e) {
+        e.preventDefault();
+        $(this).tab('show');
+
+        if (this.getAttribute('href') === '#eventRegistrations') {
+            loadEventRegistrations();
+        } else {
+            loadTableBookings();
+        }
+    });
+    async function unregisterFromEvent(eventId, userId) {
+        if (!confirm('Rimuovere questo partecipante?')) return;
+
+        try {
+            await fetch(`/admin/events/${eventId}/unregister/${userId}`, {
+                method: 'DELETE'
+            });
+            loadEventRegistrations();
+        } catch (error) {
+            console.error('Error unregistering:', error);
+            alert('Errore durante la rimozione');
+        }
+    }
 </script>
 </body>
 </html>

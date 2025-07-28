@@ -12,7 +12,17 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5501", "https://cornerpubgiovinazzo.onrender.com")
+                .allowedOrigins(
+                        "http://localhost:5501",    // Live Server default
+                        "http://127.0.0.1:5501",     // Alternative Live Server
+                        "http://localhost:3000",     // React default
+                        "http://127.0.0.1:3000",     // React alternative
+                        "http://localhost:8080",     // Backend/alternative FE
+                        "http://127.0.0.1:8080",    // Backend alternative
+                        "http://localhost:8081",     // Altri server FE
+                        "http://127.0.0.1:8081",      // Altri server FE
+                        "https://cornerpubgiovinazzo.onrender.com"
+                )
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true)

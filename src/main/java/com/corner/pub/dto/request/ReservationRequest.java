@@ -7,6 +7,7 @@ public class ReservationRequest {
     private String time;   // formato: "19:30"
     private int people;
     private String note;
+    private Long eventId; // null per prenotazione normale
 
     // Getters & Setters
     public String getName() { return name; }
@@ -26,4 +27,12 @@ public class ReservationRequest {
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+
+    public Long getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(Long eventId) {
+        this.eventId = eventId;
+    }
 }

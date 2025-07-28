@@ -11,6 +11,8 @@ public class ReservationResponse {
     private LocalTime time;
     private int people;
     private String note;
+    private Long eventId; // Aggiungi questo campo
+    private Boolean isEventRegistration; // Aggiungi questo campo
 
     public Long getId() {
         return id;
@@ -66,5 +68,20 @@ public class ReservationResponse {
 
     public void setNote(String note) {
         this.note = note;
+    }
+    public Long getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(Long eventId) {
+        this.eventId = eventId;
+    }
+
+    public Boolean getIsEventRegistration() {
+        return isEventRegistration;
+    }
+
+    public void setIsEventRegistration(Boolean eventRegistration) {
+        isEventRegistration = eventRegistration;
     }
 }
