@@ -3,7 +3,9 @@ package com.corner.pub.controller;
 import com.corner.pub.dto.request.EventRegistrationRequest;
 import com.corner.pub.dto.response.EventResponse;
 import com.corner.pub.model.Event;
+import com.corner.pub.model.EventRegistration;
 import com.corner.pub.repository.EventRepository;
+import com.corner.pub.repository.EventRegistrationRepository;
 import com.corner.pub.service.EventRegistrationService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -20,13 +22,15 @@ public class EventController {
 
     private final EventRepository eventRepository;
     private final EventRegistrationService registrationService;
+    private final EventRegistrationRepository registrationRepository;
 
     public EventController(EventRepository eventRepository,
-                           EventRegistrationService registrationService) {
+                           EventRegistrationService registrationService,
+                           EventRegistrationRepository registrationRepository) {
         this.eventRepository = eventRepository;
         this.registrationService = registrationService;
+        this.registrationRepository = registrationRepository;
     }
-
     @GetMapping
     public ResponseEntity<List<EventResponse>> getEvents(
             @RequestParam(required = false)
@@ -34,19 +38,17 @@ public class EventController {
 
         List<Event> events;
         if (date != null) {
-            // Filtra per eventi nella data specificata
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
             events = eventRepository.findByDataBetween(startOfDay, endOfDay);
         } else {
-            // Mostra solo eventi futuri
             events = eventRepository.findByDataAfterOrderByDataAsc(LocalDateTime.now());
         }
 
         List<EventResponse> response = events.stream()
                 .map(event -> {
-                    long attendees = registrationService.countByEventId(event.getId());
-                    return new EventResponse(event, attendees);
+                    long totalePartecipanti = registrationService.getTotalePartecipantiByEventId(event.getId());
+                    return new EventResponse(event, totalePartecipanti);
                 })
                 .collect(Collectors.toList());
 
@@ -57,18 +59,10 @@ public class EventController {
     public ResponseEntity<EventResponse> getEventById(@PathVariable Long eventId) {
         return eventRepository.findById(eventId)
                 .map(event -> {
-                    long attendees = registrationService.countByEventId(eventId);
-                    return ResponseEntity.ok(new EventResponse(event, attendees));
+                    long totalePartecipanti = registrationService.getTotalePartecipantiByEventId(eventId);
+                    return ResponseEntity.ok(new EventResponse(event, totalePartecipanti));
                 })
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    @PostMapping("/{eventId}/register")
-    public ResponseEntity<Void> registerToEvent(
-            @PathVariable Long eventId,
-            @RequestBody EventRegistrationRequest request) {
-        registrationService.register(eventId, request);
-        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/upcoming")
@@ -79,11 +73,12 @@ public class EventController {
 
         List<EventResponse> response = events.stream()
                 .map(event -> {
-                    long attendees = registrationService.countByEventId(event.getId());
-                    return new EventResponse(event, attendees);
+                    long totalePartecipanti = registrationService.getTotalePartecipantiByEventId(event.getId());
+                    return new EventResponse(event, totalePartecipanti);
                 })
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
     }
+
 }

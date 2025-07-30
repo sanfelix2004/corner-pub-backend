@@ -361,6 +361,10 @@
                                 <input type="tel" id="eventRegPhone" class="form-control" required>
                             </div>
                             <div class="form-group col-md-4">
+                                <label>Numero Persone</label>
+                                <input type="number" id="eventRegPeople" class="form-control" min="1" value="1" required>
+                            </div>
+                            <div class="form-group col-md-4">
                                 <label>Note</label>
                                 <input type="text" id="eventRegNote" class="form-control">
                             </div>
@@ -659,10 +663,12 @@
                                 <tr>
                                     <th>Nome</th>
                                     <th>Telefono</th>
-                                    <th>Email</th>
                                     <th>Data Iscrizione</th>
+                                    <th>Persone</th>
+                                    <th>Note</th> <!-- AGGIUNTO -->
                                 </tr>
                                 </thead>
+
                                 <tbody id="iscrittiModalBody"></tbody>
                             </table>
                         </div>
@@ -1471,10 +1477,11 @@
             if (iscritti.length === 0) {
                 modalBody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="text-center py-4">
+                    <td colspan="5" class="text-center py-4">
                         <i class="fas fa-user-slash fa-2x mb-3 text-muted"></i>
                         <p class="mb-0">Nessun iscritto a questo evento</p>
                     </td>
+                </tr>
                 </tr>
             `;
             } else {
@@ -1483,8 +1490,9 @@
                     tr.innerHTML = `
                     <td>${escape(iscritto.name || '-')}</td>
                     <td>${escape(iscritto.phone || '-')}</td>
-                    <td>${escape(iscritto.email || '-')}</td>
                     <td>${formatDateTime(iscritto.createdAt)}</td>
+                    <td>${iscritto.partecipanti || 1}</td>
+                    <td>${escape(iscritto.note || '-')}</td>
                 `;
                     modalBody.appendChild(tr);
                 });
@@ -1496,6 +1504,7 @@
             alert('Errore durante il caricamento degli iscritti');
         }
     }
+
 
     async function deleteEvento(id) {
         if (!confirm('Sei sicuro di voler eliminare questo evento?')) return;
@@ -1651,7 +1660,8 @@
                 <tr>
                     <td>${b.name}</td>
                     <td>${b.phone}</td>
-                    <td>${b.time} - ${b.people} pers.</td>
+                    <td>${b.time}</td>
+                    <td>${b.people}</td>
                     <td>${b.note || '-'}</td>
                     <td class="text-nowrap">
                         <button class="btn btn-sm btn-danger" onclick="deleteTableBooking(${b.id})">
@@ -1661,17 +1671,19 @@
                 </tr>
             `).join('');
 
+
                 section.innerHTML = `
                 <h6 class="text-primary">
                     <i class="fas fa-calendar-day"></i> ${formatDate(date)}
                 </h6>
                 <div class="table-responsive">
                     <table class="table custom-table">
-                        <thead>
+                       <thead>
                             <tr>
                                 <th>Nome</th>
                                 <th>Telefono</th>
                                 <th>Orario</th>
+                                <th>Persone</th>
                                 <th>Note</th>
                                 <th>Azioni</th>
                             </tr>
@@ -1723,29 +1735,33 @@
             });
 
             // Create cards for each event with its attendees
+            // Create cards for each event with its attendees
             eventsMap.forEach((eventData, eventId) => {
                 const eventCard = document.createElement('div');
                 eventCard.className = 'card event-registration-card mb-4';
+
+                // Calcola i partecipanti totali
+                const totaleIscritti = eventData.attendees.reduce((sum, a) => sum + (a.partecipanti || 1), 0);
 
                 // Event header
                 const header = document.createElement('div');
                 header.className = 'event-registration-header';
                 header.innerHTML = `
-                <div class="d-flex justify-content-between">
-                    <h5>${escape(eventData.event.titolo)}</h5>
-                    <span class="badge ${eventData.event.postiDisponibili === 0 ? 'bg-danger' : 'bg-success'}">
-                        ${eventData.event.postiTotali
-                    ? `${eventData.attendees.length}/${eventData.event.postiTotali} iscritti`
-                    : `${eventData.attendees.length} iscritti`}
-                    </span>
-                </div>
-                <div class="text-muted small">
-                    ${formatDateTime(eventData.event.data)} |
-                    ${eventData.event.postiDisponibili !== null
-                    ? `${eventData.event.postiDisponibili} posti disponibili`
+        <div class="d-flex justify-content-between">
+            <h5>${escape(eventData.event.titolo)}</h5>
+            <span class="badge ${eventData.event.postiTotali && totaleIscritti >= eventData.event.postiTotali ? 'bg-danger' : 'bg-success'}">
+                ${eventData.event.postiTotali
+                    ? `${totaleIscritti}/${eventData.event.postiTotali} iscritti`
+                    : `${totaleIscritti} iscritti`}
+            </span>
+        </div>
+        <div class="text-muted small">
+            ${formatDateTime(eventData.event.data)} |
+            ${eventData.event.postiTotali !== null
+                    ? `${eventData.event.postiTotali - totaleIscritti} posti disponibili`
                     : 'Posti illimitati'}
-                </div>
-            `;
+        </div>
+    `;
 
                 // Attendees table
                 const tableDiv = document.createElement('div');
@@ -1753,46 +1769,49 @@
 
                 if (eventData.attendees.length === 0) {
                     tableDiv.innerHTML = `
-                    <div class="alert alert-warning m-3">
-                        Nessun iscritto a questo evento
-                    </div>
-                `;
+            <div class="alert alert-warning m-3">
+                Nessun iscritto a questo evento
+            </div>
+        `;
                 } else {
                     const rows = eventData.attendees.map(attendee => `
-                    <tr>
-                        <td>${escape(attendee.user.name)}</td>
-                        <td>${escape(attendee.user.phone)}</td>
-                        <td>${formatDateTime(attendee.createdAt)}</td>
-                        <td>${escape(attendee.note || '-')}</td>
-                        <td class="text-nowrap">
-                            <button class="btn btn-sm btn-danger"
-                                    onclick="unregisterFromEvent(${eventId}, ${attendee.user.id})">
-                                <i class="fas fa-user-times"></i> Rimuovi
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
+            <tr>
+                <td>${escape(attendee.user.name)}</td>
+                <td>${escape(attendee.user.phone)}</td>
+                <td>${formatDateTime(attendee.createdAt)}</td>
+                <td>${attendee.partecipanti || 1}</td>
+                <td>${escape(attendee.note || '-')}</td>
+                <td class="text-nowrap">
+                    <button class="btn btn-sm btn-danger"
+                            onclick="unregisterFromEvent(${eventId}, ${attendee.user.id})">
+                        <i class="fas fa-user-times"></i> Rimuovi
+                    </button>
+                </td>
+            </tr>
+        `).join('');
 
                     tableDiv.innerHTML = `
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Telefono</th>
-                                <th>Data Registrazione</th>
-                                <th>Note</th>
-                                <th>Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                `;
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefono</th>
+                        <th>Data Registrazione</th>
+                        <th>Persone</th>
+                        <th>Note</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
                 }
 
                 eventCard.appendChild(header);
                 eventCard.appendChild(tableDiv);
                 container.appendChild(eventCard);
             });
+
         } catch (error) {
             console.error('Error loading event registrations:', error);
             document.getElementById('eventsRegistrationsContainer').innerHTML = `
@@ -1851,8 +1870,10 @@
         const payload = {
             name: document.getElementById('eventRegName').value,
             phone: document.getElementById('eventRegPhone').value,
-            note: document.getElementById('eventRegNote').value || null
+            note: document.getElementById('eventRegNote').value || null,
+            partecipanti: parseInt(document.getElementById('eventRegPeople').value)
         };
+
 
         try {
             const res = await fetch(`/admin/events/${eventId}/register`, {
@@ -1878,6 +1899,7 @@
 
     // Elimina prenotazione tavolo
     async function deleteTableBooking(id) {
+        console.log("ID prenotazione da eliminare:", id); // <-- DEBUG
         if (!confirm('Eliminare questa prenotazione?')) return;
 
         try {

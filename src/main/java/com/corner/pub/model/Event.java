@@ -3,6 +3,7 @@ package com.corner.pub.model;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "event")
@@ -23,6 +24,9 @@ public class Event {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventRegistration> registrations;
 
     public Long getId() {
         return id;
@@ -70,5 +74,13 @@ public class Event {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public List<EventRegistration> getRegistrations() {
+        return registrations;
+    }
+
+    public void setRegistrations(List<EventRegistration> registrations) {
+        this.registrations = registrations;
     }
 }

@@ -34,9 +34,27 @@ public class AdminEventController {
     public ResponseEntity<List<EventResponse>> getAllEvents() {
         List<Event> events = eventRepository.findAllByOrderByDataAsc();
         List<EventResponse> response = events.stream()
-                .map(event -> new EventResponse(event, registrationService.countByEventId(event.getId())))
+                .map(event -> new EventResponse(event,
+                        registrationService.getTotalePartecipantiByEventId(event.getId())))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{eventId}")
+    public ResponseEntity<EventResponse> getEvent(@PathVariable Long eventId) {
+        return eventRepository.findById(eventId)
+                .map(event -> ResponseEntity.ok(
+                        new EventResponse(event,
+                                registrationService.getTotalePartecipantiByEventId(eventId))))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
+    @DeleteMapping("/{eventId}/unregister/{userId}")
+    public ResponseEntity<Void> unregisterFromEvent(@PathVariable Long eventId,
+                                                    @PathVariable Long userId) {
+        registrationService.unregister(eventId, userId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping
@@ -50,14 +68,6 @@ public class AdminEventController {
         Event savedEvent = eventRepository.save(event);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new EventResponse(savedEvent, 0));
-    }
-
-    @GetMapping("/{eventId}")
-    public ResponseEntity<EventResponse> getEvent(@PathVariable Long eventId) {
-        return eventRepository.findById(eventId)
-                .map(event -> ResponseEntity.ok(
-                        new EventResponse(event, registrationService.countByEventId(eventId))))
-                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{eventId}")

@@ -23,6 +23,18 @@ public class EventRegistration {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private int partecipanti;
+
+    @Column
+    private String note;
+
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
+
+    public int getPartecipanti() { return partecipanti; }
+    public void setPartecipanti(int partecipanti) { this.partecipanti = partecipanti; }
+
     public Long getId() {
         return id;
     }
