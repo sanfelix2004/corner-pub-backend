@@ -57,32 +57,36 @@ public class MenuItemService {
         item.setPrezzo(request.getPrezzo());
         item.setVisibile(true);
 
-        // ⚠️ Prima salvo per ottenere l'ID
+        // salvo per ottenere l'ID
         MenuItem saved = menuItemRepository.save(item);
 
-        // 📤 Upload immagine con nome = id
-        String imageUrl = null;
+        // upload immagine se presente
         if (image != null && !image.isEmpty()) {
             try {
                 Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
                         ObjectUtils.asMap(
                                 "folder", "prodotti/",
-                                "public_id", String.valueOf(saved.getId()), // o item.getId()
+                                "public_id", String.valueOf(saved.getId()),
                                 "overwrite", true,
-                                "invalidate", true,  // 🔁 forza aggiornamento cache
+                                "invalidate", true,
                                 "resource_type", "image"
                         ));
-
-                imageUrl = (String) uploadResult.get("secure_url");
+                System.out.println("Upload result: " + uploadResult);
+                String imageUrl = (String) uploadResult.get("secure_url");
+                saved.setImageUrl(imageUrl);
+                saved = menuItemRepository.save(saved); // aggiorno con url
+                System.out.println("Upload result: " + uploadResult);
             } catch (Exception e) {
                 throw new RuntimeException("Errore durante il caricamento immagine su Cloudinary", e);
             }
         }
 
-        return mapToResponse(saved, imageUrl);
+        return mapToResponse(saved);
     }
 
-
+    /**
+     * Restituisce un piatto per ID.
+     */
     public MenuItemResponse getMenuItemById(Long id) {
         MenuItem item = menuItemRepository.findById(id)
                 .orElseThrow(() -> new MenuItemNotFoundException(id));
@@ -90,7 +94,7 @@ public class MenuItemService {
     }
 
     /**
-     * Modifica un piatto esistente, ricarica immagine se presente.
+     * Modifica un piatto esistente e aggiorna immagine se presente.
      */
     public MenuItemResponse updateMenuItem(Long id, MenuItemRequest request, MultipartFile image) {
         MenuItem item = menuItemRepository.findById(id)
@@ -101,7 +105,7 @@ public class MenuItemService {
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
 
-        String imageUrl = null;
+        // upload nuova immagine se presente
         if (image != null && !image.isEmpty()) {
             try {
                 Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
@@ -109,16 +113,21 @@ public class MenuItemService {
                                 "folder", "prodotti/",
                                 "public_id", String.valueOf(item.getId()),
                                 "overwrite", true,
+                                "invalidate", true,
                                 "resource_type", "image"
                         ));
-                imageUrl = (String) uploadResult.get("secure_url");
+
+                System.out.println("Upload result: " + uploadResult);
+                String imageUrl = (String) uploadResult.get("secure_url");
+                item.setImageUrl(imageUrl);
+                System.out.println("Upload result: " + uploadResult);
             } catch (Exception e) {
                 throw new RuntimeException("Errore nel caricamento immagine Cloudinary", e);
             }
         }
 
         MenuItem updated = menuItemRepository.save(item);
-        return mapToResponse(updated, imageUrl);
+        return mapToResponse(updated);
     }
 
     /**
@@ -143,23 +152,9 @@ public class MenuItemService {
     }
 
     /**
-     * Mappa MenuItem → Response con immagine ricostruita
+     * Mappa MenuItem → Response
      */
     private MenuItemResponse mapToResponse(MenuItem item) {
-        String generatedUrl = cloudinary.url()
-                .secure(true)
-                .version(System.currentTimeMillis() / 1000) // 🔁 versione dinamica
-                .generate("prodotti/" + item.getId());
-        return mapToResponse(item, generatedUrl);
-    }
-
-
-
-
-    /**
-     * Mappa MenuItem → Response con immagine personalizzata
-     */
-    private MenuItemResponse mapToResponse(MenuItem item, String imageUrl) {
         MenuItemResponse response = new MenuItemResponse();
         response.setId(item.getId());
         response.setCategoria(item.getCategoria());
@@ -167,7 +162,7 @@ public class MenuItemService {
         response.setDescrizione(item.getDescrizione());
         response.setPrezzo(item.getPrezzo());
         response.setVisibile(item.isVisibile());
-        response.setImageUrl(imageUrl);
+        response.setImageUrl(item.getImageUrl()); // sempre preso dal DB
         return response;
     }
 
@@ -183,12 +178,13 @@ public class MenuItemService {
                 .replace(" ", "_");
     }
 
+    /**
+     * Restituisce solo i piatti visibili.
+     */
     public List<MenuItemResponse> getVisibleMenuItems() {
         return menuItemRepository.findAll().stream()
                 .filter(MenuItem::isVisibile)
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
-
-
 }

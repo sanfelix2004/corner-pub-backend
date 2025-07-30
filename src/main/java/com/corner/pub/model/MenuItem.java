@@ -20,7 +20,17 @@ public class MenuItem {
     @Column(nullable = false)
     private boolean visibile = true; // default true
 
+    @Column(name = "image_url")
+    private String imageUrl;
     // Getters & Setters
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
