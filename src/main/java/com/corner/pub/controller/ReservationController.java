@@ -1,8 +1,11 @@
 package com.corner.pub.controller;
 
+import com.corner.pub.controller.admin.AdminEventController;
 import com.corner.pub.dto.request.ReservationRequest;
+import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.ReservationResponse;
 import com.corner.pub.service.EmailService;
+import com.corner.pub.service.EventRegistrationService;
 import com.corner.pub.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,11 +19,13 @@ import java.util.Map;
 @RequestMapping("/api/reservations")
 public class ReservationController {
 
+    private final EventRegistrationService eventRegistrationService;
     private final ReservationService reservationService;
     private final EmailService emailService;
 
     @Autowired
-    public ReservationController(ReservationService reservationService, EmailService emailService) {
+    public ReservationController(EventRegistrationService eventRegistrationService, ReservationService reservationService, EmailService emailService) {
+        this.eventRegistrationService = eventRegistrationService;
         this.reservationService = reservationService;
         this.emailService = emailService;
     }
@@ -77,4 +82,16 @@ public class ReservationController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/events")
+    public ResponseEntity<?> getEventRegistrations() {
+        return ResponseEntity.ok(eventRegistrationService.getAllRegistrations());
+    }
+
+    @GetMapping("/user/{phone}")
+    public ResponseEntity<List<ReservationResponse>> getUserReservations(@PathVariable String phone) {
+        return ResponseEntity.ok(reservationService.getAllUserReservations(phone));
+    }
+
+
 }

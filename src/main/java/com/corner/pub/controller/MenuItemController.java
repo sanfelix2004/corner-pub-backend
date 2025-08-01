@@ -16,7 +16,6 @@ public class MenuItemController {
 
     @Autowired
     public MenuItemController(MenuItemService menuItemService) {
-        System.out.println("🔥 RICHIESTA MENU RICEVUTA");
         this.menuItemService = menuItemService;
     }
 
@@ -26,7 +25,6 @@ public class MenuItemController {
      */
     @GetMapping
     public ResponseEntity<List<MenuItemResponse>> getVisibleMenuItems() {
-        System.out.println("🔥 RICHIESTA MENU RICEVUTA");
         return ResponseEntity.ok(menuItemService.getVisibleMenuItems());
     }
 
@@ -36,7 +34,6 @@ public class MenuItemController {
      */
     @GetMapping("/all")
     public ResponseEntity<List<MenuItemResponse>> getAll() {
-        System.out.println("🔥 RICHIESTA MENU RICEVUTA");
         return ResponseEntity.ok(menuItemService.getAllMenuItems());
     }
 
@@ -45,7 +42,6 @@ public class MenuItemController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<MenuItemResponse> getById(@PathVariable Long id) {
-        System.out.println("🔥 RICHIESTA MENU RICEVUTA");
         return ResponseEntity.ok(menuItemService.getMenuItemById(id));
     }
 }

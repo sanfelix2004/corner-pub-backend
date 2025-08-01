@@ -1,7 +1,9 @@
 package com.corner.pub.controller;
 
 import com.corner.pub.dto.request.EventRegistrationRequest;
+import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.EventResponse;
+import com.corner.pub.exception.CornerPubException;
 import com.corner.pub.model.Event;
 import com.corner.pub.model.EventRegistration;
 import com.corner.pub.repository.EventRepository;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -55,6 +58,27 @@ public class EventController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/{eventId}/register")
+    public ResponseEntity<?> registerForEvent(
+            @PathVariable Long eventId,
+            @RequestBody EventRegistrationRequest request) { // <-- INGRESSO
+
+        try {
+            EventRegistration registration = registrationService.register(eventId, request);
+
+            EventRegistrationResponse response = new EventRegistrationResponse(registration);
+
+            return ResponseEntity.ok(response); // <-- USCITA
+
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Errore imprevisto"));
+        }
+    }
+
     @GetMapping("/{eventId}")
     public ResponseEntity<EventResponse> getEventById(@PathVariable Long eventId) {
         return eventRepository.findById(eventId)
@@ -80,5 +104,21 @@ public class EventController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{eventId}/unregister/{phone}")
+    public ResponseEntity<?> unregisterFromEvent(
+            @PathVariable Long eventId,
+            @PathVariable String phone) {
+        try {
+            registrationService.unregisterByPhone(eventId, phone);
+            return ResponseEntity.ok(Map.of("message", "Registrazione annullata con successo"));
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "Errore durante l'annullamento della registrazione"));
+        }
+    }
+
 
 }

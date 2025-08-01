@@ -13,6 +13,23 @@ public class ReservationResponse {
     private String note;
     private Long eventId; // Aggiungi questo campo
     private Boolean isEventRegistration; // Aggiungi questo campo
+    private EventResponse event;
+
+    public Boolean getEventRegistration() {
+        return isEventRegistration;
+    }
+
+    public void setEventRegistration(Boolean eventRegistration) {
+        isEventRegistration = eventRegistration;
+    }
+
+    public EventResponse getEvent() {
+        return event;
+    }
+
+    public void setEvent(EventResponse event) {
+        this.event = event;
+    }
 
     public Long getId() {
         return id;

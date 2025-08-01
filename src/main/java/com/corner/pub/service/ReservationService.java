@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -213,5 +214,41 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    public List<ReservationResponse> getAllUserReservations(String phone) {
+        // Prenotazioni normali
+        List<ReservationResponse> reservations = reservationRepository
+                .findAllByUser_Phone(phone)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+
+        // Prenotazioni derivate da EventRegistration (se non hai Reservation create anche lì)
+        List<ReservationResponse> eventReservations = eventRegistrationService
+                .getRegistrationsByPhone(phone)
+                .stream()
+                .map(reg -> {
+                    ReservationResponse resp = new ReservationResponse();
+                    resp.setId(reg.getId());
+                    resp.setName(reg.getName());
+                    resp.setPhone(reg.getPhone());
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+                    LocalDateTime dateTime = LocalDateTime.parse(reg.getEvent().getData(), formatter);
+
+                    resp.setDate(dateTime.toLocalDate());
+                    resp.setTime(dateTime.toLocalTime());
+
+                    resp.setPeople(reg.getPartecipanti());
+                    resp.setNote(reg.getNote());
+                    resp.setIsEventRegistration(true);
+                    resp.setEvent(reg.getEvent());
+                    resp.setEventId(reg.getEvent().getId());
+                    return resp;
+                })
+                .collect(Collectors.toList());
+
+        // Unisco tutto
+        reservations.addAll(eventReservations);
+        return reservations;
+    }
 
 }

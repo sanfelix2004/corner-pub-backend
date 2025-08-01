@@ -20,8 +20,9 @@ public class MenuItem {
     @Column(nullable = false)
     private boolean visibile = true; // default true
 
-    @Column(name = "image_url")
+    @Column(name = "imageurl")
     private String imageUrl;
+
     // Getters & Setters
 
     public String getImageUrl() {
