@@ -4,7 +4,6 @@ import com.corner.pub.controller.admin.AdminEventController;
 import com.corner.pub.dto.request.ReservationRequest;
 import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.ReservationResponse;
-import com.corner.pub.service.EmailService;
 import com.corner.pub.service.EventRegistrationService;
 import com.corner.pub.service.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +20,11 @@ public class ReservationController {
 
     private final EventRegistrationService eventRegistrationService;
     private final ReservationService reservationService;
-    private final EmailService emailService;
 
     @Autowired
-    public ReservationController(EventRegistrationService eventRegistrationService, ReservationService reservationService, EmailService emailService) {
+    public ReservationController(EventRegistrationService eventRegistrationService, ReservationService reservationService) {
         this.eventRegistrationService = eventRegistrationService;
         this.reservationService = reservationService;
-        this.emailService = emailService;
     }
 
     // ✅ POST: crea una prenotazione
@@ -69,19 +66,7 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getAvailableTimes(date));
     }
 
-    // ✅ POST: richiesta contatto utente (telefono)
-    @PostMapping("/notify")
-    public ResponseEntity<Void> notifyPhoneOnly(@RequestBody Map<String, String> body) {
-        String phone = body.get("phone");
-        if (phone != null && !phone.isBlank()) {
-            emailService.sendSimpleMessage("staff@corner.pub",
-                    "Richiesta contatto utente",
-                    "Un utente ha lasciato il numero: " + phone);
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+
 
     @GetMapping("/events")
     public ResponseEntity<?> getEventRegistrations() {
