@@ -57,7 +57,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
         log.error("🔥 Errore interno non gestito", ex); // ✅ Log visibile in Render
-        return buildErrorResponse("Unexpected error", HttpStatus.INTERNAL_SERVER_ERROR);
+        return buildErrorResponse("Unexpected error: " + ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(String message, HttpStatus status) {
