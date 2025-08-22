@@ -15,8 +15,11 @@ import org.springframework.stereotype.Service;
 import com.corner.pub.dto.request.PromotionRequest;
 import com.corner.pub.dto.request.PromotionMenuItemRequest;
 import com.corner.pub.model.MenuItem;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +42,14 @@ public class PromotionService {
         return promotionRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
+    public List<PromotionResponse> getActivePromotionResponses() {
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        return promotionRepository.findActiveValidFetched(today)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
     /**
      * Recupera una promozione per ID, oppure lancia eccezione se non esiste.
      */

@@ -12,10 +12,20 @@ import java.util.Optional;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
     Optional<Reservation> findByUser_PhoneAndDate(String phone, LocalDate date);
     List<Reservation> findAllByDate(LocalDate date);
     List<Reservation> findAllByUser_Phone(String phone);
     List<Reservation> findAllByDateAndTime(LocalDate date, java.time.LocalTime time);
-    @Query("SELECT r FROM Reservation r LEFT JOIN FETCH r.event WHERE r.date >= :today ORDER BY r.date ASC")
+
+    // ✅ ora eviti lazy su event e user
+    @Query("""
+           SELECT r
+           FROM Reservation r
+           LEFT JOIN FETCH r.event
+           LEFT JOIN FETCH r.user
+           WHERE r.date >= :today
+           ORDER BY r.date ASC
+           """)
     List<Reservation> findAllFromToday(@Param("today") LocalDate today);
 }

@@ -21,7 +21,8 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors;import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,7 @@ public class ReservationService {
     private final EventRepository eventRepository;
     private final EventRegistrationService eventRegistrationService;
 
+    @Transactional
     public ReservationResponse createReservation(ReservationRequest request) {
         User user = userService.findOrCreate(request.getName(), request.getPhone());
         LocalDate date = LocalDate.parse(request.getDate());
@@ -50,6 +52,7 @@ public class ReservationService {
         return toResponse(reservationRepository.save(reservation));
     }
 
+    @Transactional
     public ReservationResponse createAdminReservation(ReservationRequest request) {
         if (request.getEventId() != null) {
             // Crea sia la registrazione all'evento che la prenotazione
@@ -76,18 +79,21 @@ public class ReservationService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponse> getAllReservations() {
         return reservationRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public ReservationResponse getReservationById(Long id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
         return toResponse(reservation);
     }
 
+    @Transactional
     public ReservationResponse updateReservation(Long id, ReservationRequest request) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
@@ -102,6 +108,7 @@ public class ReservationService {
         return toResponse(reservationRepository.save(reservation));
     }
 
+    @Transactional
     public void deleteById(Long id) {
         if (!reservationRepository.existsById(id)) {
             throw new ReservationNotFoundException("ID", id.toString());
@@ -109,6 +116,7 @@ public class ReservationService {
         reservationRepository.deleteById(id);
     }
 
+    @Transactional
     public void deleteReservationByPhoneAndDate(String phone, String dateString) {
         LocalDate date = parseDate(dateString);
         Reservation reservation = reservationRepository
@@ -117,6 +125,7 @@ public class ReservationService {
         reservationRepository.delete(reservation);
     }
 
+    @Transactional(readOnly = true)
     public ReservationResponse getReservation(String phone, String dateString) {
         LocalDate date = parseDate(dateString);
         Reservation reservation = reservationRepository
@@ -125,12 +134,14 @@ public class ReservationService {
         return toResponse(reservation);
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponse> getReservationsByPhone(String phone) {
         return reservationRepository.findAllByUser_Phone(phone).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponse> getReservationsByDate(String dateString) {
         LocalDate date = parseDate(dateString);
         return reservationRepository.findAllByDate(date).stream()
@@ -138,6 +149,7 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<String> getAvailableTimes(String dateString) {
         LocalDate date = parseDate(dateString);
         LocalDate today = LocalDate.now();
@@ -174,6 +186,7 @@ public class ReservationService {
         return available;
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponse> getFutureReservationsByPhone(String phone) {
         return reservationRepository.findByUser_PhoneAndDate(phone, LocalDate.now()).stream()
                 .map(this::toResponse)
@@ -202,18 +215,21 @@ public class ReservationService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponse> getReservationsWithEvents(LocalDate date) {
         return reservationRepository.findAllByDate(date).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponse> getTodayReservations() {
         return reservationRepository.findAllFromToday(LocalDate.now()).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<ReservationResponse> getAllUserReservations(String phone) {
         // Prenotazioni normali
         List<ReservationResponse> reservations = reservationRepository

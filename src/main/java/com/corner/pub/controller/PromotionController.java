@@ -21,10 +21,6 @@ public class PromotionController {
 
     @GetMapping("/attive")
     public ResponseEntity<List<PromotionResponse>> getActivePromotions() {
-        List<PromotionResponse> activePromotions = promotionService.getAllPromotions().stream()
-                .filter(Promotion::isAttiva)
-                .map(promotionService::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(activePromotions);
+        return ResponseEntity.ok(promotionService.getActivePromotionResponses());
     }
 }
