@@ -136,14 +136,19 @@ public class PromotionService {
         response.setDataFine(promo.getDataFine());
 
         List<PromotionItemDetail> itemDetails = promo.getItems().stream()
+                .filter(item -> item.getMenuItem() != null) // evita NPE su item orfani
                 .map(item -> {
-                    MenuItem menuItem = menuItemRepository.findById(item.getMenuItem().getId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Menu item non trovato"));
+                    MenuItem menuItem = item.getMenuItem();
 
-                    // Converti MenuItem in MenuItemResponse per ottenere l'imageUrl
+                    // Converto in DTO con gestione sicura per l'immagine
                     MenuItemResponse menuItemResponse = mapToMenuItemResponse(menuItem);
 
-                    return new PromotionItemDetail(menuItemResponse, item.getScontoPercentuale().doubleValue());
+                    return new PromotionItemDetail(
+                            menuItemResponse,
+                            item.getScontoPercentuale() != null
+                                    ? item.getScontoPercentuale().doubleValue()
+                                    : 0.0
+                    );
                 })
                 .collect(Collectors.toList());
 
@@ -157,16 +162,22 @@ public class PromotionService {
         response.setTitolo(item.getTitolo());
         response.setCategoria(item.getCategoria());
         response.setPrezzo(item.getPrezzo());
-
-        // Genera URL immagine da Cloudinary
-        String imageUrl = cloudinary.url()
-                .secure(true)
-                .version(System.currentTimeMillis() / 1000)
-                .generate("prodotti/" + item.getId());
-
-        response.setImageUrl(imageUrl);
         response.setVisibile(item.isVisibile());
+
+        try {
+            // Se Cloudinary è configurato bene genera URL, altrimenti fallback
+            String imageUrl = cloudinary.url()
+                    .secure(true)
+                    .version(System.currentTimeMillis() / 1000)
+                    .generate("prodotti/" + item.getId());
+
+            response.setImageUrl(imageUrl);
+        } catch (Exception e) {
+            response.setImageUrl("/images/default.png");
+        }
+
         return response;
     }
+
 
 }
