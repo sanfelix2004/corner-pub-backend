@@ -195,12 +195,22 @@ public class ReservationService {
     }
 
     private LocalDate parseDate(String dateString) {
-        try {
-            return LocalDate.parse(dateString, DateTimeFormatter.ISO_LOCAL_DATE);
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
+        DateTimeFormatter[] formatters = new DateTimeFormatter[] {
+                DateTimeFormatter.ISO_LOCAL_DATE,               // yyyy-MM-dd
+                DateTimeFormatter.ofPattern("dd-MM-yyyy"),      // dd-MM-yyyy
+                DateTimeFormatter.ofPattern("MM/dd/yyyy")       // opzionale se serve
+        };
+
+        for (DateTimeFormatter formatter : formatters) {
+            try {
+                return LocalDate.parse(dateString, formatter);
+            } catch (DateTimeParseException ignored) {
+            }
         }
+
+        throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd o dd-MM-yyyy");
     }
+
 
     public ReservationResponse toResponse(Reservation reservation) {
         ReservationResponse response = new ReservationResponse();
