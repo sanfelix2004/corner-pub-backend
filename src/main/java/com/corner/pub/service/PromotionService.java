@@ -35,6 +35,19 @@ public class PromotionService {
     @Autowired
     private Cloudinary cloudinary;
 
+    @Transactional(readOnly = true)
+    public List<PromotionResponse> getAllPromotionResponses() {
+        return promotionRepository.findAllFetched()   // <-- usa la query con join fetch
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Promotion getByIdFetched(Long id) {
+        return promotionRepository.findByIdFetched(id) // <-- join fetch by id
+                .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
+    }
     /**
      * Recupera tutte le promozioni presenti nel database.
      */

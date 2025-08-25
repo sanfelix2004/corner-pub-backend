@@ -18,14 +18,19 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findAllByUser_Phone(String phone);
     List<Reservation> findAllByDateAndTime(LocalDate date, java.time.LocalTime time);
 
-    // ✅ ora eviti lazy su event e user
     @Query("""
-           SELECT r
-           FROM Reservation r
-           LEFT JOIN FETCH r.event
-           LEFT JOIN FETCH r.user
-           WHERE r.date >= :today
-           ORDER BY r.date ASC
+           select r from Reservation r
+           left join fetch r.event
+           where r.user.phone = :phone
+           order by r.date asc, r.time asc
+           """)
+    List<Reservation> findAllWithEventByUserPhone(@Param("phone") String phone);
+
+    @Query("""
+           select r from Reservation r
+           left join fetch r.event
+           where r.date >= :today
+           order by r.date asc, r.time asc
            """)
     List<Reservation> findAllFromToday(@Param("today") LocalDate today);
 }

@@ -136,10 +136,11 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public List<ReservationResponse> getReservationsByPhone(String phone) {
-        return reservationRepository.findAllByUser_Phone(phone).stream()
+        return reservationRepository.findAllWithEventByUserPhone(phone).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
+
 
     @Transactional(readOnly = true)
     public List<ReservationResponse> getReservationsByDate(String dateString) {

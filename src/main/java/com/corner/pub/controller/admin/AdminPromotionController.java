@@ -20,34 +20,33 @@ public class AdminPromotionController {
 
     @GetMapping
     public ResponseEntity<List<PromotionResponse>> getAll() {
-        List<PromotionResponse> responses = promotionService.getAllPromotions().stream()
-                .map(promotionService::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(responses);
+        return ResponseEntity.ok(promotionService.getAllPromotionResponses());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<PromotionResponse> update(@PathVariable Long id, @RequestBody PromotionRequest promotionRequest) {
-        Promotion updated = promotionService.update(id, promotionRequest);
-        return ResponseEntity.ok(promotionService.toResponse(updated));
+    @GetMapping("/{id}")
+    public ResponseEntity<PromotionResponse> getById(@PathVariable Long id) {
+        Promotion promo = promotionService.getByIdFetched(id);
+        return ResponseEntity.ok(promotionService.toResponse(promo));
     }
 
     @PostMapping
     public ResponseEntity<PromotionResponse> create(@RequestBody PromotionRequest promotionRequest) {
         Promotion saved = promotionService.create(promotionRequest);
-        return ResponseEntity.ok(promotionService.toResponse(saved));
+        Promotion fetched = promotionService.getByIdFetched(saved.getId());   // ricarico fetchato
+        return ResponseEntity.ok(promotionService.toResponse(fetched));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<PromotionResponse> update(@PathVariable Long id, @RequestBody PromotionRequest promotionRequest) {
+        Promotion updated = promotionService.update(id, promotionRequest);
+        Promotion fetched = promotionService.getByIdFetched(updated.getId()); // ricarico fetchato
+        return ResponseEntity.ok(promotionService.toResponse(fetched));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         promotionService.delete(id);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<PromotionResponse> getById(@PathVariable Long id) {
-        Promotion promo = promotionService.getById(id);
-        return ResponseEntity.ok(promotionService.toResponse(promo));
     }
 
     @PutMapping("/{id}/disattiva")
