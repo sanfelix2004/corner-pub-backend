@@ -1146,12 +1146,11 @@
     async function loadPromozioni() {
         const checklist = document.getElementById('checklistProdottiPromozione');
         const promozioniTableBody = document.getElementById('promozioniTableBody');
-        if (!checklist || !promozioniTableBody) return; // difesa
+        if (!checklist || !promozioniTableBody) return; // id non presenti -> esci
 
-        // reset UI
-        checklist.innerHTML = '';
+        // placeholder di caricamento
         promozioniTableBody.innerHTML = `
-    <tr><td colspan="6" class="text-center py-3">Caricamento…</td></tr>
+    <tr><td colspan="6" class="text-center py-4">Caricamento…</td></tr>
   `;
 
         try {
@@ -1160,95 +1159,87 @@
                 fetch('/admin/promotions')
             ]);
 
-            if (!menuRes.ok) throw new Error(`Menu HTTP ${menuRes.status}`);
-            if (!promoRes.ok) throw new Error(`Promozioni HTTP ${promoRes.status}`);
-
+            // MENU
+            if (!menuRes.ok) throw new Error('Menu API ' + menuRes.status);
             const menuData = await menuRes.json();
-            let promoData = await promoRes.json();
-
-            // ----- CHECK FORMATO -----
-            const menuArray = Array.isArray(menuData) ? menuData : [];
-            if (!Array.isArray(promoData)) {
-                console.error('Promotions API non-array:', promoData);
-                promoData = [];
-            }
-
-            // ===== CHECKLIST PRODOTTI =====
             const grouped = {};
-            menuArray.forEach(item => {
-                const cat = item?.categoria || 'Generico';
-                (grouped[cat] ||= []).push(item);
+            (Array.isArray(menuData) ? menuData : []).forEach(item => {
+                (grouped[item.categoria] ||= []).push(item);
             });
-
+            checklist.innerHTML = '';
             Object.keys(grouped).sort().forEach(categoria => {
+                const items = grouped[categoria].map(item => `
+        <div class="form-check mb-2">
+          <input class="form-check-input promo-checkbox" type="checkbox"
+                 value="${item.id}" id="prod-${item.id}" data-title="${item.titolo}">
+          <label class="form-check-label" for="prod-${item.id}">
+            ${item.titolo} <span class="text-muted">(€${(+item.prezzo).toFixed(2)})</span>
+          </label>
+        </div>`).join('');
                 const section = document.createElement('div');
-                section.classList.add('col-md-6', 'mb-4');
-
-                const itemsHtml = grouped[categoria].map(item => {
-                    const prezzo = Number(item?.prezzo ?? 0);
-                    const titolo = (item?.titolo ?? '').toString();
-                    return `
-          <div class="form-check mb-2">
-            <input class="form-check-input promo-checkbox" type="checkbox"
-                   value="${item.id}" id="prod-${item.id}" data-title="${titolo}">
-            <label class="form-check-label" for="prod-${item.id}">
-              ${titolo} <span class="text-muted">(€${prezzo.toFixed(2)})</span>
-            </label>
-          </div>`;
-                }).join('');
-
+                section.className = 'col-md-6 mb-4';
                 section.innerHTML = `
         <div class="card h-100">
-          <div class="card-header bg-light">
-            <strong>${categoria}</strong>
-          </div>
-          <div class="card-body">
-            ${itemsHtml || '<span class="text-muted">Nessun prodotto</span>'}
-          </div>
+          <div class="card-header bg-light"><strong>${categoria}</strong></div>
+          <div class="card-body">${items}</div>
         </div>`;
                 checklist.appendChild(section);
             });
 
-            // ===== LISTA PROMOZIONI =====
-            promozioniTableBody.innerHTML = '';
+            // PROMOZIONI
+            if (!promoRes.ok) {
+                // backend KO: non far crashare il JS
+                promozioniTableBody.innerHTML = `
+        <tr><td colspan="6" class="text-center text-danger py-4">
+          Errore server (${promoRes.status}) nel caricare le promozioni
+        </td></tr>`;
+                return;
+            }
 
-            if (promoData.length === 0) {
+            const promoData = await promoRes.json();
+            const promos = Array.isArray(promoData) ? promoData : [];
+            if (promos.length === 0) {
                 promozioniTableBody.innerHTML = `
         <tr>
           <td colspan="6" class="text-center py-4">
             <i class="fas fa-tag fa-2x mb-3 text-muted"></i>
-            <p class="mb-0">Nessuna promozione attiva</p>
+            <p class="mb-0">Nessuna promozione</p>
           </td>
         </tr>`;
                 return;
             }
 
-            // sort corretto per dataInizio
-            promoData.sort((a, b) => new Date(a.dataInizio) - new Date(b.dataInizio));
+            // ordina per dataInizio (se manca, va in coda)
+            promos.sort((a, b) => {
+                const da = a?.dataInizio ? new Date(a.dataInizio) : new Date(8640000000000000);
+                const db = b?.dataInizio ? new Date(b.dataInizio) : new Date(8640000000000000);
+                return da - db;
+            });
 
-            promoData.forEach(promo => {
-                const today = new Date();
-                const startDate = promo.dataInizio ? new Date(promo.dataInizio) : null;
-                const endDate   = promo.dataFine   ? new Date(promo.dataFine)   : null;
+            promozioniTableBody.innerHTML = '';
+            const today = new Date();
 
+            promos.forEach(promo => {
+                const start = promo.dataInizio ? new Date(promo.dataInizio) : null;
+                const end   = promo.dataFine    ? new Date(promo.dataFine)    : null;
                 const isActive =
-                    (startDate ? today >= startDate : true) &&
-                    (endDate   ? today <= endDate   : true) &&
-                    !!promo.attiva;
+                    (!start || today >= start) && (!end || today <= end) && (promo.attiva !== false);
 
-                const sconto = Number(promo.items?.[0]?.scontoPercentuale ?? 0);
+                const sconto = Array.isArray(promo.items) && promo.items[0]
+                    ? (promo.items[0].scontoPercentuale ?? 0)
+                    : 0;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
         <td>
-          <strong>${promo.nome || '-'}</strong>
+          <strong>${promo.nome || '—'}</strong>
           <div class="small text-muted">${promo.descrizione || 'Nessuna descrizione'}</div>
         </td>
         <td>${promo.descrizione || '-'}</td>
         <td>
-          ${promo.dataInizio ? formatDate(promo.dataInizio) : '-'}<br>
+          ${promo.dataInizio ? new Date(promo.dataInizio).toLocaleDateString('it-IT') : '—'}<br>
           <span class="text-muted small">al</span><br>
-          ${promo.dataFine ? formatDate(promo.dataFine) : '-'}
+          ${promo.dataFine ? new Date(promo.dataFine).toLocaleDateString('it-IT') : '—'}
         </td>
         <td class="text-center">
           <span class="badge bg-danger p-2">${sconto}%</span>
@@ -1262,26 +1253,21 @@
           <button class="btn btn-sm btn-danger btn-action" onclick="eliminaPromozione(${promo.id})">
             <i class="fas fa-trash-alt"></i>
           </button>
-        </td>
-      `;
+        </td>`;
                 promozioniTableBody.appendChild(tr);
             });
 
-            // checkboxes summary
-            document.querySelectorAll('.promo-checkbox').forEach(cb => {
-                cb.addEventListener('change', updatePromoSummary);
-            });
+            // listener per il riepilogo selezione
+            document.querySelectorAll('.promo-checkbox').forEach(cb =>
+                cb.addEventListener('change', updatePromoSummary)
+            );
 
-        } catch (error) {
-            console.error('Error loading promotions:', error);
+        } catch (err) {
+            console.error('Error loading promotions:', err);
             promozioniTableBody.innerHTML = `
-      <tr>
-        <td colspan="6" class="text-center py-4 text-danger">
-          <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-          <p>Errore durante il caricamento delle promozioni</p>
-          <div class="small">${(error && error.message) || ''}</div>
-        </td>
-      </tr>`;
+      <tr><td colspan="6" class="text-center text-danger py-4">
+        Errore durante il caricamento delle promozioni
+      </td></tr>`;
         }
     }
 

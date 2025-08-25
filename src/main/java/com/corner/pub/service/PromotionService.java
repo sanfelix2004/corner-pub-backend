@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
-
 @Service
 public class PromotionService {
 
@@ -36,82 +35,45 @@ public class PromotionService {
     @Autowired
     private Cloudinary cloudinary;
 
+    // ====== NUOVO: tutti i mapping fatti DENTRO la transazione ======
+
     @Transactional(readOnly = true)
-    public List<PromotionResponse> getActivePromotionResponses() {
-        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
-
-        // Usa SEMPRE il metodo fetchato oppure (vedi punto 2) quello con @EntityGraph
-        List<Promotion> promos = promotionRepository.findActiveValidFetched(today);
-
-        // FORZA INIZIALIZZAZIONE prima della chiusura TX
-        for (Promotion p : promos) {
-            Hibernate.initialize(p.getItems());
-            if (p.getItems() != null) {
-                for (var i : p.getItems()) {
-                    if (i.getMenuItem() != null) {
-                        Hibernate.initialize(i.getMenuItem());
-                    }
-                }
-            }
-        }
-
-        // MAPPATURA *dentro* la transazione (no stream, nessuna lambda rimandata)
+    public List<PromotionResponse> getAllPromotionResponses() {
+        List<Promotion> promos = promotionRepository.findAllFetched();
         List<PromotionResponse> out = new java.util.ArrayList<>(promos.size());
         for (Promotion p : promos) {
-            out.add(toResponse(p));
+            out.add(toResponse(p));           // siamo ancora nella tx
         }
         return out;
     }
 
     @Transactional(readOnly = true)
-    public List<PromotionResponse> getAllPromotionResponses() {
-        List<Promotion> promos = promotionRepository.findAllFetched();
-
-        for (Promotion p : promos) {
-            Hibernate.initialize(p.getItems());
-            if (p.getItems() != null) {
-                for (var i : p.getItems()) {
-                    if (i.getMenuItem() != null) {
-                        Hibernate.initialize(i.getMenuItem());
-                    }
-                }
-            }
-        }
-
+    public List<PromotionResponse> getActivePromotionResponses() {
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        List<Promotion> promos = promotionRepository.findActiveValidFetched(today);
         List<PromotionResponse> out = new java.util.ArrayList<>(promos.size());
         for (Promotion p : promos) {
-            out.add(toResponse(p));
+            out.add(toResponse(p));           // siamo ancora nella tx
         }
         return out;
     }
 
     @Transactional(readOnly = true)
     public Promotion getByIdFetched(Long id) {
-        Promotion p = promotionRepository.findByIdFetched(id)
+        return promotionRepository.findByIdFetched(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
-
-        Hibernate.initialize(p.getItems());
-        if (p.getItems() != null) {
-            for (var i : p.getItems()) {
-                if (i.getMenuItem() != null) {
-                    Hibernate.initialize(i.getMenuItem());
-                }
-            }
-        }
-        return p;
     }
 
-    /**
-     * Recupera una promozione per ID, oppure lancia eccezione se non esiste.
-     */
+    // --- questi possono restare come li avevi ---
+
+    public List<Promotion> getAllPromotions() {
+        return promotionRepository.findAll();
+    }
+
     public Promotion getById(Long id) {
         return promotionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
     }
-
-    /**
-     * Crea una nuova promozione e collega correttamente ogni PromotionMenuItem.
-     */
 
     public Promotion create(PromotionRequest dto) {
         Promotion promo = new Promotion();
@@ -128,20 +90,15 @@ public class PromotionService {
 
                 PromotionMenuItem item = new PromotionMenuItem();
                 item.setMenuItem(menuItem);
-                item.setScontoPercentuale(BigDecimal.valueOf(itemDto.getScontoPercentuale()));
+                item.setScontoPercentuale(java.math.BigDecimal.valueOf(itemDto.getScontoPercentuale()));
                 item.setPromotion(promo);
 
                 promo.getItems().add(item);
             }
         }
-
         return promotionRepository.save(promo);
     }
 
-
-    /**
-     * Elimina una promozione se esiste, altrimenti non fa nulla.
-     */
     public void delete(Long id) {
         if (!promotionRepository.existsById(id)) {
             throw new ResourceNotFoundException("Promozione da eliminare non trovata con ID: " + id);
@@ -157,43 +114,33 @@ public class PromotionService {
         existing.setDataFine(request.getDataFine());
         existing.setAttiva(request.isAttiva());
 
-        // Mappiamo i PromotionMenuItemRequest → PromotionMenuItem
         List<PromotionMenuItem> menuItems = request.getItems().stream().map(reqItem -> {
             PromotionMenuItem item = new PromotionMenuItem();
             item.setPromotion(existing);
-            item.setScontoPercentuale(BigDecimal.valueOf(reqItem.getScontoPercentuale()));
-
-            // Recuperiamo il MenuItem dal DB
+            item.setScontoPercentuale(java.math.BigDecimal.valueOf(reqItem.getScontoPercentuale()));
             MenuItem menuItem = menuItemRepository.findById(reqItem.getMenuItemId())
                     .orElseThrow(() -> new ResourceNotFoundException("MenuItem non trovato con ID: " + reqItem.getMenuItemId()));
             item.setMenuItem(menuItem);
-
             return item;
         }).toList();
 
         existing.setItems(menuItems);
-
         return promotionRepository.save(existing);
     }
 
-    @Transactional
-    public PromotionResponse disattivaAndMap(Long id) {
-        Promotion p = promotionRepository.findByIdFetched(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
-        p.setAttiva(false);
-        // items sono già inizializzati e restiamo nella TX
-        return toResponse(p);
-    }
-
-    @Transactional
-    public PromotionResponse riattivaAndMap(Long id) {
-        Promotion p = promotionRepository.findByIdFetched(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
+    public Promotion riattiva(Long id) {
+        Promotion p = getById(id);
         p.setAttiva(true);
-        return toResponse(p);
+        return promotionRepository.save(p);
     }
 
+    public Promotion disattiva(Long id) {
+        Promotion p = getById(id);
+        p.setAttiva(false);
+        return promotionRepository.save(p);
+    }
 
+    // ----- toResponse resta uguale -----
     public PromotionResponse toResponse(Promotion promo) {
         PromotionResponse response = new PromotionResponse();
         response.setId(promo.getId());
@@ -204,21 +151,16 @@ public class PromotionService {
         response.setDataFine(promo.getDataFine());
 
         List<PromotionItemDetail> itemDetails = promo.getItems().stream()
-                .filter(item -> item.getMenuItem() != null) // evita NPE su item orfani
+                .filter(item -> item.getMenuItem() != null)
                 .map(item -> {
                     MenuItem menuItem = item.getMenuItem();
-
-                    // Converto in DTO con gestione sicura per l'immagine
                     MenuItemResponse menuItemResponse = mapToMenuItemResponse(menuItem);
-
                     return new PromotionItemDetail(
                             menuItemResponse,
-                            item.getScontoPercentuale() != null
-                                    ? item.getScontoPercentuale().doubleValue()
-                                    : 0.0
+                            item.getScontoPercentuale() != null ? item.getScontoPercentuale().doubleValue() : 0.0
                     );
                 })
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
 
         response.setItems(itemDetails);
         return response;
@@ -231,21 +173,15 @@ public class PromotionService {
         response.setCategoria(item.getCategoria());
         response.setPrezzo(item.getPrezzo());
         response.setVisibile(item.isVisibile());
-
         try {
-            // Se Cloudinary è configurato bene genera URL, altrimenti fallback
             String imageUrl = cloudinary.url()
                     .secure(true)
                     .version(System.currentTimeMillis() / 1000)
                     .generate("prodotti/" + item.getId());
-
             response.setImageUrl(imageUrl);
         } catch (Exception e) {
             response.setImageUrl("/images/default.png");
         }
-
         return response;
     }
-
-
 }

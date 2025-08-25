@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
-
 @RestController
 @RequestMapping("/admin/promotions")
 public class AdminPromotionController {
@@ -25,8 +24,7 @@ public class AdminPromotionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PromotionResponse> getById(@PathVariable Long id) {
-        Promotion promo = promotionService.getByIdFetched(id);
-        return ResponseEntity.ok(promotionService.toResponse(promo));
+        return ResponseEntity.ok(promotionService.toResponse(promotionService.getByIdFetched(id)));
     }
 
     @PostMapping
@@ -51,11 +49,11 @@ public class AdminPromotionController {
 
     @PutMapping("/{id}/disattiva")
     public ResponseEntity<PromotionResponse> disattiva(@PathVariable Long id) {
-        return ResponseEntity.ok(promotionService.disattivaAndMap(id));
+        return ResponseEntity.ok(promotionService.toResponse(promotionService.disattiva(id)));
     }
 
     @PutMapping("/{id}/attiva")
     public ResponseEntity<PromotionResponse> riattiva(@PathVariable Long id) {
-        return ResponseEntity.ok(promotionService.riattivaAndMap(id));
+        return ResponseEntity.ok(promotionService.toResponse(promotionService.riattiva(id)));
     }
 }
