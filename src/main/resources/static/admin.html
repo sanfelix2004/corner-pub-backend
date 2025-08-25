@@ -713,7 +713,7 @@
         document.getElementById('section' + capitalize(section)).classList.remove('hidden');
 
         if (section === 'prenotazioni') {
-            loadReservations();
+            loadTableBookings();
         } else if (section === 'menu') {
             loadMenuItems();
         } else if (section === 'evidenza') {
@@ -1144,119 +1144,147 @@
 
     // Promozioni functions
     async function loadPromozioni() {
+        const checklist = document.getElementById('checklistProdottiPromozione');
+        const promozioniTableBody = document.getElementById('promozioniTableBody');
+        if (!checklist || !promozioniTableBody) return; // difesa
+
+        // reset UI
+        checklist.innerHTML = '';
+        promozioniTableBody.innerHTML = `
+    <tr><td colspan="6" class="text-center py-3">Caricamento…</td></tr>
+  `;
+
         try {
             const [menuRes, promoRes] = await Promise.all([
                 fetch('/admin/menu'),
                 fetch('/admin/promotions')
             ]);
 
+            if (!menuRes.ok) throw new Error(`Menu HTTP ${menuRes.status}`);
+            if (!promoRes.ok) throw new Error(`Promozioni HTTP ${promoRes.status}`);
+
             const menuData = await menuRes.json();
-            const promoData = await promoRes.json();
+            let promoData = await promoRes.json();
 
-            // Checklist for new promotion
+            // ----- CHECK FORMATO -----
+            const menuArray = Array.isArray(menuData) ? menuData : [];
+            if (!Array.isArray(promoData)) {
+                console.error('Promotions API non-array:', promoData);
+                promoData = [];
+            }
+
+            // ===== CHECKLIST PRODOTTI =====
             const grouped = {};
-            menuData.forEach(item => {
-                if (!grouped[item.categoria]) grouped[item.categoria] = [];
-                grouped[item.categoria].push(item);
+            menuArray.forEach(item => {
+                const cat = item?.categoria || 'Generico';
+                (grouped[cat] ||= []).push(item);
             });
-
-            const checklist = document.getElementById('checklistProdottiPromozione');
-            checklist.innerHTML = '';
 
             Object.keys(grouped).sort().forEach(categoria => {
                 const section = document.createElement('div');
                 section.classList.add('col-md-6', 'mb-4');
 
-                const items = grouped[categoria].map(item => `
-                    <div class="form-check mb-2">
-                        <input class="form-check-input promo-checkbox" type="checkbox" value="${item.id}" id="prod-${item.id}" data-title="${item.titolo}">
-                        <label class="form-check-label" for="prod-${item.id}">
-                            ${item.titolo} <span class="text-muted">(€${item.prezzo.toFixed(2)})</span>
-                        </label>
-                    </div>
-                `).join('');
+                const itemsHtml = grouped[categoria].map(item => {
+                    const prezzo = Number(item?.prezzo ?? 0);
+                    const titolo = (item?.titolo ?? '').toString();
+                    return `
+          <div class="form-check mb-2">
+            <input class="form-check-input promo-checkbox" type="checkbox"
+                   value="${item.id}" id="prod-${item.id}" data-title="${titolo}">
+            <label class="form-check-label" for="prod-${item.id}">
+              ${titolo} <span class="text-muted">(€${prezzo.toFixed(2)})</span>
+            </label>
+          </div>`;
+                }).join('');
 
                 section.innerHTML = `
-                    <div class="card h-100">
-                        <div class="card-header bg-light">
-                            <strong>${categoria}</strong>
-                        </div>
-                        <div class="card-body">
-                            ${items}
-                        </div>
-                    </div>
-                `;
+        <div class="card h-100">
+          <div class="card-header bg-light">
+            <strong>${categoria}</strong>
+          </div>
+          <div class="card-body">
+            ${itemsHtml || '<span class="text-muted">Nessun prodotto</span>'}
+          </div>
+        </div>`;
                 checklist.appendChild(section);
             });
 
-            // Promotions list
-            const promozioniTableBody = document.getElementById('promozioniTableBody');
+            // ===== LISTA PROMOZIONI =====
             promozioniTableBody.innerHTML = '';
 
             if (promoData.length === 0) {
                 promozioniTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center py-4">
-                            <i class="fas fa-tag fa-2x mb-3 text-muted"></i>
-                            <p class="mb-0">Nessuna promozione attiva</p>
-                        </td>
-                    </tr>
-                `;
+        <tr>
+          <td colspan="6" class="text-center py-4">
+            <i class="fas fa-tag fa-2x mb-3 text-muted"></i>
+            <p class="mb-0">Nessuna promozione attiva</p>
+          </td>
+        </tr>`;
                 return;
             }
 
-            promoData.sort((a, b) => new Date(a.dataInizio) - new Date(b.dataFine)).forEach(promo => {
-                const today = new Date();
-                const startDate = new Date(promo.dataInizio);
-                const endDate = new Date(promo.dataFine);
-                const isActive = today >= startDate && today <= endDate;
+            // sort corretto per dataInizio
+            promoData.sort((a, b) => new Date(a.dataInizio) - new Date(b.dataInizio));
 
-                const tr = document.createElement("tr");
+            promoData.forEach(promo => {
+                const today = new Date();
+                const startDate = promo.dataInizio ? new Date(promo.dataInizio) : null;
+                const endDate   = promo.dataFine   ? new Date(promo.dataFine)   : null;
+
+                const isActive =
+                    (startDate ? today >= startDate : true) &&
+                    (endDate   ? today <= endDate   : true) &&
+                    !!promo.attiva;
+
+                const sconto = Number(promo.items?.[0]?.scontoPercentuale ?? 0);
+
+                const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>
-                        <strong>${promo.nome}</strong>
-                        <div class="small text-muted">${promo.descrizione || 'Nessuna descrizione'}</div>
-                    </td>
-                    <td>${promo.descrizione || '-'}</td>
-                    <td>
-                        ${formatDate(promo.dataInizio)}<br>
-                        <span class="text-muted small">al</span><br>
-                        ${formatDate(promo.dataFine)}
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-danger p-2">${promo.items[0]?.scontoPercentuale || 0}%</span>
-                    </td>
-                    <td>
-                        <span class="status-badge ${isActive ? 'bg-success' : 'bg-secondary'}">
-                            ${isActive ? 'Attiva' : 'Scaduta'}
-                        </span>
-                    </td>
-                    <td class="text-nowrap">
-                        <button class="btn btn-sm btn-danger btn-action" onclick="eliminaPromozione(${promo.id})">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                `;
+        <td>
+          <strong>${promo.nome || '-'}</strong>
+          <div class="small text-muted">${promo.descrizione || 'Nessuna descrizione'}</div>
+        </td>
+        <td>${promo.descrizione || '-'}</td>
+        <td>
+          ${promo.dataInizio ? formatDate(promo.dataInizio) : '-'}<br>
+          <span class="text-muted small">al</span><br>
+          ${promo.dataFine ? formatDate(promo.dataFine) : '-'}
+        </td>
+        <td class="text-center">
+          <span class="badge bg-danger p-2">${sconto}%</span>
+        </td>
+        <td>
+          <span class="status-badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+            ${isActive ? 'Attiva' : 'Non attiva'}
+          </span>
+        </td>
+        <td class="text-nowrap">
+          <button class="btn btn-sm btn-danger btn-action" onclick="eliminaPromozione(${promo.id})">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      `;
                 promozioniTableBody.appendChild(tr);
             });
 
-            // Add event listeners to checkboxes
+            // checkboxes summary
             document.querySelectorAll('.promo-checkbox').forEach(cb => {
                 cb.addEventListener('change', updatePromoSummary);
             });
 
         } catch (error) {
             console.error('Error loading promotions:', error);
-            document.getElementById('promozioniTableBody').innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center py-4 text-danger">
-                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
-                        <p>Errore durante il caricamento delle promozioni</p>
-                    </td>
-                </tr>
-            `;
+            promozioniTableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-4 text-danger">
+          <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+          <p>Errore durante il caricamento delle promozioni</p>
+          <div class="small">${(error && error.message) || ''}</div>
+        </td>
+      </tr>`;
         }
     }
+
 
     function updatePromoSummary() {
         const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
