@@ -49,7 +49,7 @@ public class ReservationController {
     }
 
     // ✅ GET: tutte le prenotazioni di un numero
-    @GetMapping("/{phone}")
+    @GetMapping("by-phone//{phone}")
     public ResponseEntity<List<ReservationResponse>> getByPhone(@PathVariable String phone) {
         return ResponseEntity.ok(reservationService.getReservationsByPhone(phone));
     }
