@@ -35,7 +35,7 @@ public class ReservationController {
     }
 
     // ✅ GET: singola prenotazione (ATTENTO: DEVE STARE PRIMA DI /{phone})
-    @GetMapping("/{phone}/{date}")
+    @GetMapping("/by/{phone}/{date}")
     public ResponseEntity<ReservationResponse> getReservation(@PathVariable String phone, @PathVariable String date) {
         ReservationResponse response = reservationService.getReservation(phone, date);
         return ResponseEntity.ok(response);
@@ -49,7 +49,7 @@ public class ReservationController {
     }
 
     // ✅ GET: tutte le prenotazioni di un numero
-    @GetMapping("by-phone//{phone}")
+    @GetMapping("/by-phone//{phone}")
     public ResponseEntity<List<ReservationResponse>> getByPhone(@PathVariable String phone) {
         return ResponseEntity.ok(reservationService.getReservationsByPhone(phone));
     }
