@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
 @RestController
 @RequestMapping("/api/reservations")
 public class ReservationController {
@@ -27,37 +26,43 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
-    // ✅ POST: crea una prenotazione
+    // ✅ POST: crea prenotazione
     @PostMapping
     public ResponseEntity<ReservationResponse> create(@RequestBody ReservationRequest request) {
         ReservationResponse dto = reservationService.createReservation(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    // ✅ GET: singola prenotazione (ATTENTO: DEVE STARE PRIMA DI /{phone})
-    @GetMapping("/by/{phone}/{date}")
+    // ✅ GET: tutte le prenotazioni di un utente (PIÙ SPECIFICA)
+    @GetMapping("/user/{phone}")
+    public ResponseEntity<List<ReservationResponse>> getUserReservations(@PathVariable String phone) {
+        return ResponseEntity.ok(reservationService.getAllUserReservations(phone));
+    }
+
+    // ✅ GET: prenotazioni future di un utente
+    @GetMapping("/future/{phone}")
+    public ResponseEntity<List<ReservationResponse>> getFuture(@PathVariable String phone) {
+        return ResponseEntity.ok(reservationService.getFutureReservationsByPhone(phone));
+    }
+
+    // ✅ GET: prenotazione singola (phone + date)
+    @GetMapping("/{phone}/{date}")
     public ResponseEntity<ReservationResponse> getReservation(@PathVariable String phone, @PathVariable String date) {
         ReservationResponse response = reservationService.getReservation(phone, date);
         return ResponseEntity.ok(response);
     }
 
-    // ✅ DELETE: cancella prenotazione
-    @DeleteMapping("/{phone}/{date}")
-    public ResponseEntity<Void> delete(@PathVariable String phone, @PathVariable String date) {
-        reservationService.deleteReservationByPhoneAndDate(phone, date);
-        return ResponseEntity.ok().build();
-    }
-
-    // ✅ GET: tutte le prenotazioni di un numero
-    @GetMapping("/by-phone//{phone}")
+    // ✅ GET: prenotazioni per phone (senza date)
+    @GetMapping("/{phone}")
     public ResponseEntity<List<ReservationResponse>> getByPhone(@PathVariable String phone) {
         return ResponseEntity.ok(reservationService.getReservationsByPhone(phone));
     }
 
-    // ✅ GET: future prenotazioni
-    @GetMapping("/future/{phone}")
-    public ResponseEntity<List<ReservationResponse>> getFuture(@PathVariable String phone) {
-        return ResponseEntity.ok(reservationService.getFutureReservationsByPhone(phone));
+    // ✅ DELETE prenotazione
+    @DeleteMapping("/{phone}/{date}")
+    public ResponseEntity<Void> delete(@PathVariable String phone, @PathVariable String date) {
+        reservationService.deleteReservationByPhoneAndDate(phone, date);
+        return ResponseEntity.ok().build();
     }
 
     // ✅ GET: orari disponibili
@@ -66,17 +71,9 @@ public class ReservationController {
         return ResponseEntity.ok(reservationService.getAvailableTimes(date));
     }
 
-
-
+    // ✅ GET: tutte le registrazioni evento
     @GetMapping("/events")
     public ResponseEntity<?> getEventRegistrations() {
         return ResponseEntity.ok(eventRegistrationService.getAllRegistrations());
     }
-
-    @GetMapping("/user/{phone}")
-    public ResponseEntity<List<ReservationResponse>> getUserReservations(@PathVariable String phone) {
-        return ResponseEntity.ok(reservationService.getAllUserReservations(phone));
-    }
-
-
 }
