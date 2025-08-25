@@ -8,7 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
+import java.util.Optional;import org.springframework.data.jpa.repository.EntityGraph;
+
 
 @Repository
 public interface PromotionRepository extends JpaRepository<Promotion, Long> {
@@ -37,6 +38,7 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
     List<Promotion> findActiveFetched();
 
     // ✅ Attive + valide per data, senza literal
+    @EntityGraph(attributePaths = {"items", "items.menuItem"})
     @Query("""
            select distinct p from Promotion p
            left join fetch p.items i

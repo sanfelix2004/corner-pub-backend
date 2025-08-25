@@ -10,6 +10,7 @@ import com.corner.pub.model.Promotion;
 import com.corner.pub.model.PromotionMenuItem;
 import com.corner.pub.repository.MenuItemRepository;
 import com.corner.pub.repository.PromotionRepository;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.corner.pub.dto.request.PromotionRequest;
@@ -36,54 +37,68 @@ public class PromotionService {
     private Cloudinary cloudinary;
 
     @Transactional(readOnly = true)
-    public List<PromotionResponse> getAllPromotionResponses() {
-        List<Promotion> promos = promotionRepository.findAllFetched();
-        promos.forEach(p -> {
-            if (p.getItems() != null) {
-                p.getItems().forEach(i -> { if (i.getMenuItem()!=null) i.getMenuItem().getId(); });
-                p.getItems().size();
-            }
-        });
-        return promos.stream().map(this::toResponse).toList();
-    }
-
-
-    @Transactional(readOnly = true)
-    public Promotion getByIdFetched(Long id) {
-        return promotionRepository.findByIdFetched(id) // <-- join fetch by id
-                .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
-    }
-    /**
-     * Recupera tutte le promozioni presenti nel database.
-     */
-    public List<Promotion> getAllPromotions() {
-        return promotionRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
     public List<PromotionResponse> getActivePromotionResponses() {
         LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
 
-        // 1) recupero
+        // Usa SEMPRE il metodo fetchato oppure (vedi punto 2) quello con @EntityGraph
         List<Promotion> promos = promotionRepository.findActiveValidFetched(today);
 
-        // 2) FORZO l'inizializzazione delle relazioni dentro la TX
-        promos.forEach(p -> {
+        // FORZA INIZIALIZZAZIONE prima della chiusura TX
+        for (Promotion p : promos) {
+            Hibernate.initialize(p.getItems());
             if (p.getItems() != null) {
-                p.getItems().forEach(i -> {
-                    // tocco i campi per inizializzare i proxy anche se non sono stati fetchati
+                for (var i : p.getItems()) {
                     if (i.getMenuItem() != null) {
-                        i.getMenuItem().getId();
+                        Hibernate.initialize(i.getMenuItem());
                     }
-                });
-                p.getItems().size(); // inizializza la collection
+                }
             }
-        });
+        }
 
-        // 3) mappo a DTO (ancora dentro la TX)
-        return promos.stream()
-                .map(this::toResponse)
-                .toList();
+        // MAPPATURA *dentro* la transazione (no stream, nessuna lambda rimandata)
+        List<PromotionResponse> out = new java.util.ArrayList<>(promos.size());
+        for (Promotion p : promos) {
+            out.add(toResponse(p));
+        }
+        return out;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PromotionResponse> getAllPromotionResponses() {
+        List<Promotion> promos = promotionRepository.findAllFetched();
+
+        for (Promotion p : promos) {
+            Hibernate.initialize(p.getItems());
+            if (p.getItems() != null) {
+                for (var i : p.getItems()) {
+                    if (i.getMenuItem() != null) {
+                        Hibernate.initialize(i.getMenuItem());
+                    }
+                }
+            }
+        }
+
+        List<PromotionResponse> out = new java.util.ArrayList<>(promos.size());
+        for (Promotion p : promos) {
+            out.add(toResponse(p));
+        }
+        return out;
+    }
+
+    @Transactional(readOnly = true)
+    public Promotion getByIdFetched(Long id) {
+        Promotion p = promotionRepository.findByIdFetched(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
+
+        Hibernate.initialize(p.getItems());
+        if (p.getItems() != null) {
+            for (var i : p.getItems()) {
+                if (i.getMenuItem() != null) {
+                    Hibernate.initialize(i.getMenuItem());
+                }
+            }
+        }
+        return p;
     }
 
     /**
