@@ -138,17 +138,23 @@ public class PromotionService {
         return promotionRepository.save(existing);
     }
 
-    public Promotion riattiva(Long id) {
-        Promotion p = getById(id);
-        p.setAttiva(true);
-        return promotionRepository.save(p);
+    @Transactional
+    public PromotionResponse disattivaAndMap(Long id) {
+        Promotion p = promotionRepository.findByIdFetched(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
+        p.setAttiva(false);
+        // items sono già inizializzati e restiamo nella TX
+        return toResponse(p);
     }
 
-    public Promotion disattiva(Long id) {
-        Promotion p = getById(id);
-        p.setAttiva(false);
-        return promotionRepository.save(p);
+    @Transactional
+    public PromotionResponse riattivaAndMap(Long id) {
+        Promotion p = promotionRepository.findByIdFetched(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
+        p.setAttiva(true);
+        return toResponse(p);
     }
+
 
     public PromotionResponse toResponse(Promotion promo) {
         PromotionResponse response = new PromotionResponse();

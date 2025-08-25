@@ -51,15 +51,11 @@ public class AdminPromotionController {
 
     @PutMapping("/{id}/disattiva")
     public ResponseEntity<PromotionResponse> disattiva(@PathVariable Long id) {
-        Promotion promozione = promotionService.disattiva(id);
-        return ResponseEntity.ok(promotionService.toResponse(promozione));
+        return ResponseEntity.ok(promotionService.disattivaAndMap(id));
     }
 
     @PutMapping("/{id}/attiva")
     public ResponseEntity<PromotionResponse> riattiva(@PathVariable Long id) {
-        Promotion promozione = promotionService.riattiva(id);
-        return ResponseEntity.ok(promotionService.toResponse(promozione));
+        return ResponseEntity.ok(promotionService.riattivaAndMap(id));
     }
-
-
 }
