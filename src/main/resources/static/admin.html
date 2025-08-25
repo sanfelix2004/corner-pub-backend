@@ -1936,19 +1936,7 @@
             loadTableBookings();
         }
     });
-    async function unregisterFromEvent(eventId, userId) {
-        if (!confirm('Rimuovere questo partecipante?')) return;
 
-        try {
-            await fetch(`/admin/events/${eventId}/unregister/${userId}`, {
-                method: 'DELETE'
-            });
-            loadEventRegistrations();
-        } catch (error) {
-            console.error('Error unregistering:', error);
-            alert('Errore durante la rimozione');
-        }
-    }
 </script>
 </body>
 </html>
