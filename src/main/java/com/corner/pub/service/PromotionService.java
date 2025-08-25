@@ -37,11 +37,16 @@ public class PromotionService {
 
     @Transactional(readOnly = true)
     public List<PromotionResponse> getAllPromotionResponses() {
-        return promotionRepository.findAllFetched()   // <-- usa la query con join fetch
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        List<Promotion> promos = promotionRepository.findAllFetched();
+        promos.forEach(p -> {
+            if (p.getItems() != null) {
+                p.getItems().forEach(i -> { if (i.getMenuItem()!=null) i.getMenuItem().getId(); });
+                p.getItems().size();
+            }
+        });
+        return promos.stream().map(this::toResponse).toList();
     }
+
 
     @Transactional(readOnly = true)
     public Promotion getByIdFetched(Long id) {
@@ -58,11 +63,29 @@ public class PromotionService {
     @Transactional(readOnly = true)
     public List<PromotionResponse> getActivePromotionResponses() {
         LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
-        return promotionRepository.findActiveValidFetched(today)
-                .stream()
+
+        // 1) recupero
+        List<Promotion> promos = promotionRepository.findActiveValidFetched(today);
+
+        // 2) FORZO l'inizializzazione delle relazioni dentro la TX
+        promos.forEach(p -> {
+            if (p.getItems() != null) {
+                p.getItems().forEach(i -> {
+                    // tocco i campi per inizializzare i proxy anche se non sono stati fetchati
+                    if (i.getMenuItem() != null) {
+                        i.getMenuItem().getId();
+                    }
+                });
+                p.getItems().size(); // inizializza la collection
+            }
+        });
+
+        // 3) mappo a DTO (ancora dentro la TX)
+        return promos.stream()
                 .map(this::toResponse)
                 .toList();
     }
+
     /**
      * Recupera una promozione per ID, oppure lancia eccezione se non esiste.
      */
