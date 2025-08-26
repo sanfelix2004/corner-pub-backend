@@ -194,18 +194,32 @@ public class ReservationService {
     }
 
     private LocalDate parseDate(String dateString) {
+        // LOGGING DEBUG - mostrerà nella console di Render
+        System.out.println("🟡 DEBUG PARSE DATE - Input received: '" + dateString + "'");
+        System.out.println("🟡 DEBUG PARSE DATE - Environment TZ: " + System.getenv("TZ"));
+        System.out.println("🟡 DEBUG PARSE DATE - Current time: " + LocalDateTime.now());
+
         DateTimeFormatter[] formatters = new DateTimeFormatter[]{
                 DateTimeFormatter.ISO_LOCAL_DATE
         };
 
         for (DateTimeFormatter formatter : formatters) {
             try {
-                return LocalDate.parse(dateString, formatter);
-            } catch (DateTimeParseException ignored) {
+                LocalDate parsedDate = LocalDate.parse(dateString, formatter);
+                System.out.println("✅ DEBUG PARSE DATE - Success with ISO_LOCAL_DATE");
+                System.out.println("✅ DEBUG PARSE DATE - Parsed date: " + parsedDate);
+                return parsedDate;
+            } catch (DateTimeParseException e) {
+                System.out.println("❌ DEBUG PARSE DATE - Failed with ISO_LOCAL_DATE");
+                System.out.println("❌ DEBUG PARSE DATE - Error: " + e.getMessage());
             }
         }
 
-        throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd o dd-MM-yyyy");
+        System.out.println("🔥 DEBUG PARSE DATE - ALL FORMATTERS FAILED!");
+        System.out.println("🔥 DEBUG PARSE DATE - Original input: '" + dateString + "'");
+        System.out.println("🔥 DEBUG PARSE DATE - Input length: " + dateString.length());
+
+        throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
     }
 
     public ReservationResponse toResponse(Reservation reservation) {
