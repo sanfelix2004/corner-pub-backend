@@ -1,8 +1,6 @@
 package com.corner.pub.controller;
 
-import com.corner.pub.controller.admin.AdminEventController;
 import com.corner.pub.dto.request.ReservationRequest;
-import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.ReservationResponse;
 import com.corner.pub.service.EventRegistrationService;
 import com.corner.pub.service.ReservationService;
@@ -12,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
+
 @RestController
 @RequestMapping("/api/reservations")
 public class ReservationController {
@@ -33,7 +31,7 @@ public class ReservationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    // ✅ GET: tutte le prenotazioni di un utente (PIÙ SPECIFICA)
+    // ✅ GET: tutte le prenotazioni di un utente (tavolo + eventi)
     @GetMapping("/user/{phone}")
     public ResponseEntity<List<ReservationResponse>> getUserReservations(@PathVariable String phone) {
         return ResponseEntity.ok(reservationService.getAllUserReservations(phone));
@@ -46,21 +44,25 @@ public class ReservationController {
     }
 
     // ✅ GET: prenotazione singola (phone + date)
-    @GetMapping("/{phone}/{date}")
-    public ResponseEntity<ReservationResponse> getReservation(@PathVariable String phone, @PathVariable String date) {
+    @GetMapping("/lookup/{phone}/{date}")
+    public ResponseEntity<ReservationResponse> getReservation(
+            @PathVariable String phone,
+            @PathVariable String date) {
         ReservationResponse response = reservationService.getReservation(phone, date);
         return ResponseEntity.ok(response);
     }
 
-    // ✅ GET: prenotazioni per phone (senza date)
-    @GetMapping("/{phone}")
+    // ✅ GET: prenotazioni per phone (solo prenotazioni tavolo, senza eventi)
+    @GetMapping("/byPhone/{phone}")
     public ResponseEntity<List<ReservationResponse>> getByPhone(@PathVariable String phone) {
         return ResponseEntity.ok(reservationService.getReservationsByPhone(phone));
     }
 
     // ✅ DELETE prenotazione
     @DeleteMapping("/{phone}/{date}")
-    public ResponseEntity<Void> delete(@PathVariable String phone, @PathVariable String date) {
+    public ResponseEntity<Void> delete(
+            @PathVariable String phone,
+            @PathVariable String date) {
         reservationService.deleteReservationByPhoneAndDate(phone, date);
         return ResponseEntity.ok().build();
     }
