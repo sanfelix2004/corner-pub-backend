@@ -22,12 +22,15 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.Collectors;import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @Service
 @RequiredArgsConstructor
 public class ReservationService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReservationService.class);
     private final ReservationRepository reservationRepository;
     private final UserService userService;
     private final EventRepository eventRepository;
@@ -194,10 +197,9 @@ public class ReservationService {
     }
 
     private LocalDate parseDate(String dateString) {
-        // LOGGING DEBUG - mostrerà nella console di Render
-        System.out.println("🟡 DEBUG PARSE DATE - Input received: '" + dateString + "'");
-        System.out.println("🟡 DEBUG PARSE DATE - Environment TZ: " + System.getenv("TZ"));
-        System.out.println("🟡 DEBUG PARSE DATE - Current time: " + LocalDateTime.now());
+        log.info("🟡 DEBUG PARSE DATE - Input received: '{}'", dateString);
+        log.info("🟡 DEBUG PARSE DATE - Environment TZ: {}", System.getenv("TZ"));
+        log.info("🟡 DEBUG PARSE DATE - Current time: {}", LocalDateTime.now());
 
         DateTimeFormatter[] formatters = new DateTimeFormatter[]{
                 DateTimeFormatter.ISO_LOCAL_DATE
@@ -206,18 +208,17 @@ public class ReservationService {
         for (DateTimeFormatter formatter : formatters) {
             try {
                 LocalDate parsedDate = LocalDate.parse(dateString, formatter);
-                System.out.println("✅ DEBUG PARSE DATE - Success with ISO_LOCAL_DATE");
-                System.out.println("✅ DEBUG PARSE DATE - Parsed date: " + parsedDate);
+                log.info("✅ DEBUG PARSE DATE - Success with ISO_LOCAL_DATE");
+                log.info("✅ DEBUG PARSE DATE - Parsed date: {}", parsedDate);
                 return parsedDate;
             } catch (DateTimeParseException e) {
-                System.out.println("❌ DEBUG PARSE DATE - Failed with ISO_LOCAL_DATE");
-                System.out.println("❌ DEBUG PARSE DATE - Error: " + e.getMessage());
+                log.warn("❌ DEBUG PARSE DATE - Failed with ISO_LOCAL_DATE: {}", e.getMessage());
             }
         }
 
-        System.out.println("🔥 DEBUG PARSE DATE - ALL FORMATTERS FAILED!");
-        System.out.println("🔥 DEBUG PARSE DATE - Original input: '" + dateString + "'");
-        System.out.println("🔥 DEBUG PARSE DATE - Input length: " + dateString.length());
+        log.error("🔥 DEBUG PARSE DATE - ALL FORMATTERS FAILED!");
+        log.error("🔥 DEBUG PARSE DATE - Original input: '{}'", dateString);
+        log.error("🔥 DEBUG PARSE DATE - Input length: {}", dateString.length());
 
         throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
     }
