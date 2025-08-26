@@ -7690,3 +7690,30 @@ org.springframework.web.servlet.resource.NoResourceFoundException: No static res
 2025-08-25 14:48:11 - INFO [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
 2025-08-25 14:48:11 - INFO [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
 2025-08-25 14:48:12 - INFO [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2025-08-25 17:46:56 - INFO [main] com.corner.pub.PubApplication - Starting PubApplication using Java 21.0.5 with PID 26480 (C:\Users\francesco.sanfelice\Desktop\pub\target\classes started by francesco.sanfelice in C:\Users\francesco.sanfelice\Desktop\pub)
+2025-08-25 17:46:56 - DEBUG [main] com.corner.pub.PubApplication - Running with Spring Boot v3.2.3, Spring v6.1.4
+2025-08-25 17:46:56 - INFO [main] com.corner.pub.PubApplication - No active profile set, falling back to 1 default profile: "default"
+2025-08-25 17:46:57 - INFO [main] o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-08-25 17:46:57 - INFO [main] o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 76 ms. Found 8 JPA repository interfaces.
+2025-08-25 17:46:57 - INFO [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2025-08-25 17:46:57 - INFO [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2025-08-25 17:46:57 - INFO [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.19]
+2025-08-25 17:46:57 - INFO [main] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2025-08-25 17:46:57 - INFO [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1470 ms
+2025-08-25 17:46:58 - INFO [main] o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-08-25 17:46:58 - INFO [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-08-25 17:46:58 - INFO [main] o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2025-08-25 17:46:58 - INFO [main] o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-08-25 17:46:58 - INFO [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2025-08-25 17:47:00 - INFO [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@22b82ddf
+2025-08-25 17:47:00 - INFO [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2025-08-25 17:47:00 - WARN [main] org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-08-25 17:47:02 - INFO [main] o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-08-25 17:47:03 - INFO [main] o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-08-25 17:47:03 - INFO [main] o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-08-25 17:47:05 - INFO [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2025-08-25 17:47:05 - INFO [main] com.corner.pub.PubApplication - Started PubApplication in 9.305 seconds (process running for 10.316)
+2025-08-25 17:47:10 - INFO [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-08-25 17:50:08 - INFO [SpringApplicationShutdownHook] o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-08-25 17:50:08 - INFO [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2025-08-25 17:50:08 - INFO [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

@@ -12,6 +12,7 @@ import com.corner.pub.repository.EventRepository;
 import com.corner.pub.repository.ReservationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -21,8 +22,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;import org.springframework.transaction.annotation.Transactional;
-
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ public class ReservationService {
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request) {
         User user = userService.findOrCreate(request.getName(), request.getPhone());
-        LocalDate date = LocalDate.parse(request.getDate());
+        LocalDate date = parseDate(request.getDate());
 
         if (reservationRepository.findByUser_PhoneAndDate(user.getPhone(), date).isPresent()) {
             throw new ReservationAlreadyExistsException(user.getPhone(), request.getDate());
@@ -66,7 +66,7 @@ public class ReservationService {
             User user = userService.findOrCreate(request.getName(), request.getPhone());
             Reservation reservation = new Reservation();
             reservation.setUser(user);
-            reservation.setDate(LocalDate.parse(request.getDate()));
+            reservation.setDate(parseDate(request.getDate()));
             reservation.setTime(LocalTime.parse(request.getTime()));
             reservation.setPeople(request.getPeople());
             reservation.setNote(request.getNote());
@@ -100,7 +100,7 @@ public class ReservationService {
 
         User user = userService.findOrCreate(request.getName(), request.getPhone());
         reservation.setUser(user);
-        reservation.setDate(LocalDate.parse(request.getDate()));
+        reservation.setDate(parseDate(request.getDate()));
         reservation.setTime(LocalTime.parse(request.getTime()));
         reservation.setPeople(request.getPeople());
         reservation.setNote(request.getNote());
@@ -140,7 +140,6 @@ public class ReservationService {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
-
 
     @Transactional(readOnly = true)
     public List<ReservationResponse> getReservationsByDate(String dateString) {
@@ -195,10 +194,10 @@ public class ReservationService {
     }
 
     private LocalDate parseDate(String dateString) {
-        DateTimeFormatter[] formatters = new DateTimeFormatter[] {
-                DateTimeFormatter.ISO_LOCAL_DATE,               // yyyy-MM-dd
-                DateTimeFormatter.ofPattern("dd-MM-yyyy"),      // dd-MM-yyyy
-                DateTimeFormatter.ofPattern("MM/dd/yyyy")       // opzionale se serve
+        DateTimeFormatter[] formatters = new DateTimeFormatter[]{
+                DateTimeFormatter.ISO_LOCAL_DATE,              // yyyy-MM-dd
+                DateTimeFormatter.ofPattern("dd-MM-yyyy"),     // dd-MM-yyyy
+                DateTimeFormatter.ofPattern("MM/dd/yyyy")      // MM/dd/yyyy
         };
 
         for (DateTimeFormatter formatter : formatters) {
@@ -210,7 +209,6 @@ public class ReservationService {
 
         throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd o dd-MM-yyyy");
     }
-
 
     public ReservationResponse toResponse(Reservation reservation) {
         ReservationResponse response = new ReservationResponse();
@@ -249,7 +247,7 @@ public class ReservationService {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
 
-        // Prenotazioni derivate da EventRegistration (se non hai Reservation create anche lì)
+        // Prenotazioni derivate da EventRegistration
         List<ReservationResponse> eventReservations = eventRegistrationService
                 .getRegistrationsByPhone(phone)
                 .stream()
@@ -273,9 +271,7 @@ public class ReservationService {
                 })
                 .collect(Collectors.toList());
 
-        // Unisco tutto
         reservations.addAll(eventReservations);
         return reservations;
     }
-
 }

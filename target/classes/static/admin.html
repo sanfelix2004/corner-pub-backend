@@ -1146,12 +1146,18 @@
     async function loadPromozioni() {
         const checklist = document.getElementById('checklistProdottiPromozione');
         const promozioniTableBody = document.getElementById('promozioniTableBody');
-        if (!checklist || !promozioniTableBody) return; // id non presenti -> esci
 
-        // placeholder di caricamento
-        promozioniTableBody.innerHTML = `
-    <tr><td colspan="6" class="text-center py-4">Caricamento…</td></tr>
-  `;
+        // helper per stampare una riga di errore in tabella
+        const showErrorRow = (msg) => {
+            if (!promozioniTableBody) return;
+            promozioniTableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center py-4 text-danger">
+          <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+          <p>${msg}</p>
+        </td>
+      </tr>`;
+        };
 
         try {
             const [menuRes, promoRes] = await Promise.all([
@@ -1159,87 +1165,124 @@
                 fetch('/admin/promotions')
             ]);
 
-            // MENU
-            if (!menuRes.ok) throw new Error('Menu API ' + menuRes.status);
-            const menuData = await menuRes.json();
-            const grouped = {};
-            (Array.isArray(menuData) ? menuData : []).forEach(item => {
-                (grouped[item.categoria] ||= []).push(item);
-            });
-            checklist.innerHTML = '';
-            Object.keys(grouped).sort().forEach(categoria => {
-                const items = grouped[categoria].map(item => `
-        <div class="form-check mb-2">
-          <input class="form-check-input promo-checkbox" type="checkbox"
-                 value="${item.id}" id="prod-${item.id}" data-title="${item.titolo}">
-          <label class="form-check-label" for="prod-${item.id}">
-            ${item.titolo} <span class="text-muted">(€${(+item.prezzo).toFixed(2)})</span>
-          </label>
-        </div>`).join('');
-                const section = document.createElement('div');
-                section.className = 'col-md-6 mb-4';
-                section.innerHTML = `
-        <div class="card h-100">
-          <div class="card-header bg-light"><strong>${categoria}</strong></div>
-          <div class="card-body">${items}</div>
-        </div>`;
-                checklist.appendChild(section);
-            });
+            // --- MENU ---
+            if (!menuRes.ok) {
+                const t = await menuRes.text().catch(() => '');
+                console.error('GET /admin/menu failed:', menuRes.status, t);
+                // Non blocco: la tabella promo può comunque tentare di mostrarsi
+            }
+            const menuData = menuRes.ok ? await menuRes.json() : [];
 
-            // PROMOZIONI
+            // Build checklist prodotti (solo se presente il container)
+            if (checklist) {
+                const grouped = {};
+                (Array.isArray(menuData) ? menuData : []).forEach(item => {
+                    const cat = item.categoria || 'Altro';
+                    (grouped[cat] ||= []).push(item);
+                });
+                checklist.innerHTML = '';
+                Object.keys(grouped).sort().forEach(categoria => {
+                    const section = document.createElement('div');
+                    section.classList.add('col-md-6', 'mb-4');
+                    section.innerHTML = `
+          <div class="card h-100">
+            <div class="card-header bg-light"><strong>${categoria}</strong></div>
+            <div class="card-body">
+              ${grouped[categoria].map(item => `
+                <div class="form-check mb-2">
+                  <input class="form-check-input promo-checkbox" type="checkbox"
+                         value="${item.id}" id="prod-${item.id}" data-title="${item.titolo}">
+                  <label class="form-check-label" for="prod-${item.id}">
+                    ${item.titolo} <span class="text-muted">(€${Number(item.prezzo).toFixed(2)})</span>
+                  </label>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+                    checklist.appendChild(section);
+                });
+
+                // listener dei checkbox
+                document.querySelectorAll('.promo-checkbox').forEach(cb => {
+                    cb.addEventListener('change', updatePromoSummary);
+                });
+            }
+
+            // --- PROMOZIONI ---
+            if (!promozioniTableBody) return;
+
             if (!promoRes.ok) {
-                // backend KO: non far crashare il JS
-                promozioniTableBody.innerHTML = `
-        <tr><td colspan="6" class="text-center text-danger py-4">
-          Errore server (${promoRes.status}) nel caricare le promozioni
-        </td></tr>`;
+                const t = await promoRes.text().catch(() => '');
+                console.error('GET /admin/promotions failed:', promoRes.status, t);
+                showErrorRow('Errore durante il caricamento delle promozioni');
                 return;
             }
 
-            const promoData = await promoRes.json();
-            const promos = Array.isArray(promoData) ? promoData : [];
-            if (promos.length === 0) {
+            let promoData;
+            try {
+                promoData = await promoRes.json();
+            } catch (e) {
+                console.error('Promotions JSON parse error:', e);
+                showErrorRow('Risposta non valida dal server (promozioni)');
+                return;
+            }
+
+            if (!Array.isArray(promoData)) {
+                console.error('Promotions not an array:', promoData);
+                showErrorRow('Risposta inattesa dal server (promozioni)');
+                return;
+            }
+
+            if (promoData.length === 0) {
                 promozioniTableBody.innerHTML = `
         <tr>
           <td colspan="6" class="text-center py-4">
             <i class="fas fa-tag fa-2x mb-3 text-muted"></i>
-            <p class="mb-0">Nessuna promozione</p>
+            <p class="mb-0">Nessuna promozione attiva</p>
           </td>
         </tr>`;
                 return;
             }
 
-            // ordina per dataInizio (se manca, va in coda)
-            promos.sort((a, b) => {
-                const da = a?.dataInizio ? new Date(a.dataInizio) : new Date(8640000000000000);
-                const db = b?.dataInizio ? new Date(b.dataInizio) : new Date(8640000000000000);
-                return da - db;
+            // ordina per dataInizio crescente (se mancano le date, le mette in coda)
+            promoData.sort((a, b) => {
+                const da = a?.dataInizio ? new Date(a.dataInizio) : null;
+                const db = b?.dataInizio ? new Date(b.dataInizio) : null;
+                if (da && db) return da - db;
+                if (da && !db) return -1;
+                if (!da && db) return 1;
+                return 0;
             });
 
             promozioniTableBody.innerHTML = '';
             const today = new Date();
 
-            promos.forEach(promo => {
-                const start = promo.dataInizio ? new Date(promo.dataInizio) : null;
-                const end   = promo.dataFine    ? new Date(promo.dataFine)    : null;
+            promoData.forEach(promo => {
+                const startDate = promo.dataInizio ? new Date(promo.dataInizio) : null;
+                const endDate   = promo.dataFine   ? new Date(promo.dataFine)   : null;
                 const isActive =
-                    (!start || today >= start) && (!end || today <= end) && (promo.attiva !== false);
+                    (!!startDate ? today >= startDate : true) &&
+                    (!!endDate   ? today <= endDate   : true);
 
-                const sconto = Array.isArray(promo.items) && promo.items[0]
-                    ? (promo.items[0].scontoPercentuale ?? 0)
-                    : 0;
+                // se la struttura items è diversa, non rompiamo
+                let sconto = 0;
+                if (Array.isArray(promo.items) && promo.items.length > 0) {
+                    // supporta sia item.scontoPercentuale che item.sconto
+                    const first = promo.items[0];
+                    sconto = Number(first.scontoPercentuale ?? first.sconto ?? 0);
+                }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
         <td>
-          <strong>${promo.nome || '—'}</strong>
+          <strong>${promo.nome ?? '-'}</strong>
           <div class="small text-muted">${promo.descrizione || 'Nessuna descrizione'}</div>
         </td>
         <td>${promo.descrizione || '-'}</td>
         <td>
-          ${promo.dataInizio ? new Date(promo.dataInizio).toLocaleDateString('it-IT') : '—'}<br>
+          ${promo.dataInizio ? formatDate(promo.dataInizio) : '-'}<br>
           <span class="text-muted small">al</span><br>
-          ${promo.dataFine ? new Date(promo.dataFine).toLocaleDateString('it-IT') : '—'}
+          ${promo.dataFine ? formatDate(promo.dataFine) : '-'}
         </td>
         <td class="text-center">
           <span class="badge bg-danger p-2">${sconto}%</span>
@@ -1257,19 +1300,12 @@
                 promozioniTableBody.appendChild(tr);
             });
 
-            // listener per il riepilogo selezione
-            document.querySelectorAll('.promo-checkbox').forEach(cb =>
-                cb.addEventListener('change', updatePromoSummary)
-            );
-
         } catch (err) {
             console.error('Error loading promotions:', err);
-            promozioniTableBody.innerHTML = `
-      <tr><td colspan="6" class="text-center text-danger py-4">
-        Errore durante il caricamento delle promozioni
-      </td></tr>`;
+            showErrorRow('Errore durante il caricamento delle promozioni');
         }
     }
+
 
 
     function updatePromoSummary() {
