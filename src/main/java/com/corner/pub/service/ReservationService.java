@@ -220,7 +220,9 @@ public class ReservationService {
         log.error("🔥 DEBUG PARSE DATE - Original input: '{}'", dateString);
         log.error("🔥 DEBUG PARSE DATE - Input length: {}", dateString.length());
 
-        throw new BadRequestException("Formato data non valido. Usa yyyy-MM-dd");
+        throw new BadRequestException(
+                "Formato data non valido. Usa yyyy-MM-dd. Valore ricevuto: '" + dateString + "'"
+        );
     }
 
     public ReservationResponse toResponse(Reservation reservation) {
