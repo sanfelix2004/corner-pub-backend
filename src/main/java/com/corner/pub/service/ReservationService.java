@@ -194,15 +194,22 @@ public class ReservationService {
     }
 
     private LocalDate parseDate(String dateString) {
+        String cleanedDate = dateString.split("T")[0]; // Se arriva yyyy-MM-ddTHH:mm:ss
+        cleanedDate = cleanedDate.split(" ")[0]; // Se arriva yyyy-MM-dd HH:mm:ss
+
         DateTimeFormatter[] formatters = new DateTimeFormatter[]{
                 DateTimeFormatter.ISO_LOCAL_DATE,              // yyyy-MM-dd
                 DateTimeFormatter.ofPattern("dd-MM-yyyy"),     // dd-MM-yyyy
-                DateTimeFormatter.ofPattern("MM/dd/yyyy")      // MM/dd/yyyy
+                DateTimeFormatter.ofPattern("MM/dd/yyyy"),     // MM/dd/yyyy
+                DateTimeFormatter.ofPattern("yyyy/MM/dd"),     // yyyy/MM/dd
+                DateTimeFormatter.ofPattern("dd/MM/yyyy"),     // dd/MM/yyyy
+                DateTimeFormatter.ISO_DATE,                    // yyyy-MM-dd+timezone
+                DateTimeFormatter.ISO_DATE_TIME                // yyyy-MM-ddTHH:mm:ss
         };
 
         for (DateTimeFormatter formatter : formatters) {
             try {
-                return LocalDate.parse(dateString, formatter);
+                return LocalDate.parse(cleanedDate, formatter);
             } catch (DateTimeParseException ignored) {
             }
         }
