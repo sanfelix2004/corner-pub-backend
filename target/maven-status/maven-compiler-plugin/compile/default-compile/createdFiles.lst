@@ -44,7 +44,6 @@ com\corner\pub\dto\request\PromotionRequest.class
 com\corner\pub\controller\EventController.class
 com\corner\pub\repository\PromotionMenuItemRepository.class
 com\corner\pub\controller\admin\AdminPromotionController.class
-com\corner\pub\service\EmailService.class
 com\corner\pub\model\EventRegistration.class
 com\corner\pub\model\User.class
 com\corner\pub\dto\request\ReservationRequest.class
