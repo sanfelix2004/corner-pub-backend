@@ -63,22 +63,22 @@ public class MenuItemService {
         // upload immagine se presente
         if (image != null && !image.isEmpty()) {
             try {
-                Map uploadResult = cloudinary.uploader().upload(image.getBytes(),
+                Map uploadResult = cloudinary.uploader().upload(
+                        image.getBytes(),
                         ObjectUtils.asMap(
-                                "folder", "prodotti/",
-                                "public_id", String.valueOf(saved.getId()), // o item.getId()
+                                // usa un solo modo per impostare il path
+                                "public_id", "prodotti/" + saved.getId(),
                                 "overwrite", true,
                                 "invalidate", true,
                                 "resource_type", "image"
-                        ));
-
+                        )
+                );
                 String imageUrl = (String) uploadResult.get("secure_url");
-
-                // 🔧 Rimuovo la parte con /v123456789/ per avere un URL stabile
-                imageUrl = imageUrl.replaceAll("/v\\d+/", "/");
-
+                // ❌ NON fare replace della /v123.../
+                // ✅ salva l'URL come lo dà Cloudinary
                 saved.setImageUrl(imageUrl);
-                saved = menuItemRepository.save(saved);
+                menuItemRepository.save(saved);
+
             } catch (Exception e) {
                 throw new RuntimeException("Errore durante il caricamento immagine su Cloudinary", e);
             }
@@ -121,9 +121,6 @@ public class MenuItemService {
                         ));
 
                 String imageUrl = (String) uploadResult.get("secure_url");
-
-                // 🔧 Rimuovo la parte con /v123456789/ per avere un URL stabile
-                imageUrl = imageUrl.replaceAll("/v\\d+/", "/");
 
                 item.setImageUrl(imageUrl); // aggiorno il campo dell'oggetto
 
