@@ -32,8 +32,10 @@ C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\respon
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\controller\admin\AdminEventController.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\service\PromotionService.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\controller\admin\AdminInEvidenzaController.java
+C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\request\EventTableAssignmentRequest.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\request\EventRegistrationRequest.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\repository\PromotionMenuItemRepository.java
+C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\dto\request\TableAssignmentRequest.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\model\Promotion.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\exception\resourcenotfound\MenuItemNotFoundException.java
 C:\Users\francesco.sanfelice\Desktop\pub\src\main\java\com\corner\pub\controller\admin\AdminMenuController.java

@@ -5,6 +5,7 @@ com\corner\pub\exception\badrequest\CapacityExceededException.class
 com\corner\pub\exception\badrequest\BadRequestException.class
 com\corner\pub\exception\CornerPubException.class
 com\corner\pub\model\InEvidenza.class
+com\corner\pub\dto\request\TableAssignmentRequest.class
 com\corner\pub\exception\resourcenotfound\ReservationNotFoundException.class
 com\corner\pub\controller\admin\AdminMenuController.class
 com\corner\pub\dto\response\UserResponse.class
@@ -44,6 +45,7 @@ com\corner\pub\dto\request\PromotionRequest.class
 com\corner\pub\controller\EventController.class
 com\corner\pub\repository\PromotionMenuItemRepository.class
 com\corner\pub\controller\admin\AdminPromotionController.class
+com\corner\pub\dto\request\EventTableAssignmentRequest.class
 com\corner\pub\model\EventRegistration.class
 com\corner\pub\model\User.class
 com\corner\pub\dto\request\ReservationRequest.class
