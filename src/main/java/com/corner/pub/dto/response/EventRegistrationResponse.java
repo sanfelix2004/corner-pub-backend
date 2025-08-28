@@ -3,6 +3,7 @@ package com.corner.pub.dto.response;
 import com.corner.pub.model.EventRegistration;
 
 import java.time.LocalDateTime;
+
 public class EventRegistrationResponse {
 
     private String name;
@@ -12,7 +13,8 @@ public class EventRegistrationResponse {
     private UserResponse user;
     private int partecipanti;
     private String phone;
-    private String note; // nuovo campo
+    private String note;
+    private String tableNumber; // 🔹 nuovo campo
 
     public EventRegistrationResponse() {}
 
@@ -28,9 +30,7 @@ public class EventRegistrationResponse {
         }
 
         if (reg.getEvent() != null) {
-            // Calcolo totale iscritti considerando i partecipanti
-            long totaleIscritti = reg.getEvent()
-                    .getRegistrations() != null
+            long totaleIscritti = reg.getEvent().getRegistrations() != null
                     ? reg.getEvent().getRegistrations().stream()
                     .mapToLong(EventRegistration::getPartecipanti)
                     .sum()
@@ -40,6 +40,7 @@ public class EventRegistrationResponse {
         }
 
         this.note = reg.getNote();
+        this.tableNumber = reg.getTableNumber(); // 🔹 assegno il tavolo
     }
 
     public EventRegistrationResponse(Long id, LocalDateTime createdAt, EventResponse eventResponse, UserResponse userResponse, int partecipanti) {
@@ -74,4 +75,7 @@ public class EventRegistrationResponse {
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    public String getTableNumber() { return tableNumber; }
+    public void setTableNumber(String tableNumber) { this.tableNumber = tableNumber; }
 }

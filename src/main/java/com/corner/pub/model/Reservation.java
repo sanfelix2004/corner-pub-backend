@@ -27,6 +27,9 @@ public class Reservation {
     @JoinColumn(name = "event_id")
     private Event event; // Aggiungi questa relazione
 
+    @Column(name = "table_number")
+    private String tableNumber;  // es. "T1", "Tavolo 8", "Sala esterna"
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -37,6 +40,16 @@ public class Reservation {
     }
 
     // Getters e Setters
+
+
+    public String getTableNumber() {
+        return tableNumber;
+    }
+
+    public void setTableNumber(String tableNumber) {
+        this.tableNumber = tableNumber;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

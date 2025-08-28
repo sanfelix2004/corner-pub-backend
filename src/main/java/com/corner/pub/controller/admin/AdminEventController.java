@@ -2,6 +2,7 @@ package com.corner.pub.controller.admin;
 
 import com.corner.pub.dto.request.EventRequest;
 import com.corner.pub.dto.request.EventRegistrationRequest;
+import com.corner.pub.dto.request.EventTableAssignmentRequest;
 import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.EventResponse;
 import com.corner.pub.dto.response.UserResponse;
@@ -29,6 +30,15 @@ public class AdminEventController {
         this.eventRepository = eventRepository;
         this.registrationService = registrationService;
     }
+
+    @PatchMapping("/registrations/{id}/table")
+    public ResponseEntity<EventRegistrationResponse> updateTable(
+            @PathVariable Long id,
+            @RequestBody EventTableAssignmentRequest request
+    ) {
+        return ResponseEntity.ok(registrationService.assignTable(id, request.getTableNumber()));
+    }
+
 
     @GetMapping
     public ResponseEntity<List<EventResponse>> getAllEvents() {

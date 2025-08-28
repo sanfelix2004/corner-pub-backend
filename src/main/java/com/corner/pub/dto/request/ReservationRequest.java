@@ -8,8 +8,18 @@ public class ReservationRequest {
     private int people;
     private String note;
     private Long eventId; // null per prenotazione normale
+    private String tableNumber;  // aggiunto
 
     // Getters & Setters
+
+    public String getTableNumber() {
+        return tableNumber;
+    }
+
+    public void setTableNumber(String tableNumber) {
+        this.tableNumber = tableNumber;
+    }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 

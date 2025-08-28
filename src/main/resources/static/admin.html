@@ -1707,19 +1707,27 @@
                 section.classList.add('mb-4');
 
                 const rows = grouped[date].map(b => `
-                <tr>
-                    <td>${b.name}</td>
-                    <td>${b.phone}</td>
-                    <td>${b.time}</td>
-                    <td>${b.people}</td>
-                    <td>${b.note || '-'}</td>
-                    <td class="text-nowrap">
-                        <button class="btn btn-sm btn-danger" onclick="deleteTableBooking(${b.id})">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+                    <tr>
+                        <td>${b.name}</td>
+                        <td>${b.phone}</td>
+                        <td>${b.time}</td>
+                        <td>${b.people}</td>
+                        <td>${b.note || '-'}</td>
+                        <td>
+                            <input type="text" id="table-${b.id}" class="form-control form-control-sm"
+                                   value="${b.tableNumber || ''}" placeholder="Tavolo" />
+                        </td>
+                        <td class="text-nowrap">
+                            <button class="btn btn-sm btn-success" onclick="updateTable(${b.id})">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteTableBooking(${b.id})">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
 
 
                 section.innerHTML = `
@@ -1735,9 +1743,11 @@
                                 <th>Orario</th>
                                 <th>Persone</th>
                                 <th>Note</th>
+                                <th>Tavolo</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
+
                         <tbody>${rows}</tbody>
                     </table>
                 </div>
@@ -1825,20 +1835,30 @@
         `;
                 } else {
                     const rows = eventData.attendees.map(attendee => `
-            <tr>
-                <td>${escape(attendee.user.name)}</td>
-                <td>${escape(attendee.user.phone)}</td>
-                <td>${formatDateTime(attendee.createdAt)}</td>
-                <td>${attendee.partecipanti || 1}</td>
-                <td>${escape(attendee.note || '-')}</td>
-                <td class="text-nowrap">
-                    <button class="btn btn-sm btn-danger"
-                            onclick="unregisterFromEvent(${eventId}, ${attendee.user.id})">
-                        <i class="fas fa-user-times"></i> Rimuovi
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+    <tr>
+        <td>${escape(attendee.user.name)}</td>
+        <td>${escape(attendee.user.phone)}</td>
+        <td>${formatDateTime(attendee.createdAt)}</td>
+        <td>${attendee.partecipanti || 1}</td>
+        <td>${escape(attendee.note || '-')}</td>
+        <td>
+            <input type="text" id="event-table-${attendee.id}"
+                   class="form-control form-control-sm"
+                   value="${attendee.tableNumber || ''}"
+                   placeholder="Tavolo" />
+        </td>
+        <td class="text-nowrap">
+            <button class="btn btn-sm btn-success" onclick="updateEventTable(${attendee.id})">
+                <i class="fas fa-check"></i>
+            </button>
+            <button class="btn btn-sm btn-danger"
+                    onclick="unregisterFromEvent(${eventId}, ${attendee.user.id})">
+                <i class="fas fa-user-times"></i> Rimuovi
+            </button>
+        </td>
+    </tr>
+`).join('');
+
 
                     tableDiv.innerHTML = `
             <table class="table table-hover">
@@ -1849,6 +1869,7 @@
                         <th>Data Registrazione</th>
                         <th>Persone</th>
                         <th>Note</th>
+                        <th>Tavolo</th>
                         <th>Azioni</th>
                     </tr>
                 </thead>
@@ -1986,6 +2007,53 @@
             loadTableBookings();
         }
     });
+    async function updateTable(id) {
+        const tableInput = document.getElementById(`table-${id}`);
+        const tableNumber = tableInput.value;
+
+        try {
+            const res = await fetch(`/admin/reservations/${id}/table`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tableNumber })
+            });
+
+            if (res.ok) {
+                alert("✅ Tavolo aggiornato!");
+                loadTableBookings();
+            } else {
+                const error = await res.json();
+                alert("❌ Errore: " + (error.message || 'Impossibile aggiornare il tavolo'));
+            }
+        } catch (error) {
+            console.error("Error updating table:", error);
+            alert("❌ Errore durante l'aggiornamento del tavolo");
+        }
+    }
+    async function updateEventTable(id) {
+        const tableInput = document.getElementById(`event-table-${id}`);
+        const tableNumber = tableInput.value;
+
+        try {
+            const res = await fetch(`/admin/events/registrations/${id}/table`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tableNumber })
+            });
+
+            if (res.ok) {
+                alert("✅ Tavolo aggiornato!");
+                loadEventRegistrations(); // ricarica la lista aggiornata
+            } else {
+                const error = await res.json();
+                alert("❌ Errore: " + (error.message || 'Impossibile aggiornare il tavolo'));
+            }
+        } catch (error) {
+            console.error("Error updating event table:", error);
+            alert("❌ Errore durante l'aggiornamento del tavolo");
+        }
+    }
+
 
 </script>
 </body>

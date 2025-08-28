@@ -14,6 +14,15 @@ public class ReservationResponse {
     private Long eventId; // Aggiungi questo campo
     private Boolean isEventRegistration; // Aggiungi questo campo
     private EventResponse event;
+    private String tableNumber;  // aggiunto
+
+    public String getTableNumber() {
+        return tableNumber;
+    }
+
+    public void setTableNumber(String tableNumber) {
+        this.tableNumber = tableNumber;
+    }
 
     public Boolean getEventRegistration() {
         return isEventRegistration;

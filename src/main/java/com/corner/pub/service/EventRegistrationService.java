@@ -5,6 +5,7 @@ import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.EventResponse;
 import com.corner.pub.dto.response.UserResponse;
 import com.corner.pub.exception.CornerPubException;
+import com.corner.pub.exception.resourcenotfound.ResourceNotFoundException;
 import com.corner.pub.model.Event;
 import com.corner.pub.model.EventRegistration;
 import com.corner.pub.model.User;
@@ -33,19 +34,11 @@ public class EventRegistrationService {
         this.registrationRepository = registrationRepository;
     }
 
-    // 🔑 nuovo metodo
-    @Transactional(readOnly = true)
-    public long getTotalePartecipantiByEventId(Long eventId) {
-        List<EventRegistration> regs = registrationRepository.findByEventId(eventId);
-        long totale = regs.stream()
-                .mapToLong(EventRegistration::getPartecipanti)
-                .sum();
-        return totale;
-    }
-
-
-
-    public EventRegistration register(Long eventId, EventRegistrationRequest request) {
+    // -----------------------------
+    //           CREATE
+    // -----------------------------
+    @Transactional
+    public EventRegistrationResponse register(Long eventId, EventRegistrationRequest request) {
         User user = userRepository.findByPhone(request.getPhone())
                 .orElseGet(() -> {
                     User newUser = new User();
@@ -57,7 +50,7 @@ public class EventRegistrationService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CornerPubException("Evento non trovato"));
 
-        // 🔒 NUOVO CONTROLLO: se l'utente ha già un evento lo stesso giorno
+        // 🔒 controllo: stesso giorno
         LocalDate eventDate = event.getData().toLocalDate();
         if (hasEventSameDay(user.getPhone(), eventDate)) {
             throw new CornerPubException("Non puoi registrarti: sei già iscritto a un evento nello stesso giorno.");
@@ -69,7 +62,6 @@ public class EventRegistrationService {
 
         if (event.getPostiTotali() != null) {
             long iscritti = getTotalePartecipantiByEventId(eventId);
-
             if (iscritti + request.getPartecipanti() > event.getPostiTotali()) {
                 throw new CornerPubException("Posti esauriti per questo evento");
             }
@@ -81,124 +73,30 @@ public class EventRegistrationService {
         registration.setNote(request.getNote());
         registration.setPartecipanti(request.getPartecipanti());
 
-        return registrationRepository.save(registration); // 👈 RITORNO QUI
+        return toResponse(registrationRepository.save(registration));
     }
 
-
-    @Transactional(readOnly = true)
-    public long countByEventId(Long eventId) {
-        return registrationRepository.countByEventId(eventId);
-    }
-
+    // -----------------------------
+    //           UPDATE
+    // -----------------------------
     @Transactional
-    public void deleteByEventId(Long eventId) {
-        registrationRepository.deleteByEventId(eventId);
+    public EventRegistrationResponse assignTable(Long registrationId, String tableNumber) {
+        EventRegistration reg = registrationRepository.findById(registrationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Registrazione non trovata con id " + registrationId));
+
+        reg.setTableNumber(tableNumber);
+        return toResponse(registrationRepository.save(reg));
     }
 
-    public List<EventRegistrationResponse> getRegistrationsByEventId(Long eventId) {
-        List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
-
-        long totaleIscritti = registrations.stream()
-                .mapToLong(EventRegistration::getPartecipanti)
-                .sum();
-
-        return registrations.stream()
-                .map(reg -> {
-                    EventResponse eventResponse = new EventResponse(reg.getEvent(), totaleIscritti);
-                    UserResponse userResponse = new UserResponse(reg.getUser());
-
-                    EventRegistrationResponse resp = new EventRegistrationResponse(
-                            reg.getId(),
-                            reg.getCreatedAt(),
-                            eventResponse,
-                            userResponse,
-                            reg.getPartecipanti()
-                    );
-                    resp.setNote(reg.getNote());
-                    resp.setName(userResponse.getName());
-                    resp.setPhone(userResponse.getPhone());
-
-                    return resp;
-                })
-                .collect(Collectors.toList());
-    }
-
-
+    // -----------------------------
+    //           DELETE
+    // -----------------------------
     @Transactional
     public void unregister(Long eventId, Long userId) {
         EventRegistration reg = registrationRepository
                 .findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new CornerPubException("Registrazione non trovata"));
-
         registrationRepository.delete(reg);
-    }
-
-    public List<EventRegistrationResponse> getAllRegistrations() {
-        return registrationRepository.findAll().stream()
-                .map(reg -> {
-                    long totalePartecipanti = registrationRepository.findByEventId(reg.getEvent().getId())
-                            .stream()
-                            .mapToLong(EventRegistration::getPartecipanti)
-                            .sum();
-
-                    EventResponse eventResponse = null;
-                    if (reg.getEvent() != null) {
-                        eventResponse = new EventResponse(reg.getEvent(), totalePartecipanti);
-                    }
-
-                    UserResponse userResponse = null;
-                    if (reg.getUser() != null) {
-                        userResponse = new UserResponse(reg.getUser());
-                    }
-
-                    EventRegistrationResponse resp = new EventRegistrationResponse(
-                            reg.getId(),
-                            reg.getCreatedAt(),
-                            eventResponse,
-                            userResponse,
-                            reg.getPartecipanti()
-                    );
-                    resp.setNote(reg.getNote());
-
-                    if (userResponse != null) {
-                        resp.setName(userResponse.getName());
-                        resp.setPhone(userResponse.getPhone());
-                    }
-
-                    return resp;
-                })
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public boolean hasEventSameDay(String phone, LocalDate date) {
-        return registrationRepository.existsByPhoneAndEventDate(phone, date);
-    }
-
-    public List<EventRegistrationResponse> getRegistrationsByPhone(String phone) {
-        List<EventRegistration> regs = registrationRepository.findByUser_Phone(phone);
-
-        long totaleIscritti = regs.stream()
-                .mapToLong(EventRegistration::getPartecipanti)
-                .sum();
-
-        return regs.stream().map(reg -> {
-            EventResponse eventResponse = new EventResponse(reg.getEvent(), totaleIscritti);
-            UserResponse userResponse = new UserResponse(reg.getUser());
-
-            EventRegistrationResponse resp = new EventRegistrationResponse(
-                    reg.getId(),
-                    reg.getCreatedAt(),
-                    eventResponse,
-                    userResponse,
-                    reg.getPartecipanti()
-            );
-            resp.setNote(reg.getNote());
-            resp.setName(userResponse.getName());
-            resp.setPhone(userResponse.getPhone());
-
-            return resp;
-        }).collect(Collectors.toList());
     }
 
     @Transactional
@@ -209,4 +107,91 @@ public class EventRegistrationService {
         registrationRepository.delete(reg);
     }
 
+    @Transactional
+    public void deleteByEventId(Long eventId) {
+        registrationRepository.deleteByEventId(eventId);
+    }
+
+    // -----------------------------
+    //           READ
+    // -----------------------------
+    @Transactional(readOnly = true)
+    public long getTotalePartecipantiByEventId(Long eventId) {
+        return registrationRepository.findByEventId(eventId).stream()
+                .mapToLong(EventRegistration::getPartecipanti)
+                .sum();
+    }
+
+    @Transactional(readOnly = true)
+    public long countByEventId(Long eventId) {
+        return registrationRepository.countByEventId(eventId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventRegistrationResponse> getRegistrationsByEventId(Long eventId) {
+        List<EventRegistration> registrations = registrationRepository.findByEventId(eventId);
+        long totaleIscritti = registrations.stream().mapToLong(EventRegistration::getPartecipanti).sum();
+        return registrations.stream()
+                .map(r -> toResponse(r, totaleIscritti))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventRegistrationResponse> getRegistrationsByPhone(String phone) {
+        List<EventRegistration> regs = registrationRepository.findByUser_Phone(phone);
+        long totaleIscritti = regs.stream().mapToLong(EventRegistration::getPartecipanti).sum();
+        return regs.stream()
+                .map(r -> toResponse(r, totaleIscritti))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EventRegistrationResponse> getAllRegistrations() {
+        return registrationRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasEventSameDay(String phone, LocalDate date) {
+        return registrationRepository.existsByPhoneAndEventDate(phone, date);
+    }
+
+    // -----------------------------
+    //        MAPPING
+    // -----------------------------
+    public EventRegistrationResponse toResponse(EventRegistration reg) {
+        long totalePartecipanti = registrationRepository.findByEventId(reg.getEvent().getId())
+                .stream()
+                .mapToLong(EventRegistration::getPartecipanti)
+                .sum();
+        return toResponse(reg, totalePartecipanti);
+    }
+
+    private EventRegistrationResponse toResponse(EventRegistration reg, long totalePartecipanti) {
+        EventResponse eventResponse = reg.getEvent() != null
+                ? new EventResponse(reg.getEvent(), totalePartecipanti)
+                : null;
+
+        UserResponse userResponse = reg.getUser() != null
+                ? new UserResponse(reg.getUser())
+                : null;
+
+        EventRegistrationResponse resp = new EventRegistrationResponse(
+                reg.getId(),
+                reg.getCreatedAt(),
+                eventResponse,
+                userResponse,
+                reg.getPartecipanti()
+        );
+        resp.setNote(reg.getNote());
+        resp.setTableNumber(reg.getTableNumber());
+
+        if (userResponse != null) {
+            resp.setName(userResponse.getName());
+            resp.setPhone(userResponse.getPhone());
+        }
+
+        return resp;
+    }
 }

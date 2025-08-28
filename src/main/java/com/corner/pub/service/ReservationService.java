@@ -42,6 +42,15 @@ public class ReservationService {
     //           CREATE / UPDATE
     // -----------------------------
 
+    @Transactional(readOnly = true)
+    public List<ReservationResponse> getActiveReservations() {
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+        return reservationRepository.findAllFromToday(today).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request) {
         User user = userService.findOrCreate(request.getName(), request.getPhone());
@@ -99,6 +108,16 @@ public class ReservationService {
 
         return toResponse(reservationRepository.save(reservation));
     }
+
+    @Transactional
+    public ReservationResponse assignTable(Long id, String tableNumber) {
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
+
+        reservation.setTableNumber(tableNumber);
+        return toResponse(reservationRepository.save(reservation));
+    }
+
 
     @Transactional
     public void deleteById(Long id) {
@@ -243,6 +262,7 @@ public class ReservationService {
         response.setNote(reservation.getNote());
         response.setEventId(reservation.getEvent() != null ? reservation.getEvent().getId() : null);
         response.setIsEventRegistration(reservation.getEvent() != null);
+        response.setTableNumber(reservation.getTableNumber());
         return response;
     }
 
@@ -310,14 +330,17 @@ public class ReservationService {
 
     @Transactional(readOnly = true)
     public List<ReservationResponse> getAllUserReservations(String phone) {
+        LocalDate today = LocalDate.now(ZoneId.systemDefault());
+
         // Prenotazioni “normali”
         List<ReservationResponse> reservations = reservationRepository
                 .findAllByUserPhone(phone)
                 .stream()
+                .filter(r -> !r.getDate().isBefore(today)) // 🔹 solo oggi/futuro
                 .map(this::toResponse)
                 .collect(Collectors.toList());
 
-        // Prenotazioni derivate da EventRegistration
+        // Prenotazioni da eventi
         List<ReservationResponse> eventReservations = eventRegistrationService
                 .getRegistrationsByPhone(phone)
                 .stream()
@@ -327,14 +350,7 @@ public class ReservationService {
                     resp.setName(reg.getName());
                     resp.setPhone(reg.getPhone());
 
-                    LocalDateTime dateTime;
-                    try {
-                        dateTime = LocalDateTime.parse(reg.getEvent().getData(), EVENT_DT_FMT);
-                    } catch (DateTimeParseException e) {
-                        // fallback difensivo: se cambia formato in futuro
-                        throw new BadRequestException("Formato data/ora evento non valido: '" + reg.getEvent().getData() + "'");
-                    }
-
+                    LocalDateTime dateTime = LocalDateTime.parse(reg.getEvent().getData(), EVENT_DT_FMT);
                     resp.setDate(dateTime.toLocalDate());
                     resp.setTime(dateTime.toLocalTime());
                     resp.setPeople(reg.getPartecipanti());
@@ -344,9 +360,11 @@ public class ReservationService {
                     resp.setEventId(reg.getEvent().getId());
                     return resp;
                 })
+                .filter(r -> !r.getDate().isBefore(today)) // 🔹 anche sugli eventi
                 .collect(Collectors.toList());
 
         reservations.addAll(eventReservations);
         return reservations;
     }
+
 }

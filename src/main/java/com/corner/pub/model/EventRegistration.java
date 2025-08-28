@@ -29,6 +29,9 @@ public class EventRegistration {
     @Column
     private String note;
 
+    @Column
+    private String tableNumber;
+
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
 
@@ -65,5 +68,13 @@ public class EventRegistration {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getTableNumber() {
+        return tableNumber;
+    }
+
+    public void setTableNumber(String tableNumber) {
+        this.tableNumber = tableNumber;
     }
 }

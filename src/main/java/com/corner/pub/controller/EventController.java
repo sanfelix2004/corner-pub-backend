@@ -61,14 +61,13 @@ public class EventController {
     @PostMapping("/{eventId}/register")
     public ResponseEntity<?> registerForEvent(
             @PathVariable Long eventId,
-            @RequestBody EventRegistrationRequest request) { // <-- INGRESSO
+            @RequestBody EventRegistrationRequest request) {
 
         try {
-            EventRegistration registration = registrationService.register(eventId, request);
+            // ora register ritorna direttamente un DTO
+            EventRegistrationResponse response = registrationService.register(eventId, request);
 
-            EventRegistrationResponse response = new EventRegistrationResponse(registration);
-
-            return ResponseEntity.ok(response); // <-- USCITA
+            return ResponseEntity.ok(response);
 
         } catch (CornerPubException e) {
             return ResponseEntity.badRequest()
@@ -78,6 +77,7 @@ public class EventController {
                     .body(Map.of("error", "Errore imprevisto"));
         }
     }
+
 
     @GetMapping("/{eventId}")
     public ResponseEntity<EventResponse> getEventById(@PathVariable Long eventId) {

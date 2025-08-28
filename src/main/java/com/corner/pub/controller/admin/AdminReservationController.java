@@ -1,6 +1,7 @@
 package com.corner.pub.controller.admin;
 
 import com.corner.pub.dto.request.ReservationRequest;
+import com.corner.pub.dto.request.TableAssignmentRequest;
 import com.corner.pub.dto.response.ReservationResponse;
 import com.corner.pub.service.ReservationService;
 import lombok.RequiredArgsConstructor;
@@ -18,8 +19,9 @@ public class AdminReservationController {
 
     @GetMapping
     public ResponseEntity<List<ReservationResponse>> getAllTableReservations() {
-        return ResponseEntity.ok(reservationService.getAllReservations());
+        return ResponseEntity.ok(reservationService.getActiveReservations());
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<ReservationResponse> getReservationById(@PathVariable Long id) {
@@ -32,9 +34,22 @@ public class AdminReservationController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ReservationResponse> updateReservation(@PathVariable Long id, @RequestBody ReservationRequest request) {
+    public ResponseEntity<ReservationResponse> updateReservation(
+            @PathVariable Long id,
+            @RequestBody ReservationRequest request
+    ) {
         return ResponseEntity.ok(reservationService.updateReservation(id, request));
     }
+
+    // 🔹 Nuovo endpoint solo per assegnare/cambiare tavolo
+    @PatchMapping("/{id}/table")
+    public ResponseEntity<ReservationResponse> updateTable(
+            @PathVariable Long id,
+            @RequestBody TableAssignmentRequest request
+    ) {
+        return ResponseEntity.ok(reservationService.assignTable(id, request.getTableNumber()));
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
@@ -43,9 +58,11 @@ public class AdminReservationController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteByPhoneAndDate(@RequestParam String phone, @RequestParam String date) {
+    public ResponseEntity<Void> deleteByPhoneAndDate(
+            @RequestParam String phone,
+            @RequestParam String date
+    ) {
         reservationService.deleteReservationByPhoneAndDate(phone, date);
         return ResponseEntity.ok().build();
     }
-
 }
