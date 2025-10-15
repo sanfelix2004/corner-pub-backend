@@ -23,7 +23,14 @@ public class MenuItem {
     @Column(name = "imageurl")
     private String imageUrl;
 
+    // ... esistente ...
+    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.Set<MenuItemAllergen> allergens = new java.util.HashSet<>();
+
     // Getters & Setters
+
+    public java.util.Set<MenuItemAllergen> getAllergens() { return allergens; }
+    public void setAllergens(java.util.Set<MenuItemAllergen> allergens) { this.allergens = allergens; }
 
     public String getImageUrl() {
         return imageUrl;

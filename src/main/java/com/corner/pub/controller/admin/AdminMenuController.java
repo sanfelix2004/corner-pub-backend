@@ -1,7 +1,10 @@
 package com.corner.pub.controller.admin;
 
 import com.corner.pub.dto.request.MenuItemRequest;
+import com.corner.pub.dto.response.AllergenResponse;
 import com.corner.pub.dto.response.MenuItemResponse;
+import com.corner.pub.model.AllergenStatus;
+import com.corner.pub.repository.AllergenRepository;
 import com.corner.pub.service.MenuItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import java.util.List;
 public class AdminMenuController {
 
     private final MenuItemService menuItemService;
+    private final AllergenRepository allergenRepository;
 
     // ✅ Ottieni tutto il menu (anche quelli nascosti)
     @GetMapping
@@ -58,5 +62,23 @@ public class AdminMenuController {
         return ResponseEntity.ok(updated);
     }
 
+    // ADD: elenco allergeni per il picker
+    // AdminMenuController.java
+    @GetMapping("/allergens")
+    public List<AllergenResponse> listAllergens() {
+        return allergenRepository.findAllByOrderByCodeAsc()
+                .stream()
+                .map(a -> {
+                    AllergenResponse r = new AllergenResponse();
+                    r.setCode(a.getCode());
+                    r.setLabel(a.getLabel());
+                    // se hai iconBase in entity:
+                    r.setIconUrl("/img/" + a.getIconBase() + ".png");
+                    // lo status per l’anagrafica è solo un default lato UI:
+                    r.setStatus("FREE");
+                    return r;
+                })
+                .toList();
+    }
 
 }

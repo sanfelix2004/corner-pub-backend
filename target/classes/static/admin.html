@@ -240,6 +240,11 @@
             background-color: #e2e3e5;
             color: #383d41;
         }
+        .allergen-icon{ width:20px; height:20px; margin-right:6px; vertical-align:middle; opacity:.95 }
+        .allergen-icon{ width:20px; height:20px; margin-right:6px; vertical-align:middle; opacity:.95 }
+        .allergen-chip{ display:inline-flex; align-items:center; gap:6px; margin:4px 8px 0 0; padding:4px 8px; border:1px solid #e9ecef; border-radius:16px; background:#fff }
+        .allergen-picker label{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #eee; border-radius:8px; margin:6px 8px 0 0; background:#fff }
+        .allergen-picker .statuses{ display:inline-flex; gap:8px; margin-left:8px; font-size:.9rem }
     </style>
 </head>
 <body>
@@ -438,6 +443,18 @@
                         <button type="submit" class="btn btn-success btn-action">
                             <i class="fas fa-save"></i> Salva Piatto
                         </button>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label><i class="fa-solid fa-triangle-exclamation"></i> Allergeni</label>
+
+                        <!-- nuovo selettore compatto -->
+                        <div id="allergenSelectAdd"></div>
+
+                        <small class="text-muted d-block mt-1">
+                            Clicca per selezionare uno o più allergeni e imposta “Contiene” o “Tracce”.
+                        </small>
                     </div>
                 </div>
             </form>
@@ -716,6 +733,9 @@
             loadTableBookings();
         } else if (section === 'menu') {
             loadMenuItems();
+
+            ensureAllergenCatalog().then(() => renderAllergenSelect('allergenSelectAdd'))
+                .catch(err => { console.error(err); renderAllergenSelect('allergenSelectAdd'); });
         } else if (section === 'evidenza') {
             loadInEvidenza();
         } else if (section === 'promozioni') {
@@ -829,29 +849,141 @@
             select.appendChild(opt);
         });
     }
+        // === Allergen Picker utilities ===
+        // === Catalogo allergeni ===
+        let ALLERGEN_CATALOG = [];
+        // === Global for edit lock (menu) ===
+        let CURRENT_EDIT_ID = null;
+
+        async function ensureAllergenCatalog() {
+        if (ALLERGEN_CATALOG.length) return;
+        const res = await fetch('/admin/menu/allergens');
+        if (!res.ok) throw new Error('Errore caricamento allergeni');
+        ALLERGEN_CATALOG = await res.json(); // [{code,label,iconUrl,status:'FREE'}...]
+    }
+
+        // === Multi-selettore a dropdown ===
+        // containerId: es. "allergenSelectAdd" o "allergenSelectEdit-123"
+        // preselectedMap: { MILK: 'CONTAINS', SOYBEANS: 'MAY_CONTAIN' }
+        function renderAllergenSelect(containerId, preselectedMap = {}) {
+        const root = document.getElementById(containerId);
+        if (!root) return;
+
+        // bottone + dropdown Bootstrap
+        root.innerHTML = `
+    <div class="dropdown">
+      <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Seleziona allergeni
+      </button>
+      <div class="dropdown-menu p-3" style="max-height: 360px; overflow:auto; min-width: 420px;">
+        <div id="${containerId}-list"></div>
+      </div>
+    </div>
+    <div id="${containerId}-summary" class="mt-2"></div>
+  `;
+
+        // lista elementi (checkbox + select status)
+        const list = document.getElementById(`${containerId}-list`);
+        list.innerHTML = ALLERGEN_CATALOG.map(a => {
+        const checked = preselectedMap[a.code] ? 'checked' : '';
+        const current = (preselectedMap[a.code] || 'FREE').toUpperCase();
+        const disabled = checked ? '' : 'disabled';
+
+            return `
+  <div class="d-flex align-items-center mb-2">
+    <input type="checkbox" class="mr-2" id="${containerId}-chk-${a.code}" ${checked}>
+    <div class="flex-grow-1">
+      <div class="font-weight-bold">${a.label}</div>
+      <div class="small text-muted">${a.code}</div>
+    </div>
+    <select id="${containerId}-status-${a.code}" class="form-control form-control-sm" style="width:160px" ${disabled}>
+      <option value="CONTAINS" ${current==='CONTAINS'?'selected':''}>Contiene</option>
+      <option value="MAY_CONTAIN" ${current==='MAY_CONTAIN'?'selected':''}>Tracce</option>
+    </select>
+  </div>
+`;
+    }).join('');
+
+        // abilitazione/disabilitazione select status
+        ALLERGEN_CATALOG.forEach(a => {
+        const chk = document.getElementById(`${containerId}-chk-${a.code}`);
+        const sel = document.getElementById(`${containerId}-status-${a.code}`);
+        chk.addEventListener('change', () => {
+        sel.disabled = !chk.checked;
+        updateSummary(containerId);
+    });
+        sel.addEventListener('change', () => updateSummary(containerId));
+    });
+
+        updateSummary(containerId);
+    }
+
+        // Legge il selezionato: array di {code, status} (FREE viene escluso)
+        function readAllergenSelect(containerId) {
+        const selected = [];
+        ALLERGEN_CATALOG.forEach(a => {
+        const chk = document.getElementById(`${containerId}-chk-${a.code}`);
+        const sel = document.getElementById(`${containerId}-status-${a.code}`);
+        if (chk && chk.checked) {
+        selected.push({ code: a.code, status: sel.value.toUpperCase() });
+    }
+    });
+        return selected;
+    }
+
+        // badge riepilogo sotto al pulsante
+        function updateSummary(containerId) {
+        const wrap = document.getElementById(`${containerId}-summary`);
+        const chosen = readAllergenSelect(containerId);
+        if (!chosen.length) {
+        wrap.innerHTML = `<span class="text-muted small">Nessun allergene selezionato</span>`;
+        return;
+    }
+        wrap.innerHTML = chosen.map(s => `
+    <span class="badge badge-light mr-1 mb-1">
+      ${s.code} — ${s.status==='CONTAINS' ? 'Contiene' : 'Tracce'}
+    </span>
+  `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        showSection('prenotazioni');
+
+        // Carica catalogo allergeni e renderizza il selettore compatto dell'ADD
+        try {
+            await ensureAllergenCatalog();
+            renderAllergenSelect('allergenSelectAdd');
+        } catch (e) {
+            console.error(e);
+        }
+    });
+
 
     async function loadMenuItems() {
+        CURRENT_EDIT_ID = null;
         try {
             const res = await fetch('/admin/menu');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
+
             const grouped = {};
-            data.forEach(item => {
-                if (!grouped[item.categoria]) grouped[item.categoria] = [];
-                grouped[item.categoria].push(item);
+            (data || []).forEach(item => {
+                const cat = item.categoria || 'Altro';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(item);
             });
 
             populateSelect('Menu', Object.keys(grouped));
             const container = document.getElementById('menuTablesContainer');
             container.innerHTML = '';
 
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 container.innerHTML = `
-                    <div class="alert alert-info text-center">
-                        <i class="fas fa-info-circle fa-2x mb-3"></i>
-                        <h4>Menu vuoto</h4>
-                        <p>Non ci sono piatti nel menu al momento</p>
-                    </div>
-                `;
+        <div class="alert alert-info text-center">
+          <i class="fas fa-info-circle fa-2x mb-3"></i>
+          <h4>Menu vuoto</h4>
+          <p>Non ci sono piatti nel menu al momento</p>
+        </div>`;
                 return;
             }
 
@@ -860,75 +992,95 @@
                 section.classList.add('mb-5');
 
                 const rows = grouped[cat].map(item => {
-                    const imgSrc = item.imageUrl && item.imageUrl.trim() !== '' ?
-                        item.imageUrl : `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${item.id}.png`;
+                    const safeId = Number(item.id);
+                    const imgSrc = (item.imageUrl && item.imageUrl.trim() !== '')
+                        ? item.imageUrl
+                        : `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${safeId}.png`;
+
+                    // ——— testo allergeni sotto la descrizione ———
+                    const allergensText = ((item.allergens || [])
+                        .filter(a => a && a.status && a.status !== 'FREE')
+                        .map(a => {
+                            const label = (a.label || a.code || '').toString();
+                            const status = (a.status || '').toString().toUpperCase();
+                            return `${label}${status === 'MAY_CONTAIN' ? ' (tracce)' : ' (contiene)'}`;
+                        }))
+                        .join(', ');
 
                     return `
-                        <tr id="menu-row-${item.id}">
-                            <td><img src="${imgSrc}" onerror="this.onerror=null;this.src='/img/placeholder.png'" class="thumb" /></td>
-                            <td>${escape(item.titolo)}</td>
-                            <td>${escape(item.descrizione || '-')}</td>
-                            <td>€${item.prezzo.toFixed(2)}</td>
-                            <td>
-                                <button class="status-badge btn btn-sm ${item.visibile ? 'bg-success' : 'bg-secondary'}"
-                                        onclick="toggleVisibility(${item.id})"
-                                        title="Clicca per cambiare stato">
-                                    ${item.visibile ? 'Visibile' : 'Nascosto'}
-                                </button>
-                            </td>
-                            <td class="text-nowrap">
-                                <button class="btn btn-sm btn-warning btn-action" onclick="makeEditable(${item.id}, '${escape(item.titolo)}', '${escape(item.categoria)}', '${escape(item.descrizione || '')}', ${item.prezzo})">
-                                    <i class="fas fa-edit"></i> Modifica
-                                </button>
-                                <button class="btn btn-sm btn-danger btn-action" onclick="deleteMenuItem(${item.id})">
-                                    <i class="fas fa-trash-alt"></i> Elimina
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+          <tr id="menu-row-${safeId}">
+            <td><img src="${imgSrc}" onerror="this.onerror=null;this.src='/img/placeholder.png'" class="thumb" /></td>
+            <td>${escape(item.titolo || '')}</td>
+            <td>
+              ${escape(item.descrizione || '-')}
+              ${allergensText
+                        ? `<div class="small text-muted mt-1"><strong>Allergeni:</strong> ${escape(allergensText)}</div>`
+                        : ``}
+            </td>
+            <td>€${Number(item.prezzo || 0).toFixed(2)}</td>
+            <td>
+              <button class="status-badge btn btn-sm ${item.visibile ? 'bg-success' : 'bg-secondary'}"
+                      onclick="toggleVisibility(${safeId})" title="Clicca per cambiare stato">
+                ${item.visibile ? 'Visibile' : 'Nascosto'}
+              </button>
+            </td>
+            <td>-</td>
+            <td class="text-nowrap">
+              <button class="btn btn-sm btn-warning btn-action"
+                onclick="makeEditable(${safeId}, '${escape(item.titolo || '')}', '${escape(item.categoria || '')}', '${escape(item.descrizione || '')}', ${Number(item.prezzo || 0)})">
+                <i class="fas fa-edit"></i> Modifica
+              </button>
+              <button class="btn btn-sm btn-danger btn-action" onclick="deleteMenuItem(${safeId})">
+                <i class="fas fa-trash-alt"></i> Elimina
+              </button>
+            </td>
+          </tr>`;
                 }).join('');
 
                 section.innerHTML = `
-                    <h5 class="d-flex align-items-center">
-                        <i class="fas fa-utensils me-2"></i> ${escape(cat)}
-                    </h5>
-                    <div class="table-responsive">
-                        <table class="table custom-table">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Foto</th>
-                                    <th>Titolo</th>
-                                    <th>Descrizione</th>
-                                    <th>Prezzo</th>
-                                    <th>Stato</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows}</tbody>
-                        </table>
-                    </div>
-                `;
+        <h5 class="d-flex align-items-center">
+          <i class="fas fa-utensils me-2"></i> ${escape(cat)}
+        </h5>
+        <div class="table-responsive">
+          <table class="table custom-table">
+            <thead class="thead-light">
+              <tr>
+                <th>Foto</th>
+                <th>Titolo</th>
+                <th>Descrizione</th>
+                <th>Prezzo</th>
+                <th>Stato</th>
+                <th>Allergeni</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
                 container.appendChild(section);
             });
         } catch (error) {
             console.error('Error loading menu items:', error);
             document.getElementById('menuTablesContainer').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento del menu
-                </div>
-            `;
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento del menu
+      </div>`;
         }
     }
 
     document.getElementById('formAddNewItem').addEventListener('submit', async e => {
         e.preventDefault();
         const form = e.target;
+
+        const allergens = readAllergenSelect('allergenSelectAdd');
+
         const data = {
             titolo: form.titolo.value,
             categoria: form.categoria.value,
             descrizione: form.descrizione.value,
             prezzo: parseFloat(form.prezzo.value),
-            visibile: form.visibile.value === 'true'
+            visibile: form.visibile.value === 'true',
+            allergens
         };
 
         const formData = new FormData();
@@ -940,7 +1092,9 @@
             if (res.ok) {
                 alert('✅ Piatto aggiunto con successo!');
                 form.reset();
-                loadMenuItems();
+                // reset anche il selettore allergeni
+                renderAllergenSelect('allergenSelectAdd');
+                await loadMenuItems();
             } else {
                 alert('❌ Errore durante l\'aggiunta del piatto');
             }
@@ -953,7 +1107,7 @@
     async function toggleVisibility(id) {
         try {
             await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
-            loadMenuItems();
+            await loadMenuItems();
         } catch (error) {
             console.error('Error toggling visibility:', error);
             alert('Errore durante l\'aggiornamento dello stato');
@@ -964,30 +1118,53 @@
         if (!confirm('Sei sicuro di voler eliminare questo piatto?')) return;
         try {
             await fetch(`/admin/menu/${id}`, { method: 'DELETE' });
-            loadMenuItems();
+            if (CURRENT_EDIT_ID === id) CURRENT_EDIT_ID = null;
+            await loadMenuItems();
         } catch (error) {
             console.error('Error deleting menu item:', error);
             alert('Errore durante l\'eliminazione del piatto');
         }
     }
 
-    function makeEditable(id, titolo, categoria, descrizione, prezzo) {
+    async function makeEditable(id, titolo, categoria, descrizione, prezzo) {
+        if (CURRENT_EDIT_ID !== null && CURRENT_EDIT_ID !== id) {
+            alert('Puoi modificare solo un elemento alla volta. Prima salva o annulla quello in modifica.');
+            return;
+        }
+        CURRENT_EDIT_ID = id;
         const row = document.getElementById(`menu-row-${id}`);
         row.innerHTML = `
-            <td><input type="file" id="edit-image-${id}" accept="image/*" class="form-control-file" /></td>
-            <td><input type="text" id="edit-titolo-${id}" value="${titolo}" class="form-control" /></td>
-            <td><input type="text" id="edit-desc-${id}" value="${descrizione}" class="form-control" /></td>
-            <td><input type="number" id="edit-prezzo-${id}" value="${prezzo}" step="0.01" class="form-control" /></td>
-            <td><input type="text" id="edit-cat-${id}" value="${categoria}" class="form-control" /></td>
-            <td class="text-nowrap">
-                <button class="btn btn-sm btn-success btn-action" onclick="submitEdit(${id})">
-                    <i class="fas fa-check"></i> Salva
-                </button>
-                <button class="btn btn-sm btn-secondary btn-action" onclick="loadMenuItems()">
-                    <i class="fas fa-times"></i> Annulla
-                </button>
-            </td>
-        `;
+    <td><input type="file" id="edit-image-${id}" accept="image/*" class="form-control-file" /></td>
+    <td><input type="text" id="edit-titolo-${id}" value="${titolo}" class="form-control" /></td>
+    <td><input type="text" id="edit-desc-${id}" value="${descrizione}" class="form-control" /></td>
+    <td><input type="number" id="edit-prezzo-${id}" value="${prezzo}" step="0.01" class="form-control" /></td>
+    <td><input type="text" id="edit-cat-${id}" value="${categoria}" class="form-control" /></td>
+    <td colspan="2">
+      <div class="mb-2"><strong>Allergeni</strong></div>
+      <div id="allergenSelectEdit-${id}"></div>
+    </td>
+    <td class="text-nowrap">
+      <button class="btn btn-sm btn-success btn-action" onclick="submitEdit(${id})">
+        <i class="fas fa-check"></i> Salva
+      </button>
+      <button class="btn btn-sm btn-secondary btn-action" onclick="CURRENT_EDIT_ID=null; loadMenuItems();">
+        <i class="fas fa-times"></i> Annulla
+      </button>
+    </td>
+  `;
+
+        try {
+            await ensureAllergenCatalog();
+            const detailRes = await fetch(`/api/menu/${id}`);
+            const item = await detailRes.json();
+
+            const pre = {};
+            (item.allergens || []).forEach(a => pre[a.code] = a.status); // CONTAINS/MAY_CONTAIN
+            renderAllergenSelect(`allergenSelectEdit-${id}`, pre);
+        } catch (e) {
+            console.error('Impossibile caricare allergeni per edit:', e);
+            renderAllergenSelect(`allergenSelectEdit-${id}`, {});
+        }
     }
 
     async function submitEdit(id) {
@@ -997,13 +1174,18 @@
         const categoria = document.getElementById(`edit-cat-${id}`).value;
         const imageInput = document.getElementById(`edit-image-${id}`);
 
-        const data = { titolo, descrizione, prezzo, categoria };
+        const allergens = readAllergenSelect(`allergenSelectEdit-${id}`);
+
+        const data = { titolo, descrizione, prezzo, categoria, allergens };
+
         const formData = new FormData();
         formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
         if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
 
         try {
-            await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
+            const res = await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
+            if (!res.ok) throw new Error('Update failed');
+            CURRENT_EDIT_ID = null;
             loadMenuItems();
         } catch (error) {
             console.error('Error updating menu item:', error);

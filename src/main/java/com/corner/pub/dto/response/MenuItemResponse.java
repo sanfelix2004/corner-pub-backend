@@ -10,10 +10,11 @@ public class MenuItemResponse {
     private boolean visibile;
     public boolean isVisibile() { return visibile; }
     public void setVisibile(boolean visibile) { this.visibile = visibile; }
-
-
+    private java.util.List<AllergenResponse> allergens;
 
     // Getters & Setters
+    public java.util.List<AllergenResponse> getAllergens(){ return allergens; }
+    public void setAllergens(java.util.List<AllergenResponse> allergens){ this.allergens = allergens; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

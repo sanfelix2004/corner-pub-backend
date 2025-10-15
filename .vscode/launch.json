@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-PubApplication<pub>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.corner.pub.PubApplication",
+            "projectName": "pub",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

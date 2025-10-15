@@ -2,9 +2,24 @@
 <project version="4">
   <component name="RemoteRepositoriesConfiguration">
     <remote-repository>
+      <option name="id" value="github-mfe-sl-lib-cvp" />
+      <option name="name" value="github-mfe-sl-lib-cvp" />
+      <option name="url" value="https://maven.pkg.github.com/mds-ott-platform/mfe-sl-lib-cvp" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="github-mfe-sl-lib-gigya" />
+      <option name="name" value="github-mfe-sl-lib-gigya" />
+      <option name="url" value="https://maven.pkg.github.com/mds-ott-platform/mfe-sl-lib-gigya" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="central" />
       <option name="name" value="Central Repository" />
       <option name="url" value="https://repo.maven.apache.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="github-mfe-sl-service-starter-parent" />
+      <option name="name" value="github-mfe-sl-service-starter-parent" />
+      <option name="url" value="https://maven.pkg.github.com/mds-ott-platform/mfe-sl-service-starter-parent" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="github" />
@@ -20,6 +35,21 @@
       <option name="id" value="jboss.community" />
       <option name="name" value="JBoss Community repository" />
       <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="github-mfe-sl-lib-aws" />
+      <option name="name" value="github-mfe-sl-lib-aws" />
+      <option name="url" value="https://maven.pkg.github.com/mds-ott-platform/mfe-sl-lib-aws" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="central" />
+      <option name="url" value="https://repo1.maven.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="github-mfe-sl-lib-common" />
+      <option name="name" value="github-mfe-sl-lib-common" />
+      <option name="url" value="https://maven.pkg.github.com/mds-ott-platform/mfe-sl-lib-common" />
     </remote-repository>
   </component>
 </project>

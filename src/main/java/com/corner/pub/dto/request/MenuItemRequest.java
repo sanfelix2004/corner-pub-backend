@@ -5,8 +5,12 @@ public class MenuItemRequest {
     private String titolo;
     private String descrizione;
     private double prezzo;
+    private java.util.List<AllergenSelection> allergens;
 
     // Getters & Setters
+
+    public java.util.List<AllergenSelection> getAllergens(){ return allergens; }
+    public void setAllergens(java.util.List<AllergenSelection> allergens){ this.allergens = allergens; }
 
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }

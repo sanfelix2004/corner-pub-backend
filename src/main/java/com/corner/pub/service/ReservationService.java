@@ -38,6 +38,60 @@ public class ReservationService {
     private final EventRepository eventRepository;
     private final EventRegistrationService eventRegistrationService;
 
+    // Sala: 12 tavoli numerati 1..12, ~70 posti totali
+    private static final int MAX_TABLES = 12;
+    private static final int MAX_SEATS = 70;
+    // Limite ragionevole per singola prenotazione (1 tavolo)
+    private static final int MAX_PEOPLE_PER_RESERVATION = 12;
+
+    // -----------------------------
+    //           CAPACITY HELPERS
+    // -----------------------------
+
+    private List<Reservation> getReservationsAt(LocalDate date, LocalTime time) {
+        return reservationRepository.findAllByDate(date).stream()
+                .filter(r -> Objects.equals(r.getTime(), time))
+                .collect(Collectors.toList());
+    }
+
+    private void enforceCapacity(LocalDate date, LocalTime time, int people, Long ignoreReservationId) {
+        if (people <= 0) {
+            throw new BadRequestException("Il numero di persone deve essere maggiore di 0");
+        }
+        if (people > MAX_PEOPLE_PER_RESERVATION) {
+            throw new BadRequestException("Prenotazione troppo numerosa per un singolo tavolo (max " + MAX_PEOPLE_PER_RESERVATION + ")");
+        }
+        List<Reservation> atSlot = getReservationsAt(date, time);
+        // escludi la prenotazione che stiamo aggiornando (se presente)
+        if (ignoreReservationId != null) {
+            atSlot = atSlot.stream()
+                    .filter(r -> !Objects.equals(r.getId(), ignoreReservationId))
+                    .collect(Collectors.toList());
+        }
+        int currentReservations = atSlot.size();
+        int currentPeople = atSlot.stream().mapToInt(Reservation::getPeople).sum();
+
+        if (currentReservations >= MAX_TABLES) {
+            throw new BadRequestException("Nessun tavolo disponibile a quest'ora (" + time + ")");
+        }
+        if (currentPeople + people > MAX_SEATS) {
+            throw new BadRequestException("Capienza massima della sala superata per questo orario (" + time + ")");
+        }
+    }
+
+    private String autoAssignTable(LocalDate date, LocalTime time, Long ignoreReservationId) {
+        Set<String> used = getReservationsAt(date, time).stream()
+                .filter(r -> ignoreReservationId == null || !Objects.equals(r.getId(), ignoreReservationId))
+                .map(Reservation::getTableNumber)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        for (int i = 1; i <= MAX_TABLES; i++) {
+            String tn = String.valueOf(i);
+            if (!used.contains(tn)) return tn;
+        }
+        return null; // nessun tavolo libero (dovrebbe essere intercettato da enforceCapacity)
+    }
+
     // -----------------------------
     //           CREATE / UPDATE
     // -----------------------------
@@ -55,14 +109,17 @@ public class ReservationService {
     public ReservationResponse createReservation(ReservationRequest request) {
         User user = userService.findOrCreate(request.getName(), request.getPhone());
         LocalDate date = parseDate(request.getDate());
+        LocalTime time = parseTime(request.getTime());
 
         reservationRepository.findByUserPhoneAndDate(user.getPhone(), date)
                 .ifPresent(r -> { throw new ReservationAlreadyExistsException(user.getPhone(), request.getDate()); });
 
+        enforceCapacity(date, time, request.getPeople(), null);
+
         Reservation reservation = new Reservation();
         reservation.setUser(user);
         reservation.setDate(date);
-        reservation.setTime(parseTime(request.getTime()));
+        reservation.setTime(time);
         reservation.setPeople(request.getPeople());
         reservation.setNote(request.getNote());
 
@@ -80,10 +137,15 @@ public class ReservationService {
 
             // Crea anche la prenotazione associata
             User user = userService.findOrCreate(request.getName(), request.getPhone());
+            LocalDate date = parseDate(request.getDate());
+            LocalTime time = parseTime(request.getTime());
+
+            enforceCapacity(date, time, request.getPeople(), null);
+
             Reservation reservation = new Reservation();
             reservation.setUser(user);
-            reservation.setDate(parseDate(request.getDate()));
-            reservation.setTime(parseTime(request.getTime()));
+            reservation.setDate(date);
+            reservation.setTime(time);
             reservation.setPeople(request.getPeople());
             reservation.setNote(request.getNote());
             reservation.setEvent(eventRepository.findById(request.getEventId()).orElse(null));
@@ -101,8 +163,13 @@ public class ReservationService {
 
         User user = userService.findOrCreate(request.getName(), request.getPhone());
         reservation.setUser(user);
-        reservation.setDate(parseDate(request.getDate()));
-        reservation.setTime(parseTime(request.getTime()));
+        LocalDate date = parseDate(request.getDate());
+        LocalTime time = parseTime(request.getTime());
+
+        enforceCapacity(date, time, request.getPeople(), reservation.getId());
+
+        reservation.setDate(date);
+        reservation.setTime(time);
         reservation.setPeople(request.getPeople());
         reservation.setNote(request.getNote());
 
@@ -114,7 +181,22 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
 
-        reservation.setTableNumber(tableNumber);
+        if (tableNumber == null || tableNumber.isBlank()) {
+            throw new BadRequestException("Numero tavolo mancante");
+        }
+        int tn;
+        try { tn = Integer.parseInt(tableNumber.trim()); } catch (NumberFormatException e) { throw new BadRequestException("Numero tavolo non valido"); }
+        if (tn < 1 || tn > MAX_TABLES) {
+            throw new BadRequestException("Il tavolo deve essere compreso tra 1 e " + MAX_TABLES);
+        }
+        // verifica non occupato nello stesso slot
+        boolean taken = getReservationsAt(reservation.getDate(), reservation.getTime()).stream()
+                .anyMatch(r -> !Objects.equals(r.getId(), reservation.getId()) && String.valueOf(tn).equals(r.getTableNumber()));
+        if (taken) {
+            throw new BadRequestException("Tavolo già occupato per questo orario");
+        }
+
+        reservation.setTableNumber(String.valueOf(tn));
         return toResponse(reservationRepository.save(reservation));
     }
 
@@ -190,9 +272,6 @@ public class ReservationService {
             return List.of();
         }
 
-        Map<String, Long> countMap = reservationRepository.findAllByDate(date).stream()
-                .collect(Collectors.groupingBy(r -> r.getTime().toString(), Collectors.counting()));
-
         List<String> available = new ArrayList<>();
         LocalTime start = LocalTime.of(20, 0);
         LocalTime end = LocalTime.of(23, 0);
@@ -206,8 +285,11 @@ public class ReservationService {
                 continue;
             }
 
-            // capienza 12 come nel tuo codice
-            if (countMap.getOrDefault(timeStr, 0L) < 12L) {
+            List<Reservation> atSlot = getReservationsAt(date, start);
+            int reservationsCount = atSlot.size();
+            int peopleCount = atSlot.stream().mapToInt(Reservation::getPeople).sum();
+
+            if (reservationsCount < MAX_TABLES && peopleCount < MAX_SEATS) {
                 available.add(timeStr);
             }
             start = start.plusMinutes(30);
