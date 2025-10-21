@@ -1,3 +1,4 @@
+com/corner/pub/service/EventService.class
 com/corner/pub/controller/MenuItemController.class
 com/corner/pub/dto/request/EventRequest.class
 com/corner/pub/model/MenuItem.class

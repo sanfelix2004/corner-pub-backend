@@ -240,6 +240,19 @@
             background-color: #e2e3e5;
             color: #383d41;
         }
+
+        .event-thumb {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .event-thumb.placeholder {
+            background-color: #f1f1f1;
+            display: inline-block;
+        }
         .allergen-icon{ width:20px; height:20px; margin-right:6px; vertical-align:middle; opacity:.95 }
         .allergen-icon{ width:20px; height:20px; margin-right:6px; vertical-align:middle; opacity:.95 }
         .allergen-chip{ display:inline-flex; align-items:center; gap:6px; margin:4px 8px 0 0; padding:4px 8px; border:1px solid #e9ecef; border-radius:16px; background:#fff }
@@ -634,6 +647,13 @@
                         <textarea name="descrizione" class="form-control" placeholder="Descrizione evento" rows="3"></textarea>
                     </div>
                 </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-12">
+                        <label>Locandina (immagine)</label>
+                        <input type="file" name="poster" accept="image/*" class="form-control-file">
+                    </div>
+                </div>
                 <div class="form-row mt-3">
                     <div class="form-group col-md-12">
                         <button type="submit" class="btn btn-success btn-action">
@@ -651,6 +671,7 @@
                 <table class="table custom-table">
                     <thead class="thead-light">
                     <tr>
+                        <th>Locandina</th>
                         <th>Titolo</th>
                         <th>Descrizione</th>
                         <th>Data</th>
@@ -1654,7 +1675,7 @@
             if (eventi.length === 0) {
                 tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center py-4">
+                    <td colspan="6" class="text-center py-4">
                         <i class="fas fa-calendar-times fa-2x mb-3 text-muted"></i>
                         <p class="mb-0">Nessun evento programmato</p>
                     </td>
@@ -1666,6 +1687,11 @@
             eventi.forEach(evento => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
+                <td>
+                    ${evento.posterUrl
+                        ? `<img src="${evento.posterUrl}" class="event-thumb" alt="Locandina evento">`
+                        : `<div class="event-thumb placeholder"></div>`}
+                </td>
                 <td><strong>${escape(evento.titolo)}</strong></td>
                 <td>${escape(evento.descrizione || '-')}</td>
                 <td>${formatDateTime(evento.data)}</td>
@@ -1754,35 +1780,38 @@
         }
     }
 
-    document.getElementById('formAddEvento').addEventListener('submit', async e => {
-        e.preventDefault();
-        const form = e.target;
-        const data = {
-            titolo: form.titolo.value,
-            descrizione: form.descrizione.value,
-            data: form.data.value,
-            postiTotali: form.postiTotali.value ? parseInt(form.postiTotali.value) : null
-        };
+document.getElementById('formAddEvento').addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.target;
 
-        try {
-            const res = await fetch('/admin/events', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
+    // Costruisci FormData per invio multipart (no Content-Type esplicito)
+    const formData = new FormData();
+    formData.append('titolo', form.titolo.value);
+    formData.append('descrizione', form.descrizione.value);
+    formData.append('data', form.data.value);
+    if (form.postiTotali.value) formData.append('postiTotali', form.postiTotali.value);
+    if (form.poster && form.poster.files && form.poster.files[0]) {
+        formData.append('poster', form.poster.files[0]);
+    }
 
-            if (res.ok) {
-                alert('✅ Evento creato con successo!');
-                form.reset();
-                loadEventi();
-            } else {
-                alert('❌ Errore durante la creazione dell\'evento');
-            }
-        } catch (error) {
-            console.error('Error creating event:', error);
+    try {
+        const res = await fetch('/admin/events', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (res.ok) {
+            alert('✅ Evento creato con successo!');
+            form.reset();
+            loadEventi();
+        } else {
             alert('❌ Errore durante la creazione dell\'evento');
         }
-    });
+    } catch (error) {
+        console.error('Error creating event:', error);
+        alert('❌ Errore durante la creazione dell\'evento');
+    }
+});
     // Gestione Tab Prenotazioni
     document.addEventListener('DOMContentLoaded', function() {
         // Imposta data di default per prenotazioni tavolo

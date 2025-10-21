@@ -123,7 +123,8 @@ public class ReservationService {
         reservation.setPeople(request.getPeople());
         reservation.setNote(request.getNote());
 
-        return toResponse(reservationRepository.save(reservation));
+        Reservation saved = reservationRepository.save(reservation);
+        return toResponse(saved);
     }
 
     @Transactional
@@ -150,7 +151,8 @@ public class ReservationService {
             reservation.setNote(request.getNote());
             reservation.setEvent(eventRepository.findById(request.getEventId()).orElse(null));
 
-            return toResponse(reservationRepository.save(reservation));
+            Reservation saved = reservationRepository.save(reservation);
+            return toResponse(saved);
         }
         // Prenotazione normale
         return createReservation(request);

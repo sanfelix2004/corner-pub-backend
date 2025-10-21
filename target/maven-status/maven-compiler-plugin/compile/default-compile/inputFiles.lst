@@ -60,6 +60,7 @@
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/controller/HealthController.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/exception/badrequest/BadRequestException.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/exception/badrequest/CapacityExceededException.java
+/Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/service/EventService.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/controller/admin/AdminMenuController.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/request/TableAssignmentRequest.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/model/EventRegistration.java

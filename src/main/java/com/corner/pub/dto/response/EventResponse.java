@@ -8,6 +8,7 @@ public class EventResponse {
 
     private Long id;
     private String titolo;
+    private String posterUrl;
     private String descrizione;
     private String data;
     private Integer postiTotali;
@@ -18,6 +19,7 @@ public class EventResponse {
     public EventResponse(Event event, long totalePartecipanti) {
         this.id = event.getId();
         this.titolo = event.getTitolo();
+        this.posterUrl = event.getPosterUrl();
         this.descrizione = event.getDescrizione();
         this.data = event.getData().toString();
         this.postiTotali = event.getPostiTotali();
@@ -52,4 +54,12 @@ public class EventResponse {
     public void setPostiOccupati(Long postiOccupati) { this.postiOccupati = postiOccupati; }
     public Long getPostiDisponibili() { return postiDisponibili; }
     public void setPostiDisponibili(Long postiDisponibili) { this.postiDisponibili = postiDisponibili; }
+
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
+    }
 }

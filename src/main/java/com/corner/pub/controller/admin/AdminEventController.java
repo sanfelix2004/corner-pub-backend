@@ -10,10 +10,13 @@ import com.corner.pub.model.Event;
 import com.corner.pub.model.EventRegistration;
 import com.corner.pub.repository.EventRepository;
 import com.corner.pub.service.EventRegistrationService;
+import com.corner.pub.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,11 +27,14 @@ public class AdminEventController {
 
     private final EventRepository eventRepository;
     private final EventRegistrationService registrationService;
+    private final EventService eventService;
 
     public AdminEventController(EventRepository eventRepository,
-                                EventRegistrationService registrationService) {
+                                EventRegistrationService registrationService,
+                                EventService eventService) {
         this.eventRepository = eventRepository;
         this.registrationService = registrationService;
+        this.eventService = eventService;
     }
 
     @PatchMapping("/registrations/{id}/table")
@@ -67,36 +73,23 @@ public class AdminEventController {
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping
-    public ResponseEntity<EventResponse> createEvent(@RequestBody @Valid EventRequest request) {
-        Event event = new Event();
-        event.setTitolo(request.getTitolo());
-        event.setDescrizione(request.getDescrizione());
-        event.setData(request.getData());
-        event.setPostiTotali(request.getPostiTotali());
-
-        Event savedEvent = eventRepository.save(event);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new EventResponse(savedEvent, 0));
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventResponse> createEvent(
+            @ModelAttribute @Valid EventRequest request,
+            @RequestPart(value = "poster", required = false) MultipartFile poster
+    ) {
+        EventResponse response = eventService.createEvent(request, poster);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PutMapping("/{eventId}")
+    @PutMapping(value = "/{eventId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<EventResponse> updateEvent(
             @PathVariable Long eventId,
-            @RequestBody @Valid EventRequest request) {
-
-        return eventRepository.findById(eventId)
-                .map(event -> {
-                    event.setTitolo(request.getTitolo());
-                    event.setDescrizione(request.getDescrizione());
-                    event.setData(request.getData());
-                    event.setPostiTotali(request.getPostiTotali());
-                    Event updatedEvent = eventRepository.save(event);
-                    return ResponseEntity.ok(
-                            new EventResponse(updatedEvent,
-                                    registrationService.countByEventId(eventId)));
-                })
-                .orElse(ResponseEntity.notFound().build());
+            @ModelAttribute @Valid EventRequest request,
+            @RequestPart(value = "poster", required = false) MultipartFile poster
+    ) {
+        EventResponse response = eventService.updateEvent(eventId, request, poster);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{eventId}/register")
@@ -109,11 +102,7 @@ public class AdminEventController {
 
     @DeleteMapping("/{eventId}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
-        if (!eventRepository.existsById(eventId)) {
-            return ResponseEntity.notFound().build();
-        }
-        registrationService.deleteByEventId(eventId);
-        eventRepository.deleteById(eventId);
+        eventService.deleteEvent(eventId);
         return ResponseEntity.noContent().build();
     }
 

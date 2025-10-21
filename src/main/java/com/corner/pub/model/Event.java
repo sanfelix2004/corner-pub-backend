@@ -22,6 +22,12 @@ public class Event {
     @Column(name = "posti_totali")
     private Integer postiTotali;
 
+    @Column(name = "poster_url", length = 512)
+    private String posterUrl;
+
+    @Column(name = "poster_public_id", length = 255)
+    private String posterPublicId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -82,5 +88,21 @@ public class Event {
 
     public void setRegistrations(List<EventRegistration> registrations) {
         this.registrations = registrations;
+    }
+
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
+    }
+
+    public String getPosterPublicId() {
+        return posterPublicId;
+    }
+
+    public void setPosterPublicId(String posterPublicId) {
+        this.posterPublicId = posterPublicId;
     }
 }
