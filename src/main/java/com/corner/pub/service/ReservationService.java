@@ -1,5 +1,7 @@
 package com.corner.pub.service;
 
+import com.corner.pub.service.MailService;
+
 import com.corner.pub.dto.request.EventRegistrationRequest;
 import com.corner.pub.dto.request.ReservationRequest;
 import com.corner.pub.dto.response.ReservationResponse;
@@ -15,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +41,7 @@ public class ReservationService {
     private final UserService userService;
     private final EventRepository eventRepository;
     private final EventRegistrationService eventRegistrationService;
+    private final MailService mailService;
 
     // Sala: 12 tavoli numerati 1..12, ~70 posti totali
     private static final int MAX_TABLES = 12;
@@ -45,6 +50,29 @@ public class ReservationService {
     private static final int MAX_PEOPLE_PER_RESERVATION = 12;
 
     // -----------------------------
+    /**
+     * Esegue il task solo dopo il commit della transazione. Se non c'è transazione attiva, esegue subito.
+     */
+    private void runAfterCommit(Runnable task) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        task.run();
+                    } catch (Exception e) {
+                        log.warn("[MAIL] async afterCommit task failed: {}", e.getMessage());
+                    }
+                }
+            });
+        } else {
+            try {
+                task.run();
+            } catch (Exception e) {
+                log.warn("[MAIL] task (no-tx) failed: {}", e.getMessage());
+            }
+        }
+    }
     //           CAPACITY HELPERS
     // -----------------------------
 
@@ -124,6 +152,7 @@ public class ReservationService {
         reservation.setNote(request.getNote());
 
         Reservation saved = reservationRepository.save(reservation);
+        runAfterCommit(() -> mailService.notifyReservationCreated(saved));
         return toResponse(saved);
     }
 
@@ -152,6 +181,7 @@ public class ReservationService {
             reservation.setEvent(eventRepository.findById(request.getEventId()).orElse(null));
 
             Reservation saved = reservationRepository.save(reservation);
+            runAfterCommit(() -> mailService.notifyReservationCreated(saved));
             return toResponse(saved);
         }
         // Prenotazione normale
@@ -187,7 +217,11 @@ public class ReservationService {
             throw new BadRequestException("Numero tavolo mancante");
         }
         int tn;
-        try { tn = Integer.parseInt(tableNumber.trim()); } catch (NumberFormatException e) { throw new BadRequestException("Numero tavolo non valido"); }
+        try {
+            tn = Integer.parseInt(tableNumber.trim());
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("Numero tavolo non valido");
+        }
         if (tn < 1 || tn > MAX_TABLES) {
             throw new BadRequestException("Il tavolo deve essere compreso tra 1 e " + MAX_TABLES);
         }
@@ -205,10 +239,11 @@ public class ReservationService {
 
     @Transactional
     public void deleteById(Long id) {
-        if (!reservationRepository.existsById(id)) {
-            throw new ReservationNotFoundException("ID", id.toString());
-        }
-        reservationRepository.deleteById(id);
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
+        // invia mail solo dopo commit
+        runAfterCommit(() -> mailService.notifyReservationCancelled(reservation));
+        reservationRepository.delete(reservation);
     }
 
     @Transactional
@@ -217,6 +252,8 @@ public class ReservationService {
         Reservation reservation = reservationRepository
                 .findByUserPhoneAndDate(phone, date)
                 .orElseThrow(() -> new ReservationNotFoundException(phone, dateString));
+        // invia mail solo dopo commit
+        runAfterCommit(() -> mailService.notifyReservationCancelled(reservation));
         reservationRepository.delete(reservation);
     }
 

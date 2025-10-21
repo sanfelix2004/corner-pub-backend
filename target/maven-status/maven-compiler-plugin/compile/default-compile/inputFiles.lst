@@ -52,6 +52,7 @@
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/controller/admin/AdminPromotionController.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/controller/admin/AdminReservationController.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/response/UserResponse.java
+/Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/service/MailService.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/exception/badrequest/ValidationException.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/controller/admin/AdminUserController.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/repository/PromotionMenuItemRepository.java

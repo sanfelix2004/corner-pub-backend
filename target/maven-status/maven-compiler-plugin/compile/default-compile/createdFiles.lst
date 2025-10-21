@@ -22,6 +22,7 @@ com/corner/pub/dto/request/EventTableAssignmentRequest.class
 com/corner/pub/controller/admin/AdminReservationController.class
 com/corner/pub/dto/response/MenuItemResponse.class
 com/corner/pub/repository/MenuItemRepository.class
+com/corner/pub/service/ReservationService$1.class
 com/corner/pub/exception/conflictexception/MenuItemDuplicateException.class
 com/corner/pub/dto/response/PromotionResponse.class
 com/corner/pub/exception/resourcenotfound/ReservationNotFoundException.class
@@ -38,6 +39,8 @@ com/corner/pub/model/PromotionMenuItem.class
 com/corner/pub/dto/response/ErrorResponse.class
 com/corner/pub/service/ReservationService.class
 com/corner/pub/dto/request/TableAssignmentRequest.class
+com/corner/pub/service/EventRegistrationService$1.class
+com/corner/pub/service/EventRegistrationService$2.class
 com/corner/pub/exception/GlobalExceptionHandler.class
 com/corner/pub/exception/resourcenotfound/ResourceNotFoundException.class
 com/corner/pub/repository/MenuItemAllergenRepository.class
@@ -47,6 +50,7 @@ com/corner/pub/model/Allergen.class
 com/corner/pub/repository/InEvidenzaRepository.class
 com/corner/pub/service/InEvidenzaService.class
 com/corner/pub/dto/request/EventRegistrationRequest.class
+com/corner/pub/service/MailService.class
 com/corner/pub/exception/badrequest/CapacityExceededException.class
 com/corner/pub/dto/request/UserRequest.class
 com/corner/pub/controller/EventController.class
@@ -66,6 +70,7 @@ com/corner/pub/service/UserService.class
 com/corner/pub/exception/conflictexception/ConflictException.class
 com/corner/pub/dto/response/UserResponse.class
 com/corner/pub/dto/response/ReservationResponse.class
+com/corner/pub/service/EventRegistrationService$3.class
 com/corner/pub/exception/badrequest/BadRequestException.class
 com/corner/pub/dto/response/InEvidenzaResponse.class
 com/corner/pub/model/Reservation.class

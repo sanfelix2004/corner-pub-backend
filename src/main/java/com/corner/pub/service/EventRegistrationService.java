@@ -12,8 +12,11 @@ import com.corner.pub.model.User;
 import com.corner.pub.repository.EventRegistrationRepository;
 import com.corner.pub.repository.EventRepository;
 import com.corner.pub.repository.UserRepository;
+import com.corner.pub.service.MailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,13 +27,16 @@ public class EventRegistrationService {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
+    private final MailService mailService;
 
     public EventRegistrationService(UserRepository userRepository,
                                     EventRepository eventRepository,
-                                    EventRegistrationRepository registrationRepository) {
+                                    EventRegistrationRepository registrationRepository,
+                                    MailService mailService) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
+        this.mailService = mailService;
     }
 
     // -----------------------------
@@ -72,7 +78,19 @@ public class EventRegistrationService {
         registration.setNote(request.getNote());
         registration.setPartecipanti(request.getPartecipanti());
 
-        return toResponse(registrationRepository.save(registration));
+        EventRegistration saved = registrationRepository.save(registration);
+        // notifica via email l'amministratore DOPO il commit della transazione
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    mailService.notifyEventRegistrationCreated(saved);
+                }
+            });
+        } else {
+            mailService.notifyEventRegistrationCreated(saved);
+        }
+        return toResponse(saved);
     }
 
     // -----------------------------
@@ -95,6 +113,16 @@ public class EventRegistrationService {
         EventRegistration reg = registrationRepository
                 .findByEventIdAndUserId(eventId, userId)
                 .orElseThrow(() -> new CornerPubException("Registrazione non trovata"));
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    mailService.notifyEventRegistrationCancelled(reg);
+                }
+            });
+        } else {
+            mailService.notifyEventRegistrationCancelled(reg);
+        }
         registrationRepository.delete(reg);
     }
 
@@ -103,6 +131,16 @@ public class EventRegistrationService {
         EventRegistration reg = registrationRepository
                 .findByEventIdAndUser_Phone(eventId, phone)
                 .orElseThrow(() -> new CornerPubException("Registrazione non trovata"));
+        if (TransactionSynchronizationManager.isActualTransactionActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    mailService.notifyEventRegistrationCancelled(reg);
+                }
+            });
+        } else {
+            mailService.notifyEventRegistrationCancelled(reg);
+        }
         registrationRepository.delete(reg);
     }
 
