@@ -90,7 +90,8 @@ public class MenuItemService {
                 Map<?, ?> uploadResult = cloudinary.uploader().upload(
                         image.getBytes(),
                         ObjectUtils.asMap(
-                                "public_id", "prodotti/" + saved.getId(),
+                                "folder", "prodotti/",
+                                "public_id", String.valueOf(saved.getId()),
                                 "overwrite", true,
                                 "invalidate", true,
                                 "resource_type", "image"
@@ -158,11 +159,39 @@ public class MenuItemService {
     /** Elimina un piatto per ID. */
     @Transactional
     public void deleteMenuItem(Long id) {
-        if (!menuItemRepository.existsById(id)) {
-            throw new MenuItemNotFoundException(id);
-        }
-        // rimuovo relazioni allergeni prima (orphanRemoval gestisce ma esplicito è chiaro)
+        MenuItem item = menuItemRepository.findById(id)
+                .orElseThrow(() -> new MenuItemNotFoundException(id));
+
+        // 1) elimina relazioni allergeni
         menuItemAllergenRepository.deleteByMenuItem_Id(id);
+
+        // 2) elimina asset Cloudinary (tenta sia /prodotti/<id> che <id> legacy)
+        try {
+            String publicIdPreferred = "prodotti/" + id;   // forma corretta
+            Map<String, Object> opts = ObjectUtils.asMap(
+                    "resource_type", "image",
+                    "type", "upload",
+                    "invalidate", true
+            );
+
+            // principale
+            cloudinary.uploader().destroy(publicIdPreferred, opts);
+
+            // eventuali derivati (thumbnail, trasformazioni, versioni)
+            cloudinary.api().deleteResourcesByPrefix(publicIdPreferred, ObjectUtils.asMap(
+                    "resource_type", "image",
+                    "type", "upload"
+            ));
+
+            // legacy: se in passato hai salvato senza folder o con public_id "prodotti/<id>" in root
+            cloudinary.uploader().destroy(String.valueOf(id), opts);
+
+        } catch (Exception e) {
+            log.warn("Cloudinary delete failed for menuItem id={}: {}", id, e.getMessage());
+            // non bloccare la cancellazione del record
+        }
+
+        // 3) elimina record
         menuItemRepository.deleteById(id);
     }
 
