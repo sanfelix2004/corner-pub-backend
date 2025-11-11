@@ -717,6 +717,56 @@
                 </div>
             </div>
         </div>
+        <!-- Modifica Evento Modal -->
+        <div class="modal fade" id="editEventoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Modifica Evento</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editEventoForm">
+                            <input type="hidden" id="editEventoId">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Titolo</label>
+                                    <input type="text" id="editEventoTitolo" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Data e Ora</label>
+                                    <input type="datetime-local" id="editEventoData" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Descrizione</label>
+                                    <textarea id="editEventoDescrizione" class="form-control" rows="3"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Posti Totali</label>
+                                    <input type="number" id="editEventoPosti" class="form-control" min="1">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="editEventoPoster">Locandina (facoltativa)</label>
+                                <input type="file" id="editEventoPoster" class="form-control-file" accept="image/*">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+                        <button type="button" class="btn btn-success" onclick="updateEvento()">
+                            <i class="fas fa-save"></i> Salva modifiche
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -738,10 +788,18 @@
     }
 
     function formatDateTime(dateStr) {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        return d.toLocaleString('it-IT');
-    }
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  // Mostra sempre in orario italiano, indipendentemente dal device
+  return d.toLocaleString('it-IT', {
+    timeZone: 'Europe/Rome',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
 
     // Section management
     function showSection(section) {
@@ -1685,32 +1743,35 @@
             }
 
             eventi.forEach(evento => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                <td>
-                    ${evento.posterUrl
-                        ? `<img src="${evento.posterUrl}" class="event-thumb" alt="Locandina evento">`
-                        : `<div class="event-thumb placeholder"></div>`}
-                </td>
-                <td><strong>${escape(evento.titolo)}</strong></td>
-                <td>${escape(evento.descrizione || '-')}</td>
-                <td>${formatDateTime(evento.data)}</td>
-                <td>
-                    ${evento.postiTotali ?
-                    `${evento.postiOccupati}/${evento.postiTotali} (${evento.postiDisponibili} disponibili)` :
-                    'Illimitati'}
-                </td>
-                <td class="text-nowrap">
-                    <button class="btn btn-sm btn-info btn-action" onclick="viewIscritti(${evento.id})">
-                        <i class="fas fa-users"></i> Iscritti
-                    </button>
-                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteEvento(${evento.id})">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </td>
-            `;
-                tbody.appendChild(tr);
-            });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            ${evento.posterUrl
+                ? `<img src="${evento.posterUrl}" class="event-thumb" alt="Locandina evento">`
+                : `<div class="event-thumb placeholder"></div>`}
+        </td>
+        <td><strong>${escape(evento.titolo)}</strong></td>
+        <td>${escape(evento.descrizione || '-')}</td>
+        <td>${formatDateTime(evento.data)}</td>
+        <td>
+            ${evento.postiTotali ?
+            `${evento.postiOccupati}/${evento.postiTotali} (${evento.postiDisponibili} disponibili)` :
+            'Illimitati'}
+        </td>
+        <td class="text-nowrap">
+            <button class="btn btn-sm btn-info btn-action" onclick="viewIscritti(${evento.id})">
+                <i class="fas fa-users"></i> Iscritti
+            </button>
+            <button class="btn btn-sm btn-warning btn-action" onclick="openEditEventoModal(${evento.id}, '${escape(evento.titolo)}', '${escape(evento.descrizione || '')}', '${evento.data}', ${evento.postiTotali || 'null'})">
+                <i class="fas fa-edit"></i> Modifica
+            </button>
+            <button class="btn btn-sm btn-danger btn-action" onclick="deleteEvento(${evento.id})">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </td>
+    `;
+    tbody.appendChild(tr);
+});
         } catch (error) {
             console.error('Error loading events:', error);
             document.getElementById('eventiTableBody').innerHTML = `
@@ -2265,7 +2326,50 @@ document.getElementById('formAddEvento').addEventListener('submit', async e => {
         }
     }
 
+function openEditEventoModal(id, titolo, descrizione, data, postiTotali) {
+  document.getElementById('editEventoId').value = id;
+  document.getElementById('editEventoTitolo').value = titolo;
+  document.getElementById('editEventoDescrizione').value = descrizione;
+  document.getElementById('editEventoData').value = data.slice(0, 16); // formato compatibile con datetime-local
+  document.getElementById('editEventoPosti').value = postiTotali || '';
+  $('#editEventoModal').modal('show');
+}
 
+async function updateEvento() {
+  const id = document.getElementById('editEventoId').value;
+  const titolo = document.getElementById('editEventoTitolo').value;
+  const descrizione = document.getElementById('editEventoDescrizione').value;
+  const data = document.getElementById('editEventoData').value;
+  const postiTotali = document.getElementById('editEventoPosti').value;
+  const posterInput = document.getElementById('editEventoPoster'); // aggiungilo nel modal
+
+  const formData = new FormData();
+  formData.append('titolo', titolo);
+  formData.append('descrizione', descrizione);
+  formData.append('data', data);
+  if (postiTotali) formData.append('postiTotali', postiTotali);
+  if (posterInput && posterInput.files.length > 0) {
+    formData.append('poster', posterInput.files[0]);
+  }
+
+  try {
+    const res = await fetch(`/admin/events/${id}`, {
+      method: 'PUT',
+      body: formData // 🔥 niente headers espliciti
+    });
+
+    if (res.ok) {
+      alert('✅ Evento aggiornato con successo!');
+      $('#editEventoModal').modal('hide');
+      loadEventi();
+    } else {
+      alert('❌ Errore durante l\'aggiornamento dell\'evento');
+    }
+  } catch (error) {
+    console.error('Errore durante l\'update:', error);
+    alert('❌ Errore di connessione');
+  }
+}
 </script>
 </body>
 </html>
