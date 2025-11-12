@@ -1,26 +1,60 @@
 package com.corner.pub.dto.request;
 
+import java.util.List;
+
 public class MenuItemRequest {
-    private String categoria;
+    private Long categoryId;
+    private String categoryName; // opzionale, se vuoi creare nuove categorie al volo
     private String titolo;
     private String descrizione;
     private double prezzo;
     private java.util.List<AllergenSelection> allergens;
 
-    // Getters & Setters
+    public Long getCategoryId() {
+        return categoryId;
+    }
 
-    public java.util.List<AllergenSelection> getAllergens(){ return allergens; }
-    public void setAllergens(java.util.List<AllergenSelection> allergens){ this.allergens = allergens; }
+    public String getCategoryName() {
+        return categoryName;
+    }
 
-    public String getCategoria() { return categoria; }
-    public void setCategoria(String categoria) { this.categoria = categoria; }
+    public String getTitolo() {
+        return titolo;
+    }
 
-    public String getTitolo() { return titolo; }
-    public void setTitolo(String titolo) { this.titolo = titolo; }
+    public String getDescrizione() {
+        return descrizione;
+    }
 
-    public String getDescrizione() { return descrizione; }
-    public void setDescrizione(String descrizione) { this.descrizione = descrizione; }
+    public double getPrezzo() {
+        return prezzo;
+    }
 
-    public double getPrezzo() { return prezzo; }
-    public void setPrezzo(double prezzo) { this.prezzo = prezzo; }
+    public List<AllergenSelection> getAllergens() {
+        return allergens;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public void setTitolo(String titolo) {
+        this.titolo = titolo;
+    }
+
+    public void setDescrizione(String descrizione) {
+        this.descrizione = descrizione;
+    }
+
+    public void setPrezzo(double prezzo) {
+        this.prezzo = prezzo;
+    }
+
+    public void setAllergens(List<AllergenSelection> allergens) {
+        this.allergens = allergens;
+    }
 }

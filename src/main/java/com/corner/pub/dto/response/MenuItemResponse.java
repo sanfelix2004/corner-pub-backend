@@ -1,38 +1,79 @@
 package com.corner.pub.dto.response;
 
+import java.util.List;
+
+
 public class MenuItemResponse {
     private Long id;
-    private String categoria;
+    private String categoryName;
     private String titolo;
     private String descrizione;
     private double prezzo;
     private String imageUrl;
     private boolean visibile;
-    public boolean isVisibile() { return visibile; }
-    public void setVisibile(boolean visibile) { this.visibile = visibile; }
     private java.util.List<AllergenResponse> allergens;
 
-    // Getters & Setters
-    public java.util.List<AllergenResponse> getAllergens(){ return allergens; }
-    public void setAllergens(java.util.List<AllergenResponse> allergens){ this.allergens = allergens; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
 
-    public String getCategoria() { return categoria; }
-    public void setCategoria(String categoria) { this.categoria = categoria; }
+    public void setTitolo(String titolo) {
+        this.titolo = titolo;
+    }
 
-    public String getTitolo() { return titolo; }
-    public void setTitolo(String titolo) { this.titolo = titolo; }
+    public void setDescrizione(String descrizione) {
+        this.descrizione = descrizione;
+    }
 
-    public String getDescrizione() { return descrizione; }
-    public void setDescrizione(String descrizione) { this.descrizione = descrizione; }
+    public void setPrezzo(double prezzo) {
+        this.prezzo = prezzo;
+    }
 
-    public double getPrezzo() { return prezzo; }
-    public void setPrezzo(double prezzo) { this.prezzo = prezzo; }
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public void setVisibile(boolean visibile) {
+        this.visibile = visibile;
+    }
 
+    public void setAllergens(List<AllergenResponse> allergens) {
+        this.allergens = allergens;
+    }
 
+    public Long getId() {
+        return id;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public String getTitolo() {
+        return titolo;
+    }
+
+    public String getDescrizione() {
+        return descrizione;
+    }
+
+    public double getPrezzo() {
+        return prezzo;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public boolean isVisibile() {
+        return visibile;
+    }
+
+    public List<AllergenResponse> getAllergens() {
+        return allergens;
+    }
 }

@@ -1,28 +1,28 @@
 package com.corner.pub.service;
 
 import com.cloudinary.Cloudinary;
+import com.corner.pub.dto.request.PromotionMenuItemRequest;
+import com.corner.pub.dto.request.PromotionRequest;
 import com.corner.pub.dto.response.MenuItemResponse;
 import com.corner.pub.dto.response.PromotionItemDetail;
-import com.corner.pub.dto.response.PromotionMenuItemResponse;
 import com.corner.pub.dto.response.PromotionResponse;
 import com.corner.pub.exception.resourcenotfound.ResourceNotFoundException;
+import com.corner.pub.model.MenuItem;
 import com.corner.pub.model.Promotion;
 import com.corner.pub.model.PromotionMenuItem;
 import com.corner.pub.repository.MenuItemRepository;
 import com.corner.pub.repository.PromotionRepository;
-import org.hibernate.Hibernate;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.corner.pub.dto.request.PromotionRequest;
-import com.corner.pub.dto.request.PromotionMenuItemRequest;
-import com.corner.pub.model.MenuItem;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 @Service
 public class PromotionService {
 
@@ -35,36 +35,30 @@ public class PromotionService {
     @Autowired
     private Cloudinary cloudinary;
 
-    // ====== NUOVO: tutti i mapping fatti DENTRO la transazione ======
+    /* ===========================================================
+       🔹 Metodi di lettura
+    ============================================================ */
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<PromotionResponse> getAllPromotionResponses() {
-        List<Promotion> promos = promotionRepository.findAllFetched();
-        List<PromotionResponse> out = new java.util.ArrayList<>(promos.size());
-        for (Promotion p : promos) {
-            out.add(toResponse(p));           // siamo ancora nella tx
-        }
-        return out;
+        return promotionRepository.findAllFetched().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<PromotionResponse> getActivePromotionResponses() {
         LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
-        List<Promotion> promos = promotionRepository.findActiveValidFetched(today);
-        List<PromotionResponse> out = new java.util.ArrayList<>(promos.size());
-        for (Promotion p : promos) {
-            out.add(toResponse(p));           // siamo ancora nella tx
-        }
-        return out;
+        return promotionRepository.findActiveValidFetched(today).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public Promotion getByIdFetched(Long id) {
         return promotionRepository.findByIdFetched(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
     }
-
-    // --- questi possono restare come li avevi ---
 
     public List<Promotion> getAllPromotions() {
         return promotionRepository.findAll();
@@ -75,6 +69,11 @@ public class PromotionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
     }
 
+    /* ===========================================================
+       🔹 Creazione / Update / Delete
+    ============================================================ */
+
+    @Transactional
     public Promotion create(PromotionRequest dto) {
         Promotion promo = new Promotion();
         promo.setNome(dto.getNome());
@@ -84,104 +83,108 @@ public class PromotionService {
         promo.setDataFine(dto.getDataFine());
 
         if (dto.getItems() != null && !dto.getItems().isEmpty()) {
-            for (PromotionMenuItemRequest itemDto : dto.getItems()) {
-                MenuItem menuItem = menuItemRepository.findById(itemDto.getMenuItemId())
-                        .orElseThrow(() -> new ResourceNotFoundException("MenuItem non trovato con ID: " + itemDto.getMenuItemId()));
-
-                PromotionMenuItem item = new PromotionMenuItem();
-                item.setMenuItem(menuItem);
-                item.setScontoPercentuale(java.math.BigDecimal.valueOf(itemDto.getScontoPercentuale()));
-                item.setPromotion(promo);
-
-                promo.getItems().add(item);
-            }
+            dto.getItems().forEach(req -> promo.getItems().add(buildPromotionItem(req, promo)));
         }
+
         return promotionRepository.save(promo);
     }
 
-    public void delete(Long id) {
-        if (!promotionRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Promozione da eliminare non trovata con ID: " + id);
-        }
-        promotionRepository.deleteById(id);
-    }
-
+    @Transactional
     public Promotion update(Long id, PromotionRequest request) {
         Promotion existing = getById(id);
+
         existing.setNome(request.getNome());
         existing.setDescrizione(request.getDescrizione());
         existing.setDataInizio(request.getDataInizio());
         existing.setDataFine(request.getDataFine());
         existing.setAttiva(request.isAttiva());
 
-        List<PromotionMenuItem> menuItems = request.getItems().stream().map(reqItem -> {
-            PromotionMenuItem item = new PromotionMenuItem();
-            item.setPromotion(existing);
-            item.setScontoPercentuale(java.math.BigDecimal.valueOf(reqItem.getScontoPercentuale()));
-            MenuItem menuItem = menuItemRepository.findById(reqItem.getMenuItemId())
-                    .orElseThrow(() -> new ResourceNotFoundException("MenuItem non trovato con ID: " + reqItem.getMenuItemId()));
-            item.setMenuItem(menuItem);
-            return item;
-        }).toList();
+        existing.getItems().clear();
+        if (request.getItems() != null && !request.getItems().isEmpty()) {
+            request.getItems().forEach(req -> existing.getItems().add(buildPromotionItem(req, existing)));
+        }
 
-        existing.setItems(menuItems);
         return promotionRepository.save(existing);
     }
 
+    @Transactional
+    public void delete(Long id) {
+        Promotion promo = getById(id);
+        promotionRepository.delete(promo);
+    }
+
+    @Transactional
     public Promotion riattiva(Long id) {
         Promotion p = getById(id);
         p.setAttiva(true);
         return promotionRepository.save(p);
     }
 
+    @Transactional
     public Promotion disattiva(Long id) {
         Promotion p = getById(id);
         p.setAttiva(false);
         return promotionRepository.save(p);
     }
 
-    // ----- toResponse resta uguale -----
+    /* ===========================================================
+       🔹 Mapping
+    ============================================================ */
+
+    private PromotionMenuItem buildPromotionItem(PromotionMenuItemRequest req, Promotion promo) {
+        MenuItem menuItem = menuItemRepository.findById(req.getMenuItemId())
+                .orElseThrow(() -> new ResourceNotFoundException("MenuItem non trovato con ID: " + req.getMenuItemId()));
+
+        PromotionMenuItem item = new PromotionMenuItem();
+        item.setPromotion(promo);
+        item.setMenuItem(menuItem);
+        item.setScontoPercentuale(BigDecimal.valueOf(req.getScontoPercentuale()));
+        return item;
+    }
+
     public PromotionResponse toResponse(Promotion promo) {
-        PromotionResponse response = new PromotionResponse();
-        response.setId(promo.getId());
-        response.setNome(promo.getNome());
-        response.setAttiva(promo.isAttiva());
-        response.setDescrizione(promo.getDescrizione());
-        response.setDataInizio(promo.getDataInizio());
-        response.setDataFine(promo.getDataFine());
+        PromotionResponse res = new PromotionResponse();
+        res.setId(promo.getId());
+        res.setNome(promo.getNome());
+        res.setDescrizione(promo.getDescrizione());
+        res.setAttiva(promo.isAttiva());
+        res.setDataInizio(promo.getDataInizio());
+        res.setDataFine(promo.getDataFine());
 
         List<PromotionItemDetail> itemDetails = promo.getItems().stream()
-                .filter(item -> item.getMenuItem() != null)
-                .map(item -> {
-                    MenuItem menuItem = item.getMenuItem();
-                    MenuItemResponse menuItemResponse = mapToMenuItemResponse(menuItem);
-                    return new PromotionItemDetail(
-                            menuItemResponse,
-                            item.getScontoPercentuale() != null ? item.getScontoPercentuale().doubleValue() : 0.0
-                    );
-                })
-                .collect(java.util.stream.Collectors.toList());
+                .filter(i -> i.getMenuItem() != null)
+                .map(i -> new PromotionItemDetail(
+                        mapToMenuItemResponse(i.getMenuItem()),
+                        i.getScontoPercentuale() != null ? i.getScontoPercentuale().doubleValue() : 0.0
+                ))
+                .collect(Collectors.toList());
 
-        response.setItems(itemDetails);
-        return response;
+        res.setItems(itemDetails);
+        return res;
     }
 
     private MenuItemResponse mapToMenuItemResponse(MenuItem item) {
-        MenuItemResponse response = new MenuItemResponse();
-        response.setId(item.getId());
-        response.setTitolo(item.getTitolo());
-        response.setCategoria(item.getCategoria());
-        response.setPrezzo(item.getPrezzo());
-        response.setVisibile(item.isVisibile());
+        MenuItemResponse r = new MenuItemResponse();
+        r.setId(item.getId());
+        r.setTitolo(item.getTitolo());
+        r.setDescrizione(item.getDescrizione());
+        r.setPrezzo(item.getPrezzo());
+        r.setVisibile(item.isVisibile());
+        r.setCategoryName(item.getCategory() != null ? item.getCategory().getName() : null);
+        r.setImageUrl(resolveImageUrl(item));
+        return r;
+    }
+
+    private String resolveImageUrl(MenuItem item) {
         try {
-            String imageUrl = cloudinary.url()
+            if (item.getImageUrl() != null && !item.getImageUrl().isBlank()) {
+                return item.getImageUrl(); // usa l'URL già salvato da Cloudinary
+            }
+            return cloudinary.url()
                     .secure(true)
-                    .version(System.currentTimeMillis() / 1000)
                     .generate("prodotti/" + item.getId());
-            response.setImageUrl(imageUrl);
         } catch (Exception e) {
-            response.setImageUrl("/images/default.png");
+            return "/images/default.png";
         }
-        return response;
     }
 }

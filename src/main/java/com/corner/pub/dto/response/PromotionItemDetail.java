@@ -20,7 +20,7 @@ public class PromotionItemDetail {
         this.imageUrl = menuItem.getImageUrl();
         this.prezzoOriginale = menuItem.getPrezzo();       // può essere null
         this.scontoPercentuale = scontoPercentuale == null ? 0.0 : scontoPercentuale;
-        this.categoria = menuItem.getCategoria();
+        this.categoria = menuItem.getCategoryName();
 
         // Calcolo sicuro del prezzo scontato
         if (this.prezzoOriginale != null) {

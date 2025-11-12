@@ -272,6 +272,9 @@
         <button class="btn btn-primary section-btn" onclick="showSection('prenotazioni')">
             <i class="fas fa-calendar-alt"></i> Prenotazioni
         </button>
+        <button class="btn btn-secondary section-btn" onclick="showSection('categorie')">
+            <i class="fas fa-layer-group"></i> Categorie
+        </button>
         <button class="btn btn-info section-btn" onclick="showSection('menu')">
             <i class="fas fa-utensils"></i> Menu
         </button>
@@ -411,6 +414,45 @@
             </div>
         </div>
     </div>
+    <!-- Categorie Section -->
+    <div id="sectionCategorie" class="card-section hidden">
+        <h4><i class="fas fa-layer-group"></i> Gestione Categorie</h4>
+
+        <!-- Aggiungi nuova categoria -->
+        <div class="form-card mb-4">
+            <h5><i class="fas fa-plus-circle"></i> Aggiungi Categoria</h5>
+            <form id="formAddCategory">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Nome Categoria</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Esempio: Panini, Bevande..." required />
+                    </div>
+                    <div class="form-group col-md-3 mt-4 pt-2">
+                        <button type="submit" class="btn btn-success btn-action">
+                            <i class="fas fa-save"></i> Salva Categoria
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lista categorie -->
+        <div class="mt-4">
+            <h5><i class="fas fa-list"></i> Categorie Attuali</h5>
+            <div class="table-responsive">
+                <table class="table custom-table">
+                    <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Azioni</th>
+                    </tr>
+                    </thead>
+                    <tbody id="categorieTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <!-- Menu Section -->
     <div id="sectionMenu" class="card-section hidden">
@@ -518,6 +560,7 @@
     </div>
 
     <!-- Promozioni Section -->
+    <!-- Promozioni Section -->
     <div id="sectionPromozioni" class="card-section hidden">
         <h4><i class="fas fa-tag"></i> Gestione Promozioni</h4>
 
@@ -554,6 +597,7 @@
                     </div>
                 </div>
 
+                <!-- Checklist prodotti -->
                 <div class="form-row mt-3">
                     <div class="form-group col-md-12">
                         <label><i class="fas fa-list"></i> Prodotti inclusi</label>
@@ -563,7 +607,7 @@
 
                 <div class="form-row mt-3">
                     <div class="col-md-12">
-                        <div class="alert alert-info" id="selectedPromoSummary" style="display: none;"></div>
+                        <div class="alert alert-info" id="selectedPromoSummary" style="display:none;"></div>
                     </div>
                 </div>
 
@@ -597,6 +641,8 @@
             </div>
         </div>
     </div>
+
+</div>
 
     <!-- Utenti Section -->
     <div id="sectionUtenti" class="card-section hidden">
@@ -803,7 +849,7 @@
 
     // Section management
     function showSection(section) {
-        ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti', 'eventi'].forEach(s => {
+        ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti', 'eventi', 'categorie'].forEach(s => {
             document.getElementById('section' + capitalize(s)).classList.add('hidden');
         });
         document.getElementById('section' + capitalize(section)).classList.remove('hidden');
@@ -812,9 +858,8 @@
             loadTableBookings();
         } else if (section === 'menu') {
             loadMenuItems();
-
-            ensureAllergenCatalog().then(() => renderAllergenSelect('allergenSelectAdd'))
-                .catch(err => { console.error(err); renderAllergenSelect('allergenSelectAdd'); });
+            refreshCategorySelects();
+            ensureAllergenCatalog().then(() => renderAllergenSelect('allergenSelectAdd'));
         } else if (section === 'evidenza') {
             loadInEvidenza();
         } else if (section === 'promozioni') {
@@ -823,8 +868,11 @@
             loadUtenti();
         } else if (section === 'eventi') {
             loadEventi();
+        } else if (section === 'categorie') {
+            loadCategorie(); // <-- AGGIUNTO
         }
     }
+
 
     // Prenotazioni functions
     async function loadReservations() {
@@ -1047,12 +1095,11 @@
 
             const grouped = {};
             (data || []).forEach(item => {
-                const cat = item.categoria || 'Altro';
+                const cat = item.categoryName || 'Altro';
                 if (!grouped[cat]) grouped[cat] = [];
                 grouped[cat].push(item);
             });
 
-            populateSelect('Menu', Object.keys(grouped));
             const container = document.getElementById('menuTablesContainer');
             container.innerHTML = '';
 
@@ -1151,16 +1198,26 @@
         e.preventDefault();
         const form = e.target;
 
+        // ✅ Salva temporaneamente la categoria selezionata
+        const selectedCategory = form.categoria.value;
+
         const allergens = readAllergenSelect('allergenSelectAdd');
+
+        const categoryName = form.categoria.value;
+        if (!categoryName) {
+            alert("⚠️ Devi selezionare una categoria prima di salvare il piatto!");
+            return;
+        }
 
         const data = {
             titolo: form.titolo.value,
-            categoria: form.categoria.value,
+            categoryName: categoryName,
             descrizione: form.descrizione.value,
             prezzo: parseFloat(form.prezzo.value),
             visibile: form.visibile.value === 'true',
             allergens
         };
+
 
         const formData = new FormData();
         formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
@@ -1170,9 +1227,16 @@
             const res = await fetch('/admin/menu', { method: 'POST', body: formData });
             if (res.ok) {
                 alert('✅ Piatto aggiunto con successo!');
+
+                // 🔹 Reset solo i campi di testo e file, ma NON la categoria
+                const categoriaSelect = form.categoria;
                 form.reset();
-                // reset anche il selettore allergeni
+                categoriaSelect.value = selectedCategory; // <-- riapplica la categoria selezionata
+
+                // 🔹 Reinizializza il selettore allergeni
                 renderAllergenSelect('allergenSelectAdd');
+
+                // 🔹 Ricarica il menu
                 await loadMenuItems();
             } else {
                 alert('❌ Errore durante l\'aggiunta del piatto');
@@ -1182,6 +1246,7 @@
             alert('❌ Errore durante l\'aggiunta del piatto');
         }
     });
+
 
     async function toggleVisibility(id) {
         try {
@@ -1288,7 +1353,7 @@
                 idToTitolo[item.id] = item.titolo;
             });
 
-            const categories = [...new Set(menuData.map(i => i.categoria))].sort();
+            const items = (await res.json()).filter(i => i.categoryName === cat);
             populateSelect('Evidenza', categories);
 
             const container = document.getElementById('highlightsContainer');
@@ -1404,13 +1469,15 @@
     }
 
     // Promozioni functions
+    // ==============================
+    //        PROMOZIONI
+    // ==============================
+
     async function loadPromozioni() {
         const checklist = document.getElementById('checklistProdottiPromozione');
         const promozioniTableBody = document.getElementById('promozioniTableBody');
 
-        // helper per stampare una riga di errore in tabella
         const showErrorRow = (msg) => {
-            if (!promozioniTableBody) return;
             promozioniTableBody.innerHTML = `
       <tr>
         <td colspan="6" class="text-center py-4 text-danger">
@@ -1421,40 +1488,41 @@
         };
 
         try {
-            const [menuRes, promoRes] = await Promise.all([
+            // 🔹 carico categorie e menu
+            const [catRes, menuRes, promoRes] = await Promise.all([
+                fetch('/admin/categories'),
                 fetch('/admin/menu'),
                 fetch('/admin/promotions')
             ]);
 
-            // --- MENU ---
-            if (!menuRes.ok) {
-                const t = await menuRes.text().catch(() => '');
-                console.error('GET /admin/menu failed:', menuRes.status, t);
-                // Non blocco: la tabella promo può comunque tentare di mostrarsi
-            }
+            const categories = catRes.ok ? await catRes.json() : [];
             const menuData = menuRes.ok ? await menuRes.json() : [];
+            const promoData = promoRes.ok ? await promoRes.json() : [];
 
-            // Build checklist prodotti (solo se presente il container)
+            // === CHECKLIST PRODOTTI ===
             if (checklist) {
                 const grouped = {};
-                (Array.isArray(menuData) ? menuData : []).forEach(item => {
-                    const cat = item.categoria || 'Altro';
-                    (grouped[cat] ||= []).push(item);
+
+                menuData.forEach(item => {
+                    const catName = item.categoryName || 'Altro';
+                    (grouped[catName] ||= []).push(item);
                 });
+
                 checklist.innerHTML = '';
                 Object.keys(grouped).sort().forEach(categoria => {
                     const section = document.createElement('div');
                     section.classList.add('col-md-6', 'mb-4');
                     section.innerHTML = `
-          <div class="card h-100">
+          <div class="card h-100 shadow-sm">
             <div class="card-header bg-light"><strong>${categoria}</strong></div>
             <div class="card-body">
               ${grouped[categoria].map(item => `
                 <div class="form-check mb-2">
                   <input class="form-check-input promo-checkbox" type="checkbox"
-                         value="${item.id}" id="prod-${item.id}" data-title="${item.titolo}">
-                  <label class="form-check-label" for="prod-${item.id}">
-                    ${item.titolo} <span class="text-muted">(€${Number(item.prezzo).toFixed(2)})</span>
+                         value="${item.id}" id="promo-prod-${item.id}"
+                         data-title="${item.titolo}">
+                  <label class="form-check-label" for="promo-prod-${item.id}">
+                    ${escape(item.titolo)} <span class="text-muted">(€${Number(item.prezzo).toFixed(2)})</span>
                   </label>
                 </div>
               `).join('')}
@@ -1463,96 +1531,43 @@
                     checklist.appendChild(section);
                 });
 
-                // listener dei checkbox
                 document.querySelectorAll('.promo-checkbox').forEach(cb => {
                     cb.addEventListener('change', updatePromoSummary);
                 });
             }
 
-            // --- PROMOZIONI ---
-            if (!promozioniTableBody) return;
-
-            if (!promoRes.ok) {
-                const t = await promoRes.text().catch(() => '');
-                console.error('GET /admin/promotions failed:', promoRes.status, t);
-                showErrorRow('Errore durante il caricamento delle promozioni');
-                return;
-            }
-
-            let promoData;
-            try {
-                promoData = await promoRes.json();
-            } catch (e) {
-                console.error('Promotions JSON parse error:', e);
-                showErrorRow('Risposta non valida dal server (promozioni)');
-                return;
-            }
-
-            if (!Array.isArray(promoData)) {
-                console.error('Promotions not an array:', promoData);
-                showErrorRow('Risposta inattesa dal server (promozioni)');
-                return;
-            }
-
-            if (promoData.length === 0) {
+            // === TABELLA PROMOZIONI ===
+            if (!Array.isArray(promoData) || promoData.length === 0) {
                 promozioniTableBody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center py-4">
-            <i class="fas fa-tag fa-2x mb-3 text-muted"></i>
-            <p class="mb-0">Nessuna promozione attiva</p>
-          </td>
-        </tr>`;
+        <tr><td colspan="6" class="text-center py-4 text-muted">
+          <i class="fas fa-info-circle"></i> Nessuna promozione attiva
+        </td></tr>`;
                 return;
             }
-
-            // ordina per dataInizio crescente (se mancano le date, le mette in coda)
-            promoData.sort((a, b) => {
-                const da = a?.dataInizio ? new Date(a.dataInizio) : null;
-                const db = b?.dataInizio ? new Date(b.dataInizio) : null;
-                if (da && db) return da - db;
-                if (da && !db) return -1;
-                if (!da && db) return 1;
-                return 0;
-            });
 
             promozioniTableBody.innerHTML = '';
+            promoData.sort((a, b) => new Date(a.dataInizio) - new Date(b.dataInizio));
+
             const today = new Date();
-
             promoData.forEach(promo => {
-                const startDate = promo.dataInizio ? new Date(promo.dataInizio) : null;
-                const endDate   = promo.dataFine   ? new Date(promo.dataFine)   : null;
-                const isActive =
-                    (!!startDate ? today >= startDate : true) &&
-                    (!!endDate   ? today <= endDate   : true);
-
-                // se la struttura items è diversa, non rompiamo
-                let sconto = 0;
-                if (Array.isArray(promo.items) && promo.items.length > 0) {
-                    // supporta sia item.scontoPercentuale che item.sconto
-                    const first = promo.items[0];
-                    sconto = Number(first.scontoPercentuale ?? first.sconto ?? 0);
-                }
+                const sconto = promo.items?.[0]?.scontoPercentuale || 0;
+                const active =
+                    (!promo.dataInizio || today >= new Date(promo.dataInizio)) &&
+                    (!promo.dataFine || today <= new Date(promo.dataFine));
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-        <td>
-          <strong>${promo.nome ?? '-'}</strong>
-          <div class="small text-muted">${promo.descrizione || 'Nessuna descrizione'}</div>
-        </td>
-        <td>${promo.descrizione || '-'}</td>
+        <td><strong>${escape(promo.nome || '-')}</strong></td>
+        <td>${escape(promo.descrizione || '-')}</td>
         <td>
           ${promo.dataInizio ? formatDate(promo.dataInizio) : '-'}<br>
-          <span class="text-muted small">al</span><br>
+          <small class="text-muted">al</small><br>
           ${promo.dataFine ? formatDate(promo.dataFine) : '-'}
         </td>
-        <td class="text-center">
-          <span class="badge bg-danger p-2">${sconto}%</span>
-        </td>
-        <td>
-          <span class="status-badge ${isActive ? 'bg-success' : 'bg-secondary'}">
-            ${isActive ? 'Attiva' : 'Non attiva'}
-          </span>
-        </td>
+        <td><span class="badge bg-danger p-2">${sconto}%</span></td>
+        <td><span class="status-badge ${active ? 'bg-success' : 'bg-secondary'}">
+          ${active ? 'Attiva' : 'Non attiva'}
+        </span></td>
         <td class="text-nowrap">
           <button class="btn btn-sm btn-danger btn-action" onclick="eliminaPromozione(${promo.id})">
             <i class="fas fa-trash-alt"></i>
@@ -1562,12 +1577,37 @@
             });
 
         } catch (err) {
-            console.error('Error loading promotions:', err);
+            console.error('Errore caricamento promozioni:', err);
             showErrorRow('Errore durante il caricamento delle promozioni');
         }
     }
 
+    function updatePromoSummary() {
+        const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
+        const box = document.getElementById('selectedPromoSummary');
 
+        if (checked.length > 0) {
+            const list = checked.map(cb => cb.dataset.title).join(', ');
+            box.style.display = 'block';
+            box.innerHTML = `
+      <i class="fas fa-check-circle me-2"></i>
+      <strong>${checked.length} prodotti selezionati:</strong> ${list}`;
+        } else {
+            box.style.display = 'none';
+        }
+    }
+
+    async function eliminaPromozione(id) {
+        if (!confirm('Eliminare questa promozione?')) return;
+        try {
+            const res = await fetch(`/admin/promotions/${id}`, { method: 'DELETE' });
+            if (res.ok) loadPromozioni();
+            else alert('Errore durante l\'eliminazione');
+        } catch (err) {
+            console.error(err);
+            alert('Errore di connessione');
+        }
+    }
 
     function updatePromoSummary() {
         const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
@@ -2370,6 +2410,127 @@ async function updateEvento() {
     alert('❌ Errore di connessione');
   }
 }
+
+    // =============================
+    //        CATEGORIE
+    // =============================
+
+    async function loadCategorie() {
+        try {
+            const res = await fetch('/admin/categories');
+            const categories = await res.json();
+            const tbody = document.getElementById('categorieTableBody');
+            tbody.innerHTML = '';
+
+            if (categories.length === 0) {
+                tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center py-4 text-muted">
+                        <i class="fas fa-info-circle"></i> Nessuna categoria trovata
+                    </td>
+                </tr>`;
+                return;
+            }
+
+            categories.forEach(cat => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td>${cat.id}</td>
+                <td>${cat.name || cat.nome}</td>
+                <td class="text-nowrap">
+                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteCategory(${cat.id})">
+                        <i class="fas fa-trash-alt"></i> Elimina
+                    </button>
+                </td>`;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error('Errore caricamento categorie:', error);
+            document.getElementById('categorieTableBody').innerHTML = `
+            <tr><td colspan="3" class="text-center text-danger">
+                <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento
+            </td></tr>`;
+        }
+    }
+
+    document.getElementById('formAddCategory').addEventListener('submit', async e => {
+        e.preventDefault();
+        const form = e.target;
+        const nome = form.nome.value.trim();
+        if (!nome) return alert("Inserisci un nome valido!");
+
+        try {
+            const res = await fetch('/admin/categories', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: nome })
+            });
+            await loadCategorie(); // 🔹 richiama la funzione che ricarica la select
+            if (res.ok) {
+                alert('✅ Categoria aggiunta!');
+                form.reset();
+                loadCategorie();
+                refreshCategorySelects();
+            } else {
+                alert('❌ Errore durante il salvataggio');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('❌ Errore di connessione');
+        }
+    });
+
+    async function deleteCategory(id) {
+        if (!confirm('Eliminare questa categoria?')) return;
+        try {
+            const res = await fetch(`/admin/categories/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('✅ Categoria eliminata!');
+                loadCategorie();
+            } else {
+                alert('❌ Errore durante l\'eliminazione');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('❌ Errore di connessione');
+        }
+    }
+    async function refreshCategorySelects() {
+        try {
+            const res = await fetch('/admin/categories');
+            if (!res.ok) throw new Error('Errore HTTP ' + res.status);
+            const categories = await res.json();
+
+            // Select principale per aggiungere piatti
+            const selectMenu = document.getElementById('categoriaSelectMenu');
+            selectMenu.innerHTML = '<option value="">Seleziona Categoria</option>';
+            categories
+                .filter(c => c.visible !== false) // opzionale
+                .sort((a,b) => a.name.localeCompare(b.name))
+                .forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name;
+                    selectMenu.appendChild(opt);
+                });
+
+            // Select per evidenza (se presente)
+            const selectEvidenza = document.getElementById('categoriaSelectEvidenza');
+            if (selectEvidenza) {
+                selectEvidenza.innerHTML = '<option value="">Seleziona Categoria</option>';
+                categories.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name;
+                    selectEvidenza.appendChild(opt);
+                });
+            }
+
+        } catch (error) {
+            console.error('Errore caricamento categorie nel menu:', error);
+        }
+    }
+
 </script>
 </body>
 </html>
