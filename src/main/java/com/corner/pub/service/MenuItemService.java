@@ -63,7 +63,7 @@ public class MenuItemService {
     /** Aggiunge un nuovo piatto e carica l’immagine su Cloudinary. */
     @Transactional
     public MenuItemResponse addMenuItem(MenuItemRequest request, MultipartFile image) {
-        String categoria = request.getCategoria().trim();
+        String categoria = request.getCategoryName().trim();
         String titolo = request.getTitolo().trim();
 
         boolean exists = menuItemRepository.findAll().stream()
@@ -124,7 +124,7 @@ public class MenuItemService {
         MenuItem item = menuItemRepository.findById(id)
                 .orElseThrow(() -> new MenuItemNotFoundException(id));
 
-        item.setCategoria(request.getCategoria().trim());
+        item.setCategoria(request.getCategoryName().trim());
         item.setTitolo(request.getTitolo().trim());
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
@@ -217,7 +217,7 @@ public class MenuItemService {
     private MenuItemResponse mapToResponse(MenuItem item) {
         MenuItemResponse response = new MenuItemResponse();
         response.setId(item.getId());
-        response.setCategoria(item.getCategoria());
+        response.setCategoryName(item.getCategoria());
         response.setTitolo(item.getTitolo());
         response.setDescrizione(item.getDescrizione());
         response.setPrezzo(item.getPrezzo());

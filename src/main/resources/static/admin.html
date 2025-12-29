@@ -1200,7 +1200,7 @@
 
                 const grouped = {};
                 (data || []).forEach(item => {
-                    const cat = item.categoria || 'Altro';
+                    const cat = item.categoryName || 'Altro';
                     availableCategories.add(cat); // Ensure used categories are also listed
                     if (!grouped[cat]) grouped[cat] = [];
                     grouped[cat].push(item);
@@ -1409,7 +1409,7 @@
 
             const allergens = readAllergenSelect(`allergenSelectEdit-${id}`);
 
-            const data = { titolo, descrizione, prezzo, categoria, allergens };
+            const data = { titolo, descrizione, prezzo, categoryName: categoria, allergens };
 
             const formData = new FormData();
             formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
@@ -1442,7 +1442,7 @@
                     idToTitolo[item.id] = item.titolo;
                 });
 
-                const categories = [...new Set(menuData.map(i => i.categoria))].sort();
+                const categories = [...new Set(menuData.map(i => i.categoryName))].sort();
                 populateSelect('Evidenza', categories);
 
                 const container = document.getElementById('highlightsContainer');
@@ -1496,7 +1496,7 @@
 
             try {
                 const res = await fetch('/admin/menu');
-                const items = (await res.json()).filter(i => i.categoria === cat);
+                const items = (await res.json()).filter(i => i.categoryName === cat);
 
                 items.forEach(i => {
                     const opt = document.createElement('option');

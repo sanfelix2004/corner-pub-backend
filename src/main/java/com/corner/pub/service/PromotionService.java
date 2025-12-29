@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,9 +35,11 @@ public class PromotionService {
     @Autowired
     private Cloudinary cloudinary;
 
-    /* ===========================================================
-       🔹 Metodi di lettura
-    ============================================================ */
+    /*
+     * ===========================================================
+     * 🔹 Metodi di lettura
+     * ============================================================
+     */
 
     @Transactional
     public List<PromotionResponse> getAllPromotionResponses() {
@@ -69,9 +71,11 @@ public class PromotionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Promozione non trovata con ID: " + id));
     }
 
-    /* ===========================================================
-       🔹 Creazione / Update / Delete
-    ============================================================ */
+    /*
+     * ===========================================================
+     * 🔹 Creazione / Update / Delete
+     * ============================================================
+     */
 
     @Transactional
     public Promotion create(PromotionRequest dto) {
@@ -127,13 +131,16 @@ public class PromotionService {
         return promotionRepository.save(p);
     }
 
-    /* ===========================================================
-       🔹 Mapping
-    ============================================================ */
+    /*
+     * ===========================================================
+     * 🔹 Mapping
+     * ============================================================
+     */
 
     private PromotionMenuItem buildPromotionItem(PromotionMenuItemRequest req, Promotion promo) {
         MenuItem menuItem = menuItemRepository.findById(req.getMenuItemId())
-                .orElseThrow(() -> new ResourceNotFoundException("MenuItem non trovato con ID: " + req.getMenuItemId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("MenuItem non trovato con ID: " + req.getMenuItemId()));
 
         PromotionMenuItem item = new PromotionMenuItem();
         item.setPromotion(promo);
@@ -155,8 +162,7 @@ public class PromotionService {
                 .filter(i -> i.getMenuItem() != null)
                 .map(i -> new PromotionItemDetail(
                         mapToMenuItemResponse(i.getMenuItem()),
-                        i.getScontoPercentuale() != null ? i.getScontoPercentuale().doubleValue() : 0.0
-                ))
+                        i.getScontoPercentuale() != null ? i.getScontoPercentuale().doubleValue() : 0.0))
                 .collect(Collectors.toList());
 
         res.setItems(itemDetails);
@@ -170,7 +176,7 @@ public class PromotionService {
         r.setDescrizione(item.getDescrizione());
         r.setPrezzo(item.getPrezzo());
         r.setVisibile(item.isVisibile());
-        r.setCategoryName(item.getCategory() != null ? item.getCategory().getName() : null);
+        r.setCategoryName(item.getCategoria());
         r.setImageUrl(resolveImageUrl(item));
         return r;
     }
