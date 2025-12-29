@@ -57,4 +57,9 @@ public class MenuItemRequest {
     public void setAllergens(List<AllergenSelection> allergens) {
         this.allergens = allergens;
     }
+
+    // Compatibility method for frontend sending "categoria"
+    public void setCategoria(String categoria) {
+        this.categoryName = categoria;
+    }
 }
