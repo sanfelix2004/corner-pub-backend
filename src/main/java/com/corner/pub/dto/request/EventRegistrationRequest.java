@@ -3,8 +3,13 @@ package com.corner.pub.dto.request;
 import org.springframework.web.multipart.MultipartFile;
 
 public class EventRegistrationRequest {
+    @jakarta.validation.constraints.NotBlank(message = "Il nome è obbligatorio")
     private String name;
+
+    @jakarta.validation.constraints.NotBlank(message = "Il cognome è obbligatorio")
     private String surname;
+
+    @jakarta.validation.constraints.Pattern(regexp = "^\\d+$", message = "Il telefono deve contenere solo numeri")
     private String phone;
     private String note; // <-- aggiunto
     private int partecipanti = 1; // default 1

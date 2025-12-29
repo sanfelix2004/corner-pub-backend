@@ -371,12 +371,13 @@
                                     <input type="text" id="tableBookingName" class="form-control" required>
                                 </div>
                                 <div class="form-group col-md-4">
-                                    <label>Cognome</label>
-                                    <input type="text" id="tableBookingSurname" class="form-control">
+                                    <label>Cognome (Obbligatorio)</label>
+                                    <input type="text" id="tableBookingSurname" class="form-control" required>
                                 </div>
                                 <div class="form-group col-md-4">
-                                    <label>Telefono</label>
-                                    <input type="tel" id="tableBookingPhone" class="form-control" required>
+                                    <label>Telefono (Solo numeri)</label>
+                                    <input type="tel" id="tableBookingPhone" class="form-control" pattern="\d+"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                                 </div>
                             </div>
                             <div class="form-row">
@@ -431,12 +432,13 @@
                                     <input type="text" id="eventRegName" class="form-control" required>
                                 </div>
                                 <div class="form-group col-md-3">
-                                    <label>Cognome</label>
-                                    <input type="text" id="eventRegSurname" class="form-control">
+                                    <label>Cognome (Obbligatorio)</label>
+                                    <input type="text" id="eventRegSurname" class="form-control" required>
                                 </div>
                                 <div class="form-group col-md-3">
-                                    <label>Telefono</label>
-                                    <input type="tel" id="eventRegPhone" class="form-control" required>
+                                    <label>Telefono (Solo numeri)</label>
+                                    <input type="tel" id="eventRegPhone" class="form-control" pattern="\d+"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                                 </div>
                                 <div class="form-group col-md-3">
                                     <label>Persone</label>
@@ -2134,7 +2136,7 @@
 
                     const rows = grouped[date].map(b => `
                     <tr>
-                        <td>${b.name} ${b.surname || ''}</td>
+                        <td>${b.name || '-'} ${b.surname || ''}</td>
                         <td>${b.phone}</td>
                         <td>${b.time}</td>
                         <td>${b.people}</td>
@@ -2549,7 +2551,7 @@
                         <td>${cat.name}</td>
                         <td>
                             <button class="btn btn-sm btn-warning btn-action" onclick="openEditCategoryModal(${cat.id}, '${cat.name.replace(/'/g, "\\'")}')">
-                                <i class="fas fa-edit"></i> Modifica
+                                <i class="fas fa-edit"></i> Modifica titolo
                             </button>
                             <button class="btn btn-sm btn-danger btn-action" onclick="deleteCategory(${cat.id})">
                                 <i class="fas fa-trash-alt"></i> Elimina
@@ -2590,7 +2592,7 @@
         });
 
         async function deleteCategory(id) {
-            if (!confirm('ATTENZIONE: Eliminando questa categoria verranno eliminati anche TUTTI i piatti appartenenti ad essa. Sei sicuro di voler procedere?')) return;
+            if (!confirm('ATTENZIONE: Eliminando questa categoria verranno eliminati anche TUTTI i piatti appartenenti ad essa.\nQuesta operazione è irreversibile.\n\nSei sicuro di voler procedere?')) return;
             try {
                 const res = await fetch(`/admin/categories/${id}`, { method: 'DELETE' });
                 if (res.ok) {

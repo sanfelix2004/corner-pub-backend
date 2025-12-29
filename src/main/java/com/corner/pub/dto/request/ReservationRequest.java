@@ -1,8 +1,13 @@
 package com.corner.pub.dto.request;
 
 public class ReservationRequest {
+    @jakarta.validation.constraints.NotBlank(message = "Il nome è obbligatorio")
     private String name;
+
+    @jakarta.validation.constraints.NotBlank(message = "Il cognome è obbligatorio")
     private String surname;
+
+    @jakarta.validation.constraints.Pattern(regexp = "^\\d+$", message = "Il telefono deve contenere solo numeri")
     private String phone;
     private String date; // formato: "2025-07-02"
     private String time; // formato: "19:30"

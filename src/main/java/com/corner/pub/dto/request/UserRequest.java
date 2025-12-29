@@ -1,8 +1,13 @@
 package com.corner.pub.dto.request;
 
 public class UserRequest {
+    @jakarta.validation.constraints.NotBlank(message = "Il nome è obbligatorio")
     private String name;
+
+    @jakarta.validation.constraints.NotBlank(message = "Il cognome è obbligatorio")
     private String surname;
+
+    @jakarta.validation.constraints.Pattern(regexp = "^\\d+$", message = "Il telefono deve contenere solo numeri")
     private String phone;
 
     // Getters & Setters
