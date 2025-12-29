@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public class EventRegistrationResponse {
 
     private String name;
+    private String surname;
     private Long id;
     private LocalDateTime createdAt;
     private EventResponse event;
@@ -16,7 +17,8 @@ public class EventRegistrationResponse {
     private String note;
     private String tableNumber; // 🔹 nuovo campo
 
-    public EventRegistrationResponse() {}
+    public EventRegistrationResponse() {
+    }
 
     public EventRegistrationResponse(EventRegistration reg) {
         this.id = reg.getId();
@@ -25,6 +27,7 @@ public class EventRegistrationResponse {
         if (reg.getUser() != null) {
             this.user = new UserResponse(reg.getUser());
             this.name = reg.getUser().getName();
+            this.surname = reg.getUser().getSurname();
             this.phone = reg.getUser().getPhone();
             this.partecipanti = reg.getPartecipanti();
         }
@@ -32,8 +35,8 @@ public class EventRegistrationResponse {
         if (reg.getEvent() != null) {
             long totaleIscritti = reg.getEvent().getRegistrations() != null
                     ? reg.getEvent().getRegistrations().stream()
-                    .mapToLong(EventRegistration::getPartecipanti)
-                    .sum()
+                            .mapToLong(EventRegistration::getPartecipanti)
+                            .sum()
                     : reg.getPartecipanti();
 
             this.event = new EventResponse(reg.getEvent(), totaleIscritti);
@@ -43,7 +46,8 @@ public class EventRegistrationResponse {
         this.tableNumber = reg.getTableNumber(); // 🔹 assegno il tavolo
     }
 
-    public EventRegistrationResponse(Long id, LocalDateTime createdAt, EventResponse eventResponse, UserResponse userResponse, int partecipanti) {
+    public EventRegistrationResponse(Long id, LocalDateTime createdAt, EventResponse eventResponse,
+            UserResponse userResponse, int partecipanti) {
         this.id = id;
         this.createdAt = createdAt;
         this.event = eventResponse;
@@ -52,30 +56,83 @@ public class EventRegistrationResponse {
     }
 
     // Getter & Setter
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
+    public String getNote() {
+        return note;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setNote(String note) {
+        this.note = note;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getId() {
+        return id;
+    }
 
-    public EventResponse getEvent() { return event; }
-    public void setEvent(EventResponse event) { this.event = event; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public UserResponse getUser() { return user; }
-    public void setUser(UserResponse user) { this.user = user; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 
-    public int getPartecipanti() { return partecipanti; }
-    public void setPartecipanti(int partecipanti) { this.partecipanti = partecipanti; }
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public EventResponse getEvent() {
+        return event;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setEvent(EventResponse event) {
+        this.event = event;
+    }
 
-    public String getTableNumber() { return tableNumber; }
-    public void setTableNumber(String tableNumber) { this.tableNumber = tableNumber; }
+    public UserResponse getUser() {
+        return user;
+    }
+
+    public void setUser(UserResponse user) {
+        this.user = user;
+    }
+
+    public int getPartecipanti() {
+        return partecipanti;
+    }
+
+    public void setPartecipanti(int partecipanti) {
+        this.partecipanti = partecipanti;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getTableNumber() {
+        return tableNumber;
+    }
+
+    public void setTableNumber(String tableNumber) {
+        this.tableNumber = tableNumber;
+    }
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -30,6 +31,7 @@
             padding: 10px 15px;
             border-bottom: 1px solid #dee2e6;
         }
+
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
@@ -51,7 +53,9 @@
             max-width: 1600px;
         }
 
-        .hidden { display: none; }
+        .hidden {
+            display: none;
+        }
 
         /* Header styles */
         .page-header {
@@ -59,7 +63,7 @@
             color: white;
             padding: 25px 30px;
             border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
 
@@ -92,19 +96,19 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .section-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         /* Card styles */
         .card-section {
             background: white;
             border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             padding: 25px;
             margin-bottom: 30px;
         }
@@ -125,7 +129,7 @@
             border-spacing: 0;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 0 10px rgba(0,0,0,0.03);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.03);
         }
 
         .custom-table th {
@@ -151,7 +155,7 @@
             height: 80px;
             object-fit: cover;
             border-radius: 8px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
         }
 
         /* Forms */
@@ -218,6 +222,7 @@
                 padding: 15px;
             }
         }
+
         /* Eventi styles */
         .event-status-badge {
             padding: 5px 10px;
@@ -246,664 +251,754 @@
             height: 80px;
             object-fit: cover;
             border-radius: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
 
         .event-thumb.placeholder {
             background-color: #f1f1f1;
             display: inline-block;
         }
-        .allergen-icon{ width:20px; height:20px; margin-right:6px; vertical-align:middle; opacity:.95 }
-        .allergen-icon{ width:20px; height:20px; margin-right:6px; vertical-align:middle; opacity:.95 }
-        .allergen-chip{ display:inline-flex; align-items:center; gap:6px; margin:4px 8px 0 0; padding:4px 8px; border:1px solid #e9ecef; border-radius:16px; background:#fff }
-        .allergen-picker label{ display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #eee; border-radius:8px; margin:6px 8px 0 0; background:#fff }
-        .allergen-picker .statuses{ display:inline-flex; gap:8px; margin-left:8px; font-size:.9rem }
+
+        .allergen-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 6px;
+            vertical-align: middle;
+            opacity: .95
+        }
+
+        .allergen-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 6px;
+            vertical-align: middle;
+            opacity: .95
+        }
+
+        .allergen-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 4px 8px 0 0;
+            padding: 4px 8px;
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            background: #fff
+        }
+
+        .allergen-picker label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin: 6px 8px 0 0;
+            background: #fff
+        }
+
+        .allergen-picker .statuses {
+            display: inline-flex;
+            gap: 8px;
+            margin-left: 8px;
+            font-size: .9rem
+        }
     </style>
 </head>
+
 <body>
-<div class="container">
-    <!-- Header -->
-    <div class="page-header">
-        <h2><i class="fas fa-cogs"></i> Back Office – Corner</h2>
-    </div>
-
-    <!-- Section Switcher -->
-    <div class="section-switcher">
-        <button class="btn btn-primary section-btn" onclick="showSection('prenotazioni')">
-            <i class="fas fa-calendar-alt"></i> Prenotazioni
-        </button>
-        <button class="btn btn-secondary section-btn" onclick="showSection('categorie')">
-            <i class="fas fa-layer-group"></i> Categorie
-        </button>
-        <button class="btn btn-info section-btn" onclick="showSection('menu')">
-            <i class="fas fa-utensils"></i> Menu
-        </button>
-        <button class="btn btn-warning section-btn" onclick="showSection('evidenza')">
-            <i class="fas fa-star"></i> In Evidenza
-        </button>
-        <button class="btn btn-danger section-btn" onclick="showSection('promozioni')">
-            <i class="fas fa-tag"></i> Promozioni
-        </button>
-        <button class="btn btn-dark section-btn" onclick="showSection('utenti')">
-            <i class="fas fa-users"></i> Utenti
-        </button>
-        <!-- Nella sezione dei pulsanti di navigazione, aggiungi questo nuovo pulsante -->
-        <button class="btn btn-success section-btn" onclick="showSection('eventi')">
-            <i class="fas fa-calendar-check"></i> Eventi
-        </button>
-    </div>
-
-    <!-- Prenotazioni Section -->
-    <div id="sectionPrenotazioni" class="card-section">
-        <h4><i class="fas fa-calendar-alt"></i> Gestione Prenotazioni</h4>
-
-        <!-- Tab Navigation -->
-        <ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="table-tab" data-toggle="tab" href="#tableBookings" role="tab">
-                    <i class="fas fa-utensils"></i> Prenotazioni Tavolo
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="event-tab" data-toggle="tab" href="#eventRegistrations" role="tab">
-                    <i class="fas fa-calendar-check"></i> Registrazioni Eventi
-                </a>
-            </li>
-        </ul>
-
-        <!-- Tab Content -->
-        <div class="tab-content">
-            <!-- TAB 1: Prenotazioni Tavolo -->
-            <div class="tab-pane fade show active" id="tableBookings" role="tabpanel">
-                <!-- Form nuova prenotazione tavolo -->
-                <div class="form-card mb-4">
-                    <h5><i class="fas fa-plus-circle"></i> Nuova Prenotazione Tavolo</h5>
-                    <form id="formTableBooking">
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>Nome</label>
-                                <input type="text" id="tableBookingName" class="form-control" required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Telefono</label>
-                                <input type="tel" id="tableBookingPhone" class="form-control" required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Note</label>
-                                <input type="text" id="tableBookingNote" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>Data</label>
-                                <input type="date" id="tableBookingDate" class="form-control" required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Ora</label>
-                                <select id="tableBookingTime" class="form-control" required>
-                                    <option value="20:00">20:00</option>
-                                    <option value="20:30">20:30</option>
-                                    <option value="21:00">21:00</option>
-                                    <option value="21:30">21:30</option>
-                                    <option value="22:00">22:00</option>
-                                    <option value="22:30">22:30</option>
-                                    <option value="23:00">23:00</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Numero Persone</label>
-                                <input type="number" id="tableBookingPeople" class="form-control" min="1" value="2" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Salva Prenotazione
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Lista prenotazioni tavolo -->
-                <h5><i class="fas fa-list"></i> Prenotazioni Tavolo</h5>
-                <div id="tableBookingsContainer" class="mt-3"></div>
-            </div>
-
-            <!-- TAB 2: Registrazioni Eventi -->
-            <div class="tab-pane fade" id="eventRegistrations" role="tabpanel">
-                <!-- Form nuova registrazione evento -->
-                <div class="form-card mb-4">
-                    <h5><i class="fas fa-plus-circle"></i> Nuova Registrazione Evento</h5>
-                    <form id="formEventRegistration">
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
-                                <label>Nome</label>
-                                <input type="text" id="eventRegName" class="form-control" required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Telefono</label>
-                                <input type="tel" id="eventRegPhone" class="form-control" required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Numero Persone</label>
-                                <input type="number" id="eventRegPeople" class="form-control" min="1" value="1" required>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Note</label>
-                                <input type="text" id="eventRegNote" class="form-control">
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-8">
-                                <label>Evento</label>
-                                <select id="eventRegEvent" class="form-control" required>
-                                    <option value="">Caricamento eventi...</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label>Posti Disponibili</label>
-                                <input type="text" id="eventRegAvailable" class="form-control" readonly>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-user-plus"></i> Registra Partecipante
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Lista eventi con iscritti -->
-                <h5><i class="fas fa-list"></i> Eventi e Iscritti</h5>
-                <div id="eventsRegistrationsContainer" class="mt-3"></div>
-            </div>
-        </div>
-    </div>
-    <!-- Categorie Section -->
-    <div id="sectionCategorie" class="card-section hidden">
-        <h4><i class="fas fa-layer-group"></i> Gestione Categorie</h4>
-
-        <!-- Aggiungi nuova categoria -->
-        <div class="form-card mb-4">
-            <h5><i class="fas fa-plus-circle"></i> Aggiungi Categoria</h5>
-            <form id="formAddCategory">
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label>Nome Categoria</label>
-                        <input type="text" name="nome" class="form-control" placeholder="Esempio: Panini, Bevande..." required />
-                    </div>
-                    <div class="form-group col-md-3 mt-4 pt-2">
-                        <button type="submit" class="btn btn-success btn-action">
-                            <i class="fas fa-save"></i> Salva Categoria
-                        </button>
-                    </div>
-                </div>
-            </form>
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <h2><i class="fas fa-cogs"></i> Back Office – Corner</h2>
         </div>
 
-        <!-- Lista categorie -->
-        <div class="mt-4">
-            <h5><i class="fas fa-list"></i> Categorie Attuali</h5>
-            <div class="table-responsive">
-                <table class="table custom-table">
-                    <thead class="thead-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Azioni</th>
-                    </tr>
-                    </thead>
-                    <tbody id="categorieTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Menu Section -->
-    <div id="sectionMenu" class="card-section hidden">
-        <h4><i class="fas fa-utensils"></i> Gestione Menu</h4>
-
-        <!-- Add New Item -->
-        <div class="form-card mb-5">
-            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi nuovo piatto</h5>
-            <form id="formAddNewItem">
-                <div class="form-row">
-                    <div class="form-group col-md-3">
-                        <label>Titolo</label>
-                        <input type="text" name="titolo" class="form-control" placeholder="Nome del piatto" required />
-                    </div>
-                    <div class="form-group col-md-2">
-                        <label>Categoria</label>
-                        <select name="categoria" class="form-control" id="categoriaSelectMenu" required>
-                            <option value="">Seleziona Categoria</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-3">
-                        <label>Descrizione</label>
-                        <input type="text" name="descrizione" class="form-control" placeholder="Descrizione" />
-                    </div>
-                    <div class="form-group col-md-2">
-                        <label>Prezzo (€)</label>
-                        <input type="number" step="0.01" name="prezzo" class="form-control" placeholder="0.00" required />
-                    </div>
-                    <div class="form-group col-md-2">
-                        <label>Immagine</label>
-                        <input type="file" name="image" accept="image/*" class="form-control-file" required />
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group col-md-2">
-                        <label>Visibile</label>
-                        <select name="visibile" class="form-control">
-                            <option value="true">✅ Sì</option>
-                            <option value="false">❌ No</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-3 mt-4 pt-2">
-                        <button type="submit" class="btn btn-success btn-action">
-                            <i class="fas fa-save"></i> Salva Piatto
-                        </button>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group col-md-12">
-                        <label><i class="fa-solid fa-triangle-exclamation"></i> Allergeni</label>
-
-                        <!-- nuovo selettore compatto -->
-                        <div id="allergenSelectAdd"></div>
-
-                        <small class="text-muted d-block mt-1">
-                            Clicca per selezionare uno o più allergeni e imposta “Contiene” o “Tracce”.
-                        </small>
-                    </div>
-                </div>
-            </form>
+        <!-- Section Switcher -->
+        <div class="section-switcher">
+            <button class="btn btn-primary section-btn" onclick="showSection('prenotazioni')">
+                <i class="fas fa-calendar-alt"></i> Prenotazioni
+            </button>
+            <button class="btn btn-info section-btn" onclick="showSection('menu')">
+                <i class="fas fa-utensils"></i> Menu
+            </button>
+            <button class="btn btn-warning section-btn" onclick="showSection('evidenza')">
+                <i class="fas fa-star"></i> In Evidenza
+            </button>
+            <button class="btn btn-danger section-btn" onclick="showSection('promozioni')">
+                <i class="fas fa-tag"></i> Promozioni
+            </button>
+            <button class="btn btn-dark section-btn" onclick="showSection('utenti')">
+                <i class="fas fa-users"></i> Utenti
+            </button>
+            <!-- Nella sezione dei pulsanti di navigazione, aggiungi questo nuovo pulsante -->
+            <button class="btn btn-success section-btn" onclick="showSection('eventi')">
+                <i class="fas fa-calendar-check"></i> Eventi
+            </button>
+            <button class="btn btn-secondary section-btn" onclick="showSection('categorie')">
+                <i class="fas fa-layer-group"></i> Categorie
+            </button>
         </div>
 
-        <!-- Menu List -->
-        <div class="mt-4">
-            <h5 class="mb-3"><i class="fas fa-list"></i> Menu Attuale</h5>
-            <div id="menuTablesContainer"></div>
-        </div>
-    </div>
+        <!-- Prenotazioni Section -->
+        <div id="sectionPrenotazioni" class="card-section">
+            <h4><i class="fas fa-calendar-alt"></i> Gestione Prenotazioni</h4>
 
-    <!-- Evidenza Section -->
-    <div id="sectionEvidenza" class="card-section hidden">
-        <h4><i class="fas fa-star"></i> Contenuti in Evidenza</h4>
+            <!-- Tab Navigation -->
+            <ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="table-tab" data-toggle="tab" href="#tableBookings" role="tab">
+                        <i class="fas fa-utensils"></i> Prenotazioni Tavolo
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="event-tab" data-toggle="tab" href="#eventRegistrations" role="tab">
+                        <i class="fas fa-calendar-check"></i> Registrazioni Eventi
+                    </a>
+                </li>
+            </ul>
 
-        <!-- Add Highlight -->
-        <div class="form-card mb-5">
-            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi Contenuto</h5>
-            <form id="formAddHighlight">
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label>Categoria</label>
-                        <select id="categoriaSelectEvidenza" class="form-control" required>
-                            <option value="">Seleziona Categoria</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label>Prodotto</label>
-                        <select id="prodottoSelectEvidenza" class="form-control" disabled required>
-                            <option value="">Seleziona Prodotto</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-2 mt-4 pt-2">
-                        <button type="submit" class="btn btn-warning btn-action">
-                            <i class="fas fa-plus"></i> Aggiungi
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Highlights List -->
-        <div class="mt-4">
-            <h5 class="mb-3"><i class="fas fa-list"></i> Contenuti Attivi</h5>
-            <div id="highlightsContainer" class="mt-3"></div>
-        </div>
-    </div>
-
-    <!-- Promozioni Section -->
-    <!-- Promozioni Section -->
-    <div id="sectionPromozioni" class="card-section hidden">
-        <h4><i class="fas fa-tag"></i> Gestione Promozioni</h4>
-
-        <!-- Add Promotion -->
-        <div class="form-card mb-5">
-            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Crea Nuova Promozione</h5>
-            <form id="formAddPromozione">
-                <div class="form-row">
-                    <div class="form-group col-md-6">
-                        <label>Nome Promozione</label>
-                        <input type="text" class="form-control" name="nome" placeholder="Nome della promozione" required>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Sconto (%)</label>
-                        <input type="number" step="1" min="1" max="100" name="sconto" class="form-control" placeholder="%" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-12">
-                        <label>Descrizione</label>
-                        <textarea name="descrizione" class="form-control" placeholder="Descrizione promozione" rows="2"></textarea>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-3">
-                        <label>Data Inizio</label>
-                        <input type="date" name="dataInizio" class="form-control" required />
-                    </div>
-                    <div class="form-group col-md-3">
-                        <label>Data Fine</label>
-                        <input type="date" name="dataFine" class="form-control" required />
-                    </div>
-                </div>
-
-                <!-- Checklist prodotti -->
-                <div class="form-row mt-3">
-                    <div class="form-group col-md-12">
-                        <label><i class="fas fa-list"></i> Prodotti inclusi</label>
-                        <div id="checklistProdottiPromozione" class="row mt-2"></div>
-                    </div>
-                </div>
-
-                <div class="form-row mt-3">
-                    <div class="col-md-12">
-                        <div class="alert alert-info" id="selectedPromoSummary" style="display:none;"></div>
-                    </div>
-                </div>
-
-                <div class="form-row mt-3">
-                    <div class="col-md-12">
-                        <button type="submit" class="btn btn-danger btn-action">
-                            <i class="fas fa-fire"></i> Crea Promozione
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Promotions List -->
-        <div class="mt-4">
-            <h5 class="mb-3"><i class="fas fa-list"></i> Promozioni Attive</h5>
-            <div class="table-responsive">
-                <table class="table custom-table">
-                    <thead class="thead-light">
-                    <tr>
-                        <th>Nome</th>
-                        <th>Descrizione</th>
-                        <th>Periodo</th>
-                        <th>Sconto</th>
-                        <th>Stato</th>
-                        <th>Azioni</th>
-                    </tr>
-                    </thead>
-                    <tbody id="promozioniTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-    <!-- Utenti Section -->
-    <div id="sectionUtenti" class="card-section hidden">
-        <h4><i class="fas fa-users"></i> Gestione Utenti</h4>
-
-        <div class="table-responsive">
-            <table class="table custom-table">
-                <thead class="thead-light">
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Telefono</th>
-                    <th>Email</th>
-                    <th>Registrazione</th>
-                    <th>Azioni</th>
-                </tr>
-                </thead>
-                <tbody id="utentiTableBody"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Eventi Section -->
-    <div id="sectionEventi" class="card-section hidden">
-        <h4><i class="fas fa-calendar-check"></i> Gestione Eventi</h4>
-
-        <!-- Add New Event -->
-        <div class="form-card mb-5">
-            <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Crea Nuovo Evento</h5>
-            <form id="formAddEvento">
-                <div class="form-row">
-                    <div class="form-group col-md-4">
-                        <label>Titolo</label>
-                        <input type="text" name="titolo" class="form-control" placeholder="Titolo evento" required />
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label>Data e Ora</label>
-                        <input type="datetime-local" name="data" class="form-control" required />
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label>Posti Totali (lasciare vuoto per illimitati)</label>
-                        <input type="number" name="postiTotali" class="form-control" placeholder="Numero posti" min="1" />
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group col-md-12">
-                        <label>Descrizione</label>
-                        <textarea name="descrizione" class="form-control" placeholder="Descrizione evento" rows="3"></textarea>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group col-md-12">
-                        <label>Locandina (immagine)</label>
-                        <input type="file" name="poster" accept="image/*" class="form-control-file">
-                    </div>
-                </div>
-                <div class="form-row mt-3">
-                    <div class="form-group col-md-12">
-                        <button type="submit" class="btn btn-success btn-action">
-                            <i class="fas fa-save"></i> Crea Evento
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Events List -->
-        <div class="mt-4">
-            <h5 class="mb-3"><i class="fas fa-list"></i> Eventi Programmati</h5>
-            <div class="table-responsive">
-                <table class="table custom-table">
-                    <thead class="thead-light">
-                    <tr>
-                        <th>Locandina</th>
-                        <th>Titolo</th>
-                        <th>Descrizione</th>
-                        <th>Data</th>
-                        <th>Posti</th>
-                        <th>Azioni</th>
-                    </tr>
-                    </thead>
-                    <tbody id="eventiTableBody"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Iscritti Modal -->
-        <div class="modal fade" id="iscrittiModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Iscritti all'evento</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Telefono</th>
-                                    <th>Data Iscrizione</th>
-                                    <th>Persone</th>
-                                    <th>Note</th> <!-- AGGIUNTO -->
-                                </tr>
-                                </thead>
-
-                                <tbody id="iscrittiModalBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- Modifica Evento Modal -->
-        <div class="modal fade" id="editEventoModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Modifica Evento</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editEventoForm">
-                            <input type="hidden" id="editEventoId">
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- TAB 1: Prenotazioni Tavolo -->
+                <div class="tab-pane fade show active" id="tableBookings" role="tabpanel">
+                    <!-- Form nuova prenotazione tavolo -->
+                    <div class="form-card mb-4">
+                        <h5><i class="fas fa-plus-circle"></i> Nuova Prenotazione Tavolo</h5>
+                        <form id="formTableBooking">
                             <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label>Titolo</label>
-                                    <input type="text" id="editEventoTitolo" class="form-control" required>
+                                <div class="form-group col-md-4">
+                                    <label>Nome</label>
+                                    <input type="text" id="tableBookingName" class="form-control" required>
                                 </div>
-                                <div class="form-group col-md-6">
-                                    <label>Data e Ora</label>
-                                    <input type="datetime-local" id="editEventoData" class="form-control" required>
+                                <div class="form-group col-md-4">
+                                    <label>Cognome</label>
+                                    <input type="text" id="tableBookingSurname" class="form-control">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Telefono</label>
+                                    <input type="tel" id="tableBookingPhone" class="form-control" required>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group col-md-12">
-                                    <label>Descrizione</label>
-                                    <textarea id="editEventoDescrizione" class="form-control" rows="3"></textarea>
+                                    <label>Note</label>
+                                    <input type="text" id="tableBookingNote" class="form-control">
                                 </div>
                             </div>
                             <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label>Posti Totali</label>
-                                    <input type="number" id="editEventoPosti" class="form-control" min="1">
+                                <div class="form-group col-md-4">
+                                    <label>Data</label>
+                                    <input type="date" id="tableBookingDate" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Ora</label>
+                                    <select id="tableBookingTime" class="form-control" required>
+                                        <option value="20:00">20:00</option>
+                                        <option value="20:30">20:30</option>
+                                        <option value="21:00">21:00</option>
+                                        <option value="21:30">21:30</option>
+                                        <option value="22:00">22:00</option>
+                                        <option value="22:30">22:30</option>
+                                        <option value="23:00">23:00</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Numero Persone</label>
+                                    <input type="number" id="tableBookingPeople" class="form-control" min="1" value="2"
+                                        required>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label for="editEventoPoster">Locandina (facoltativa)</label>
-                                <input type="file" id="editEventoPoster" class="form-control-file" accept="image/*">
-                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Salva Prenotazione
+                            </button>
                         </form>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
-                        <button type="button" class="btn btn-success" onclick="updateEvento()">
-                            <i class="fas fa-save"></i> Salva modifiche
-                        </button>
+
+                    <!-- Lista prenotazioni tavolo -->
+                    <h5><i class="fas fa-list"></i> Prenotazioni Tavolo</h5>
+                    <div id="tableBookingsContainer" class="mt-3"></div>
+                </div>
+
+                <!-- TAB 2: Registrazioni Eventi -->
+                <div class="tab-pane fade" id="eventRegistrations" role="tabpanel">
+                    <!-- Form nuova registrazione evento -->
+                    <div class="form-card mb-4">
+                        <h5><i class="fas fa-plus-circle"></i> Nuova Registrazione Evento</h5>
+                        <form id="formEventRegistration">
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>Nome</label>
+                                    <input type="text" id="eventRegName" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Cognome</label>
+                                    <input type="text" id="eventRegSurname" class="form-control">
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Telefono</label>
+                                    <input type="tel" id="eventRegPhone" class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Persone</label>
+                                    <input type="number" id="eventRegPeople" class="form-control" min="1" value="1"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Note</label>
+                                    <input type="text" id="eventRegNote" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-8">
+                                    <label>Evento</label>
+                                    <select id="eventRegEvent" class="form-control" required>
+                                        <option value="">Caricamento eventi...</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Posti Disponibili</label>
+                                    <input type="text" id="eventRegAvailable" class="form-control" readonly>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-user-plus"></i> Registra Partecipante
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Lista eventi con iscritti -->
+                    <h5><i class="fas fa-list"></i> Eventi e Iscritti</h5>
+                    <div id="eventsRegistrationsContainer" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu Section -->
+        <div id="sectionMenu" class="card-section hidden">
+            <h4><i class="fas fa-utensils"></i> Gestione Menu</h4>
+
+            <!-- Add New Item -->
+            <div class="form-card mb-5">
+                <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi nuovo piatto</h5>
+                <form id="formAddNewItem">
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label>Titolo</label>
+                            <input type="text" name="titolo" class="form-control" placeholder="Nome del piatto"
+                                required />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label>Categoria</label>
+                            <select name="categoria" class="form-control" id="categoriaSelectMenu" required>
+                                <option value="">Seleziona Categoria</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Descrizione</label>
+                            <input type="text" name="descrizione" class="form-control" placeholder="Descrizione" />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label>Prezzo (€)</label>
+                            <input type="number" step="0.01" name="prezzo" class="form-control" placeholder="0.00"
+                                required />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label>Immagine</label>
+                            <input type="file" name="image" accept="image/*" class="form-control-file" required />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-2">
+                            <label>Visibile</label>
+                            <select name="visibile" class="form-control">
+                                <option value="true">✅ Sì</option>
+                                <option value="false">❌ No</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-3 mt-4 pt-2">
+                            <button type="submit" class="btn btn-success btn-action">
+                                <i class="fas fa-save"></i> Salva Piatto
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label><i class="fa-solid fa-triangle-exclamation"></i> Allergeni</label>
+
+                            <!-- nuovo selettore compatto -->
+                            <div id="allergenSelectAdd"></div>
+
+                            <small class="text-muted d-block mt-1">
+                                Clicca per selezionare uno o più allergeni e imposta “Contiene” o “Tracce”.
+                            </small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Menu List -->
+            <div class="mt-4">
+                <h5 class="mb-3"><i class="fas fa-list"></i> Menu Attuale</h5>
+                <div id="menuTablesContainer"></div>
+            </div>
+        </div>
+
+        <!-- Evidenza Section -->
+        <div id="sectionEvidenza" class="card-section hidden">
+            <h4><i class="fas fa-star"></i> Contenuti in Evidenza</h4>
+
+            <!-- Add Highlight -->
+            <div class="form-card mb-5">
+                <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi Contenuto</h5>
+                <form id="formAddHighlight">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Categoria</label>
+                            <select id="categoriaSelectEvidenza" class="form-control" required>
+                                <option value="">Seleziona Categoria</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Prodotto</label>
+                            <select id="prodottoSelectEvidenza" class="form-control" disabled required>
+                                <option value="">Seleziona Prodotto</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-2 mt-4 pt-2">
+                            <button type="submit" class="btn btn-warning btn-action">
+                                <i class="fas fa-plus"></i> Aggiungi
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Highlights List -->
+            <div class="mt-4">
+                <h5 class="mb-3"><i class="fas fa-list"></i> Contenuti Attivi</h5>
+                <div id="highlightsContainer" class="mt-3"></div>
+            </div>
+        </div>
+
+        <!-- Promozioni Section -->
+        <div id="sectionPromozioni" class="card-section hidden">
+            <h4><i class="fas fa-tag"></i> Gestione Promozioni</h4>
+
+            <!-- Add Promotion -->
+            <div class="form-card mb-5">
+                <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Crea Nuova Promozione</h5>
+                <form id="formAddPromozione">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Nome Promozione</label>
+                            <input type="text" class="form-control" name="nome" placeholder="Nome della promozione"
+                                required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Sconto (%)</label>
+                            <input type="number" step="1" min="1" max="100" name="sconto" class="form-control"
+                                placeholder="%" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Descrizione</label>
+                            <textarea name="descrizione" class="form-control" placeholder="Descrizione promozione"
+                                rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label>Data Inizio</label>
+                            <input type="date" name="dataInizio" class="form-control" required />
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Data Fine</label>
+                            <input type="date" name="dataFine" class="form-control" required />
+                        </div>
+                    </div>
+
+                    <div class="form-row mt-3">
+                        <div class="form-group col-md-12">
+                            <label><i class="fas fa-list"></i> Prodotti inclusi</label>
+                            <div id="checklistProdottiPromozione" class="row mt-2"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row mt-3">
+                        <div class="col-md-12">
+                            <div class="alert alert-info" id="selectedPromoSummary" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row mt-3">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-danger btn-action">
+                                <i class="fas fa-fire"></i> Crea Promozione
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Promotions List -->
+            <div class="mt-4">
+                <h5 class="mb-3"><i class="fas fa-list"></i> Promozioni Attive</h5>
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Nome</th>
+                                <th>Descrizione</th>
+                                <th>Periodo</th>
+                                <th>Sconto</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promozioniTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Utenti Section -->
+        <div id="sectionUtenti" class="card-section hidden">
+            <h4><i class="fas fa-users"></i> Gestione Utenti</h4>
+
+            <div class="table-responsive">
+                <table class="table custom-table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Telefono</th>
+                            <th>Email</th>
+                            <th>Registrazione</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="utentiTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Eventi Section -->
+        <div id="sectionEventi" class="card-section hidden">
+            <h4><i class="fas fa-calendar-check"></i> Gestione Eventi</h4>
+
+            <!-- Add New Event -->
+            <div class="form-card mb-5">
+                <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Crea Nuovo Evento</h5>
+                <form id="formAddEvento">
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Titolo</label>
+                            <input type="text" name="titolo" class="form-control" placeholder="Titolo evento"
+                                required />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Data e Ora</label>
+                            <input type="datetime-local" name="data" class="form-control" required />
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Posti Totali (lasciare vuoto per illimitati)</label>
+                            <input type="number" name="postiTotali" class="form-control" placeholder="Numero posti"
+                                min="1" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Descrizione</label>
+                            <textarea name="descrizione" class="form-control" placeholder="Descrizione evento"
+                                rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Locandina (immagine)</label>
+                            <input type="file" name="poster" accept="image/*" class="form-control-file">
+                        </div>
+                    </div>
+                    <div class="form-row mt-3">
+                        <div class="form-group col-md-12">
+                            <button type="submit" class="btn btn-success btn-action">
+                                <i class="fas fa-save"></i> Crea Evento
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Events List -->
+            <div class="mt-4">
+                <h5 class="mb-3"><i class="fas fa-list"></i> Eventi Programmati</h5>
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Locandina</th>
+                                <th>Titolo</th>
+                                <th>Descrizione</th>
+                                <th>Data</th>
+                                <th>Posti</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventiTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Iscritti Modal -->
+            <div class="modal fade" id="iscrittiModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Iscritti all'evento</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Telefono</th>
+                                            <th>Data Iscrizione</th>
+                                            <th>Persone</th>
+                                            <th>Note</th> <!-- AGGIUNTO -->
+                                        </tr>
+                                    </thead>
+
+                                    <tbody id="iscrittiModalBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Chiudi</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Modifica Evento Modal -->
+            <div class="modal fade" id="editEventoModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Modifica Evento</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editEventoForm">
+                                <input type="hidden" id="editEventoId">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Titolo</label>
+                                        <input type="text" id="editEventoTitolo" class="form-control" required>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Data e Ora</label>
+                                        <input type="datetime-local" id="editEventoData" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Descrizione</label>
+                                        <textarea id="editEventoDescrizione" class="form-control" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Posti Totali</label>
+                                        <input type="number" id="editEventoPosti" class="form-control" min="1">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="editEventoPoster">Locandina (facoltativa)</label>
+                                    <input type="file" id="editEventoPoster" class="form-control-file" accept="image/*">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+                            <button type="button" class="btn btn-success" onclick="updateEvento()">
+                                <i class="fas fa-save"></i> Salva modifiche
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Categorie Section -->
+        <div id="sectionCategorie" class="card-section hidden">
+            <h4><i class="fas fa-layer-group"></i> Gestione Categorie</h4>
+
+            <!-- Add New Category -->
+            <div class="form-card mb-5">
+                <h5 class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi Categoria</h5>
+                <form id="formAddCategory">
+                    <div class="form-row align-items-end">
+                        <div class="form-group col-md-8">
+                            <label>Nome Categoria</label>
+                            <input type="text" id="newCategoryName" class="form-control"
+                                placeholder="Esempio: Panini, Bevande..." required>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <button type="submit" class="btn btn-success btn-block">
+                                <i class="fas fa-save"></i> Salva Categoria
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Categories List -->
+            <div class="mt-4">
+                <h5 class="mb-3"><i class="fas fa-list"></i> Categorie Attuali</h5>
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modifica Categoria Modal -->
+            <div class="modal fade" id="editCategoryModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Modifica Categoria</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editCategoryForm">
+                                <input type="hidden" id="editCategoryId">
+                                <div class="form-group">
+                                    <label>Nome Categoria</label>
+                                    <input type="text" id="editCategoryName" class="form-control" required>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+                            <button type="button" class="btn btn-primary" onclick="submitUpdateCategory()">
+                                <i class="fas fa-save"></i> Salva
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Utility functions
-    function capitalize(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
-    function escape(str) {
-        if (!str) return '';
-        return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    }
-
-    function formatDate(dateStr) {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    function formatDateTime(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  // Mostra sempre in orario italiano, indipendentemente dal device
-  return d.toLocaleString('it-IT', {
-    timeZone: 'Europe/Rome',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-    // Section management
-    function showSection(section) {
-        ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti', 'eventi', 'categorie'].forEach(s => {
-            document.getElementById('section' + capitalize(s)).classList.add('hidden');
-        });
-        document.getElementById('section' + capitalize(section)).classList.remove('hidden');
-
-        if (section === 'prenotazioni') {
-            loadTableBookings();
-        } else if (section === 'menu') {
-            loadMenuItems();
-            refreshCategorySelects();
-            ensureAllergenCatalog().then(() => renderAllergenSelect('allergenSelectAdd'));
-        } else if (section === 'evidenza') {
-            loadInEvidenza();
-        } else if (section === 'promozioni') {
-            loadPromozioni();
-        } else if (section === 'utenti') {
-            loadUtenti();
-        } else if (section === 'eventi') {
-            loadEventi();
-        } else if (section === 'categorie') {
-            loadCategorie(); // <-- AGGIUNTO
+    <script>
+        // Utility functions
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
-    }
 
+        function escape(str) {
+            if (!str) return '';
+            return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
 
-    // Prenotazioni functions
-    async function loadReservations() {
-        try {
-            const res = await fetch('/admin/reservations');
-            const data = await res.json();
-            const grouped = {};
-            data.forEach(r => {
-                if (!grouped[r.date]) grouped[r.date] = [];
-                grouped[r.date].push(r);
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        }
+
+        function formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            // Mostra sempre in orario italiano, indipendentemente dal device
+            return d.toLocaleString('it-IT', {
+                timeZone: 'Europe/Rome',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
             });
+        }
 
-            const container = document.getElementById('reservationsByDateContainer');
-            container.innerHTML = '';
+        // Section management
+        function showSection(section) {
+            ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti', 'eventi', 'categorie'].forEach(s => {
+                document.getElementById('section' + capitalize(s)).classList.add('hidden');
+            });
+            document.getElementById('section' + capitalize(section)).classList.remove('hidden');
 
-            if (data.length === 0) {
-                container.innerHTML = `
+            if (section === 'prenotazioni') {
+                loadTableBookings();
+            } else if (section === 'menu') {
+                loadMenuItems();
+
+                ensureAllergenCatalog().then(() => renderAllergenSelect('allergenSelectAdd'))
+                    .catch(err => { console.error(err); renderAllergenSelect('allergenSelectAdd'); });
+            } else if (section === 'evidenza') {
+                loadInEvidenza();
+            } else if (section === 'promozioni') {
+                loadPromozioni();
+            } else if (section === 'utenti') {
+                loadUtenti();
+            } else if (section === 'eventi') {
+                loadEventi();
+            } else if (section === 'categorie') {
+                loadCategories();
+            }
+        }
+
+        // Prenotazioni functions
+        async function loadReservations() {
+            try {
+                const res = await fetch('/admin/reservations');
+                const data = await res.json();
+                const grouped = {};
+                data.forEach(r => {
+                    if (!grouped[r.date]) grouped[r.date] = [];
+                    grouped[r.date].push(r);
+                });
+
+                const container = document.getElementById('reservationsByDateContainer');
+                container.innerHTML = '';
+
+                if (data.length === 0) {
+                    container.innerHTML = `
                     <div class="alert alert-info text-center">
                         <i class="fas fa-info-circle fa-2x mb-3"></i>
                         <h4>Nessuna prenotazione trovata</h4>
                         <p>Non ci sono prenotazioni registrate al momento</p>
                     </div>
                 `;
-                return;
-            }
+                    return;
+                }
 
-            Object.keys(grouped).sort().forEach(date => {
-                const section = document.createElement('div');
-                section.classList.add('mb-5');
+                Object.keys(grouped).sort().forEach(date => {
+                    const section = document.createElement('div');
+                    section.classList.add('mb-5');
 
-                const rows = grouped[date].map(r => `
+                    const rows = grouped[date].map(r => `
                     <tr>
                         <td>${r.name}</td>
                         <td>${r.phone}</td>
@@ -918,7 +1013,7 @@
                     </tr>
                 `).join('');
 
-                section.innerHTML = `
+                    section.innerHTML = `
                     <h5 class="d-flex align-items-center">
                         <i class="fas fa-calendar-day me-2"></i> ${formatDate(date)}
                     </h5>
@@ -938,44 +1033,44 @@
                         </table>
                     </div>
                 `;
-                container.appendChild(section);
-            });
-        } catch (error) {
-            console.error('Error loading reservations:', error);
-            document.getElementById('reservationsByDateContainer').innerHTML = `
+                    container.appendChild(section);
+                });
+            } catch (error) {
+                console.error('Error loading reservations:', error);
+                document.getElementById('reservationsByDateContainer').innerHTML = `
                 <div class="alert alert-danger">
                     <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento delle prenotazioni
                 </div>
             `;
+            }
         }
-    }
 
-    async function deleteReservation(id) {
-        if (!confirm('Vuoi davvero eliminare questa prenotazione?')) return;
-        try {
-            const res = await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                loadReservations();
-            } else {
+        async function deleteReservation(id) {
+            if (!confirm('Vuoi davvero eliminare questa prenotazione?')) return;
+            try {
+                const res = await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadReservations();
+                } else {
+                    alert('Errore durante l\'eliminazione.');
+                }
+            } catch (error) {
+                console.error('Error deleting reservation:', error);
                 alert('Errore durante l\'eliminazione.');
             }
-        } catch (error) {
-            console.error('Error deleting reservation:', error);
-            alert('Errore durante l\'eliminazione.');
         }
-    }
 
-    // Menu functions
-    function populateSelect(context, categories) {
-        const select = document.getElementById(`categoriaSelect${context}`);
-        select.innerHTML = '<option value="">Seleziona Categoria</option>';
-        categories.forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat;
-            opt.textContent = cat;
-            select.appendChild(opt);
-        });
-    }
+        // Menu functions
+        function populateSelect(context, categories) {
+            const select = document.getElementById(`categoriaSelect${context}`);
+            select.innerHTML = '<option value="">Seleziona Categoria</option>';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = cat;
+                select.appendChild(opt);
+            });
+        }
         // === Allergen Picker utilities ===
         // === Catalogo allergeni ===
         let ALLERGEN_CATALOG = [];
@@ -983,21 +1078,21 @@
         let CURRENT_EDIT_ID = null;
 
         async function ensureAllergenCatalog() {
-        if (ALLERGEN_CATALOG.length) return;
-        const res = await fetch('/admin/menu/allergens');
-        if (!res.ok) throw new Error('Errore caricamento allergeni');
-        ALLERGEN_CATALOG = await res.json(); // [{code,label,iconUrl,status:'FREE'}...]
-    }
+            if (ALLERGEN_CATALOG.length) return;
+            const res = await fetch('/admin/menu/allergens');
+            if (!res.ok) throw new Error('Errore caricamento allergeni');
+            ALLERGEN_CATALOG = await res.json(); // [{code,label,iconUrl,status:'FREE'}...]
+        }
 
         // === Multi-selettore a dropdown ===
         // containerId: es. "allergenSelectAdd" o "allergenSelectEdit-123"
         // preselectedMap: { MILK: 'CONTAINS', SOYBEANS: 'MAY_CONTAIN' }
         function renderAllergenSelect(containerId, preselectedMap = {}) {
-        const root = document.getElementById(containerId);
-        if (!root) return;
+            const root = document.getElementById(containerId);
+            if (!root) return;
 
-        // bottone + dropdown Bootstrap
-        root.innerHTML = `
+            // bottone + dropdown Bootstrap
+            root.innerHTML = `
     <div class="dropdown">
       <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         Seleziona allergeni
@@ -1009,14 +1104,14 @@
     <div id="${containerId}-summary" class="mt-2"></div>
   `;
 
-        // lista elementi (checkbox + select status)
-        const list = document.getElementById(`${containerId}-list`);
-        list.innerHTML = ALLERGEN_CATALOG.map(a => {
-        const checked = preselectedMap[a.code] ? 'checked' : '';
-        const current = (preselectedMap[a.code] || 'FREE').toUpperCase();
-        const disabled = checked ? '' : 'disabled';
+            // lista elementi (checkbox + select status)
+            const list = document.getElementById(`${containerId}-list`);
+            list.innerHTML = ALLERGEN_CATALOG.map(a => {
+                const checked = preselectedMap[a.code] ? 'checked' : '';
+                const current = (preselectedMap[a.code] || 'FREE').toUpperCase();
+                const disabled = checked ? '' : 'disabled';
 
-            return `
+                return `
   <div class="d-flex align-items-center mb-2">
     <input type="checkbox" class="mr-2" id="${containerId}-chk-${a.code}" ${checked}>
     <div class="flex-grow-1">
@@ -1024,124 +1119,136 @@
       <div class="small text-muted">${a.code}</div>
     </div>
     <select id="${containerId}-status-${a.code}" class="form-control form-control-sm" style="width:160px" ${disabled}>
-      <option value="CONTAINS" ${current==='CONTAINS'?'selected':''}>Contiene</option>
-      <option value="MAY_CONTAIN" ${current==='MAY_CONTAIN'?'selected':''}>Tracce</option>
+      <option value="CONTAINS" ${current === 'CONTAINS' ? 'selected' : ''}>Contiene</option>
+      <option value="MAY_CONTAIN" ${current === 'MAY_CONTAIN' ? 'selected' : ''}>Tracce</option>
     </select>
   </div>
 `;
-    }).join('');
+            }).join('');
 
-        // abilitazione/disabilitazione select status
-        ALLERGEN_CATALOG.forEach(a => {
-        const chk = document.getElementById(`${containerId}-chk-${a.code}`);
-        const sel = document.getElementById(`${containerId}-status-${a.code}`);
-        chk.addEventListener('change', () => {
-        sel.disabled = !chk.checked;
-        updateSummary(containerId);
-    });
-        sel.addEventListener('change', () => updateSummary(containerId));
-    });
+            // abilitazione/disabilitazione select status
+            ALLERGEN_CATALOG.forEach(a => {
+                const chk = document.getElementById(`${containerId}-chk-${a.code}`);
+                const sel = document.getElementById(`${containerId}-status-${a.code}`);
+                chk.addEventListener('change', () => {
+                    sel.disabled = !chk.checked;
+                    updateSummary(containerId);
+                });
+                sel.addEventListener('change', () => updateSummary(containerId));
+            });
 
-        updateSummary(containerId);
-    }
+            updateSummary(containerId);
+        }
 
         // Legge il selezionato: array di {code, status} (FREE viene escluso)
         function readAllergenSelect(containerId) {
-        const selected = [];
-        ALLERGEN_CATALOG.forEach(a => {
-        const chk = document.getElementById(`${containerId}-chk-${a.code}`);
-        const sel = document.getElementById(`${containerId}-status-${a.code}`);
-        if (chk && chk.checked) {
-        selected.push({ code: a.code, status: sel.value.toUpperCase() });
-    }
-    });
-        return selected;
-    }
+            const selected = [];
+            ALLERGEN_CATALOG.forEach(a => {
+                const chk = document.getElementById(`${containerId}-chk-${a.code}`);
+                const sel = document.getElementById(`${containerId}-status-${a.code}`);
+                if (chk && chk.checked) {
+                    selected.push({ code: a.code, status: sel.value.toUpperCase() });
+                }
+            });
+            return selected;
+        }
 
         // badge riepilogo sotto al pulsante
         function updateSummary(containerId) {
-        const wrap = document.getElementById(`${containerId}-summary`);
-        const chosen = readAllergenSelect(containerId);
-        if (!chosen.length) {
-        wrap.innerHTML = `<span class="text-muted small">Nessun allergene selezionato</span>`;
-        return;
-    }
-        wrap.innerHTML = chosen.map(s => `
+            const wrap = document.getElementById(`${containerId}-summary`);
+            const chosen = readAllergenSelect(containerId);
+            if (!chosen.length) {
+                wrap.innerHTML = `<span class="text-muted small">Nessun allergene selezionato</span>`;
+                return;
+            }
+            wrap.innerHTML = chosen.map(s => `
     <span class="badge badge-light mr-1 mb-1">
-      ${s.code} — ${s.status==='CONTAINS' ? 'Contiene' : 'Tracce'}
+      ${s.code} — ${s.status === 'CONTAINS' ? 'Contiene' : 'Tracce'}
     </span>
   `).join('');
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        showSection('prenotazioni');
-
-        // Carica catalogo allergeni e renderizza il selettore compatto dell'ADD
-        try {
-            await ensureAllergenCatalog();
-            renderAllergenSelect('allergenSelectAdd');
-        } catch (e) {
-            console.error(e);
         }
-    });
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            showSection('prenotazioni');
+
+            // Carica catalogo allergeni e renderizza il selettore compatto dell'ADD
+            try {
+                await ensureAllergenCatalog();
+                renderAllergenSelect('allergenSelectAdd');
+            } catch (e) {
+                console.error(e);
+            }
+        });
 
 
-    async function loadMenuItems() {
-        CURRENT_EDIT_ID = null;
-        try {
-            const res = await fetch('/admin/menu');
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const data = await res.json();
+        async function loadMenuItems() {
+            CURRENT_EDIT_ID = null;
+            try {
+                const [resMenu, resCat] = await Promise.all([
+                    fetch('/admin/menu'),
+                    fetch('/admin/categories')
+                ]);
 
-            const grouped = {};
-            (data || []).forEach(item => {
-                const cat = item.categoryName || 'Altro';
-                if (!grouped[cat]) grouped[cat] = [];
-                grouped[cat].push(item);
-            });
+                if (!resMenu.ok) throw new Error('HTTP ' + resMenu.status);
+                const data = await resMenu.json();
 
-            const container = document.getElementById('menuTablesContainer');
-            container.innerHTML = '';
+                let availableCategories = new Set();
+                if (resCat.ok) {
+                    const params = await resCat.json(); // [{id,name}]
+                    params.forEach(p => availableCategories.add(p.name));
+                }
 
-            if (!data || data.length === 0) {
-                container.innerHTML = `
+                const grouped = {};
+                (data || []).forEach(item => {
+                    const cat = item.categoria || 'Altro';
+                    availableCategories.add(cat); // Ensure used categories are also listed
+                    if (!grouped[cat]) grouped[cat] = [];
+                    grouped[cat].push(item);
+                });
+
+                populateSelect('Menu', [...availableCategories].sort());
+                const container = document.getElementById('menuTablesContainer');
+                container.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
         <div class="alert alert-info text-center">
           <i class="fas fa-info-circle fa-2x mb-3"></i>
           <h4>Menu vuoto</h4>
           <p>Non ci sono piatti nel menu al momento</p>
         </div>`;
-                return;
-            }
+                    return;
+                }
 
-            Object.keys(grouped).sort().forEach(cat => {
-                const section = document.createElement('div');
-                section.classList.add('mb-5');
+                Object.keys(grouped).sort().forEach(cat => {
+                    const section = document.createElement('div');
+                    section.classList.add('mb-5');
 
-                const rows = grouped[cat].map(item => {
-                    const safeId = Number(item.id);
-                    const imgSrc = (item.imageUrl && item.imageUrl.trim() !== '')
-                        ? item.imageUrl
-                        : `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${safeId}.png`;
+                    const rows = grouped[cat].map(item => {
+                        const safeId = Number(item.id);
+                        const imgSrc = (item.imageUrl && item.imageUrl.trim() !== '')
+                            ? item.imageUrl
+                            : `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${safeId}.png`;
 
-                    // ——— testo allergeni sotto la descrizione ———
-                    const allergensText = ((item.allergens || [])
-                        .filter(a => a && a.status && a.status !== 'FREE')
-                        .map(a => {
-                            const label = (a.label || a.code || '').toString();
-                            const status = (a.status || '').toString().toUpperCase();
-                            return `${label}${status === 'MAY_CONTAIN' ? ' (tracce)' : ' (contiene)'}`;
-                        }))
-                        .join(', ');
+                        // ——— testo allergeni sotto la descrizione ———
+                        const allergensText = ((item.allergens || [])
+                            .filter(a => a && a.status && a.status !== 'FREE')
+                            .map(a => {
+                                const label = (a.label || a.code || '').toString();
+                                const status = (a.status || '').toString().toUpperCase();
+                                return `${label}${status === 'MAY_CONTAIN' ? ' (tracce)' : ' (contiene)'}`;
+                            }))
+                            .join(', ');
 
-                    return `
+                        return `
           <tr id="menu-row-${safeId}">
             <td><img src="${imgSrc}" onerror="this.onerror=null;this.src='/img/placeholder.png'" class="thumb" /></td>
             <td>${escape(item.titolo || '')}</td>
             <td>
               ${escape(item.descrizione || '-')}
               ${allergensText
-                        ? `<div class="small text-muted mt-1"><strong>Allergeni:</strong> ${escape(allergensText)}</div>`
-                        : ``}
+                                ? `<div class="small text-muted mt-1"><strong>Allergeni:</strong> ${escape(allergensText)}</div>`
+                                : ``}
             </td>
             <td>€${Number(item.prezzo || 0).toFixed(2)}</td>
             <td>
@@ -1153,17 +1260,17 @@
             <td>-</td>
             <td class="text-nowrap">
               <button class="btn btn-sm btn-warning btn-action"
-                  onclick="openEditMenuModal(${safeId})">
-                  <i class="fas fa-edit"></i> Modifica
-                </button>
+                onclick="makeEditable(${safeId}, '${escape(item.titolo || '')}', '${escape(item.categoria || '')}', '${escape(item.descrizione || '')}', ${Number(item.prezzo || 0)})">
+                <i class="fas fa-edit"></i> Modifica
+              </button>
               <button class="btn btn-sm btn-danger btn-action" onclick="deleteMenuItem(${safeId})">
                 <i class="fas fa-trash-alt"></i> Elimina
               </button>
             </td>
           </tr>`;
-                }).join('');
+                    }).join('');
 
-                section.innerHTML = `
+                    section.innerHTML = `
         <h5 class="d-flex align-items-center">
           <i class="fas fa-utensils me-2"></i> ${escape(cat)}
         </h5>
@@ -1183,101 +1290,83 @@
             <tbody>${rows}</tbody>
           </table>
         </div>`;
-                container.appendChild(section);
-            });
-        } catch (error) {
-            console.error('Error loading menu items:', error);
-            document.getElementById('menuTablesContainer').innerHTML = `
+                    container.appendChild(section);
+                });
+            } catch (error) {
+                console.error('Error loading menu items:', error);
+                document.getElementById('menuTablesContainer').innerHTML = `
       <div class="alert alert-danger">
         <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento del menu
       </div>`;
-        }
-    }
-
-    document.getElementById('formAddNewItem').addEventListener('submit', async e => {
-        e.preventDefault();
-        const form = e.target;
-
-        // ✅ Salva temporaneamente la categoria selezionata
-        const selectedCategory = form.categoria.value;
-
-        const allergens = readAllergenSelect('allergenSelectAdd');
-
-        const categoryName = form.categoria.value;
-        if (!categoryName) {
-            alert("⚠️ Devi selezionare una categoria prima di salvare il piatto!");
-            return;
+            }
         }
 
-        const data = {
-            titolo: form.titolo.value,
-            categoryName: categoryName,
-            descrizione: form.descrizione.value,
-            prezzo: parseFloat(form.prezzo.value),
-            visibile: form.visibile.value === 'true',
-            allergens
-        };
+        document.getElementById('formAddNewItem').addEventListener('submit', async e => {
+            e.preventDefault();
+            const form = e.target;
 
+            const allergens = readAllergenSelect('allergenSelectAdd');
 
-        const formData = new FormData();
-        formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
-        if (form.image.files[0]) formData.append('image', form.image.files[0]);
+            const data = {
+                titolo: form.titolo.value,
+                categoria: form.categoria.value,
+                descrizione: form.descrizione.value,
+                prezzo: parseFloat(form.prezzo.value),
+                visibile: form.visibile.value === 'true',
+                allergens
+            };
 
-        try {
-            const res = await fetch('/admin/menu', { method: 'POST', body: formData });
-            if (res.ok) {
-                alert('✅ Piatto aggiunto con successo!');
+            const formData = new FormData();
+            formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+            if (form.image.files[0]) formData.append('image', form.image.files[0]);
 
-                // 🔹 Reset solo i campi di testo e file, ma NON la categoria
-                const categoriaSelect = form.categoria;
-                form.reset();
-                categoriaSelect.value = selectedCategory; // <-- riapplica la categoria selezionata
-
-                // 🔹 Reinizializza il selettore allergeni
-                renderAllergenSelect('allergenSelectAdd');
-
-                // 🔹 Ricarica il menu
-                await loadMenuItems();
-            } else {
+            try {
+                const res = await fetch('/admin/menu', { method: 'POST', body: formData });
+                if (res.ok) {
+                    alert('✅ Piatto aggiunto con successo!');
+                    form.reset();
+                    // reset anche il selettore allergeni
+                    renderAllergenSelect('allergenSelectAdd');
+                    await loadMenuItems();
+                } else {
+                    alert('❌ Errore durante l\'aggiunta del piatto');
+                }
+            } catch (error) {
+                console.error('Error adding menu item:', error);
                 alert('❌ Errore durante l\'aggiunta del piatto');
             }
-        } catch (error) {
-            console.error('Error adding menu item:', error);
-            alert('❌ Errore durante l\'aggiunta del piatto');
-        }
-    });
+        });
 
-
-    async function toggleVisibility(id) {
-        try {
-            await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
-            await loadMenuItems();
-        } catch (error) {
-            console.error('Error toggling visibility:', error);
-            alert('Errore durante l\'aggiornamento dello stato');
+        async function toggleVisibility(id) {
+            try {
+                await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
+                await loadMenuItems();
+            } catch (error) {
+                console.error('Error toggling visibility:', error);
+                alert('Errore durante l\'aggiornamento dello stato');
+            }
         }
-    }
 
-    async function deleteMenuItem(id) {
-        if (!confirm('Sei sicuro di voler eliminare questo piatto?')) return;
-        try {
-            await fetch(`/admin/menu/${id}`, { method: 'DELETE' });
-            if (CURRENT_EDIT_ID === id) CURRENT_EDIT_ID = null;
-            await loadMenuItems();
-        } catch (error) {
-            console.error('Error deleting menu item:', error);
-            alert('Errore durante l\'eliminazione del piatto');
+        async function deleteMenuItem(id) {
+            if (!confirm('Sei sicuro di voler eliminare questo piatto?')) return;
+            try {
+                await fetch(`/admin/menu/${id}`, { method: 'DELETE' });
+                if (CURRENT_EDIT_ID === id) CURRENT_EDIT_ID = null;
+                await loadMenuItems();
+            } catch (error) {
+                console.error('Error deleting menu item:', error);
+                alert('Errore durante l\'eliminazione del piatto');
+            }
         }
-    }
 
-    async function makeEditable(id, titolo, categoria, descrizione, prezzo) {
-        if (CURRENT_EDIT_ID !== null && CURRENT_EDIT_ID !== id) {
-            alert('Puoi modificare solo un elemento alla volta. Prima salva o annulla quello in modifica.');
-            return;
-        }
-        CURRENT_EDIT_ID = id;
-        const row = document.getElementById(`menu-row-${id}`);
-        row.innerHTML = `
+        async function makeEditable(id, titolo, categoria, descrizione, prezzo) {
+            if (CURRENT_EDIT_ID !== null && CURRENT_EDIT_ID !== id) {
+                alert('Puoi modificare solo un elemento alla volta. Prima salva o annulla quello in modifica.');
+                return;
+            }
+            CURRENT_EDIT_ID = id;
+            const row = document.getElementById(`menu-row-${id}`);
+            row.innerHTML = `
     <td><input type="file" id="edit-image-${id}" accept="image/*" class="form-control-file" /></td>
     <td><input type="text" id="edit-titolo-${id}" value="${titolo}" class="form-control" /></td>
     <td><input type="text" id="edit-desc-${id}" value="${descrizione}" class="form-control" /></td>
@@ -1297,421 +1386,435 @@
     </td>
   `;
 
-        try {
-            await ensureAllergenCatalog();
-            const detailRes = await fetch(`/api/menu/${id}`);
-            const item = await detailRes.json();
+            try {
+                await ensureAllergenCatalog();
+                const detailRes = await fetch(`/api/menu/${id}`);
+                const item = await detailRes.json();
 
-            const pre = {};
-            (item.allergens || []).forEach(a => pre[a.code] = a.status); // CONTAINS/MAY_CONTAIN
-            renderAllergenSelect(`allergenSelectEdit-${id}`, pre);
-        } catch (e) {
-            console.error('Impossibile caricare allergeni per edit:', e);
-            renderAllergenSelect(`allergenSelectEdit-${id}`, {});
+                const pre = {};
+                (item.allergens || []).forEach(a => pre[a.code] = a.status); // CONTAINS/MAY_CONTAIN
+                renderAllergenSelect(`allergenSelectEdit-${id}`, pre);
+            } catch (e) {
+                console.error('Impossibile caricare allergeni per edit:', e);
+                renderAllergenSelect(`allergenSelectEdit-${id}`, {});
+            }
         }
-    }
 
-    async function submitEdit(id) {
-        const titolo = document.getElementById(`edit-titolo-${id}`).value;
-        const descrizione = document.getElementById(`edit-desc-${id}`).value;
-        const prezzo = parseFloat(document.getElementById(`edit-prezzo-${id}`).value);
-        const categoria = document.getElementById(`edit-cat-${id}`).value;
-        const imageInput = document.getElementById(`edit-image-${id}`);
+        async function submitEdit(id) {
+            const titolo = document.getElementById(`edit-titolo-${id}`).value;
+            const descrizione = document.getElementById(`edit-desc-${id}`).value;
+            const prezzo = parseFloat(document.getElementById(`edit-prezzo-${id}`).value);
+            const categoria = document.getElementById(`edit-cat-${id}`).value;
+            const imageInput = document.getElementById(`edit-image-${id}`);
 
-        const allergens = readAllergenSelect(`allergenSelectEdit-${id}`);
+            const allergens = readAllergenSelect(`allergenSelectEdit-${id}`);
 
-        const data = { titolo, descrizione, prezzo, categoria, allergens };
+            const data = { titolo, descrizione, prezzo, categoria, allergens };
 
-        const formData = new FormData();
-        formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
-        if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
+            const formData = new FormData();
+            formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+            if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
 
-        try {
-            const res = await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
-            if (!res.ok) throw new Error('Update failed');
-            CURRENT_EDIT_ID = null;
-            loadMenuItems();
-        } catch (error) {
-            console.error('Error updating menu item:', error);
-            alert('Errore durante l\'aggiornamento del piatto');
+            try {
+                const res = await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
+                if (!res.ok) throw new Error('Update failed');
+                CURRENT_EDIT_ID = null;
+                loadMenuItems();
+            } catch (error) {
+                console.error('Error updating menu item:', error);
+                alert('Errore durante l\'aggiornamento del piatto');
+            }
         }
-    }
 
-    // ============================
-    //       IN EVIDENZA FIX
-    // ============================
-    async function loadInEvidenza() {
-        try {
-            // Carica menu e evidenze
-            const [menuRes, evidenzaRes] = await Promise.all([
-                fetch('/admin/menu'),
-                fetch('/admin/in_evidenza')
-            ]);
+        // Evidenza functions
+        async function loadInEvidenza() {
+            try {
+                const [menuRes, evidenzaRes] = await Promise.all([
+                    fetch('/admin/menu'),
+                    fetch('/admin/in_evidenza')
+                ]);
 
-            if (!menuRes.ok || !evidenzaRes.ok) throw new Error('Errore HTTP');
+                const menuData = await menuRes.json();
+                const evidenzaData = await evidenzaRes.json();
 
-            const menuData = await menuRes.json();
-            const evidenzaData = await evidenzaRes.json();
+                const idToTitolo = {};
+                menuData.forEach(item => {
+                    idToTitolo[item.id] = item.titolo;
+                });
 
-            // Mappa ID → titolo
-            const idToTitolo = {};
-            menuData.forEach(item => {
-                idToTitolo[item.id] = item.titolo;
-            });
+                const categories = [...new Set(menuData.map(i => i.categoria))].sort();
+                populateSelect('Evidenza', categories);
 
-            // Popola select categorie
-            await refreshCategorySelects();
+                const container = document.getElementById('highlightsContainer');
+                container.innerHTML = '';
 
-            const container = document.getElementById('highlightsContainer');
-            container.innerHTML = '';
+                if (evidenzaData.length === 0) {
+                    container.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Nessun contenuto in evidenza al momento
+                    </div>
+                `;
+                    return;
+                }
 
-            if (!Array.isArray(evidenzaData) || evidenzaData.length === 0) {
-                container.innerHTML = `
-        <div class="alert alert-info">
-          <i class="fas fa-info-circle me-2"></i> Nessun contenuto in evidenza al momento
-        </div>`;
+                evidenzaData.forEach(h => {
+                    const itemId = h.itemId || h.item_id;
+                    const titolo = idToTitolo[itemId] || 'Titolo non disponibile';
+
+                    const div = document.createElement('div');
+                    div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'border-bottom', 'pb-2', 'mb-3');
+                    div.innerHTML = `
+                    <div>
+                        <span class="badge bg-primary me-2">${h.categoria}</span>
+                        <strong>${titolo}</strong>
+                    </div>
+                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteInEvidenza(${h.id})">
+                        <i class="fas fa-times"></i> Rimuovi
+                    </button>
+                `;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error loading highlights:', error);
+                document.getElementById('highlightsContainer').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento dei contenuti in evidenza
+                </div>
+            `;
+            }
+        }
+
+        document.getElementById('categoriaSelectEvidenza').addEventListener('change', async e => {
+            const cat = e.target.value;
+            const prodSelect = document.getElementById('prodottoSelectEvidenza');
+            prodSelect.innerHTML = '<option value="">Seleziona Prodotto</option>';
+
+            if (!cat) {
+                prodSelect.disabled = true;
                 return;
             }
 
-            // Stampa ogni evidenza
-            evidenzaData.forEach(h => {
-                const itemId = h.itemId || h.item_id;
-                const titolo = idToTitolo[itemId] || 'Titolo non disponibile';
-                const categoria = h.categoria || 'Senza categoria';
+            try {
+                const res = await fetch('/admin/menu');
+                const items = (await res.json()).filter(i => i.categoria === cat);
 
-                const div = document.createElement('div');
-                div.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'border-bottom', 'pb-2', 'mb-3');
-                div.innerHTML = `
-        <div>
-          <span class="badge bg-primary me-2">${categoria}</span>
-          <strong>${titolo}</strong>
-        </div>
-        <button class="btn btn-sm btn-danger btn-action" onclick="deleteInEvidenza(${h.id})">
-          <i class="fas fa-times"></i> Rimuovi
-        </button>
-      `;
-                container.appendChild(div);
-            });
-        } catch (error) {
-            console.error('Error loading highlights:', error);
-            document.getElementById('highlightsContainer').innerHTML = `
-      <div class="alert alert-danger">
-        <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento dei contenuti in evidenza
-      </div>`;
-        }
-    }
+                items.forEach(i => {
+                    const opt = document.createElement('option');
+                    opt.value = i.id;
+                    opt.textContent = i.titolo;
+                    prodSelect.appendChild(opt);
+                });
 
+                prodSelect.disabled = false;
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        });
 
-    document.getElementById('categoriaSelectEvidenza').addEventListener('change', async e => {
-        const cat = e.target.value;
-        const prodSelect = document.getElementById('prodottoSelectEvidenza');
-        prodSelect.innerHTML = '<option value="">Seleziona Prodotto</option>';
-        prodSelect.disabled = true;
+        document.getElementById('formAddHighlight').addEventListener('submit', async e => {
+            e.preventDefault();
+            const cat = document.getElementById('categoriaSelectEvidenza').value;
+            const prodId = document.getElementById('prodottoSelectEvidenza').value;
 
-        if (!cat) return;
-
-        try {
-            const res = await fetch('/admin/menu');
-            const items = (await res.json()).filter(i => i.categoryName === cat);
-
-            if (items.length === 0) {
-                prodSelect.innerHTML = '<option value="">Nessun prodotto per questa categoria</option>';
+            if (!cat || !prodId) {
+                alert('Seleziona sia la categoria che il prodotto');
                 return;
             }
 
-            items.forEach(i => {
-                const opt = document.createElement('option');
-                opt.value = i.id;
-                opt.textContent = i.titolo;
-                prodSelect.appendChild(opt);
-            });
+            try {
+                const res = await fetch('/admin/in_evidenza', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ categoria: cat, itemId: prodId })
+                });
 
-            prodSelect.disabled = false;
-        } catch (error) {
-            console.error('Error loading products:', error);
-        }
-    });
-
-
-    document.getElementById('formAddHighlight').addEventListener('submit', async e => {
-        e.preventDefault();
-        const cat = document.getElementById('categoriaSelectEvidenza').value;
-        const prodId = document.getElementById('prodottoSelectEvidenza').value;
-
-        if (!cat || !prodId) {
-            alert('Seleziona sia la categoria che il prodotto');
-            return;
-        }
-
-        try {
-            const res = await fetch('/admin/in_evidenza', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ categoria: cat, itemId: prodId })
-            });
-
-            if (res.ok) {
-                loadInEvidenza();
-                e.target.reset();
-                document.getElementById('prodottoSelectEvidenza').disabled = true;
-            } else {
+                if (res.ok) {
+                    loadInEvidenza();
+                    e.target.reset();
+                    document.getElementById('prodottoSelectEvidenza').disabled = true;
+                } else {
+                    alert('Errore durante l\'aggiunta del contenuto in evidenza');
+                }
+            } catch (error) {
+                console.error('Error adding highlight:', error);
                 alert('Errore durante l\'aggiunta del contenuto in evidenza');
             }
-        } catch (error) {
-            console.error('Error adding highlight:', error);
-            alert('Errore durante l\'aggiunta del contenuto in evidenza');
-        }
-    });
+        });
 
-    async function deleteInEvidenza(id) {
-        if (!confirm('Sei sicuro di voler rimuovere questo contenuto in evidenza?')) return;
+        async function deleteInEvidenza(id) {
+            if (!confirm('Sei sicuro di voler rimuovere questo contenuto in evidenza?')) return;
 
-        try {
-            const res = await fetch(`/admin/in_evidenza/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                loadInEvidenza();
-            } else {
+            try {
+                const res = await fetch(`/admin/in_evidenza/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadInEvidenza();
+                } else {
+                    alert('Errore durante la rimozione');
+                }
+            } catch (error) {
+                console.error('Error deleting highlight:', error);
                 alert('Errore durante la rimozione');
             }
-        } catch (error) {
-            console.error('Error deleting highlight:', error);
-            alert('Errore durante la rimozione');
         }
-    }
 
-    // Promozioni functions
-    // ==============================
-    //        PROMOZIONI
-    // ==============================
+        // Promozioni functions
+        async function loadPromozioni() {
+            const checklist = document.getElementById('checklistProdottiPromozione');
+            const promozioniTableBody = document.getElementById('promozioniTableBody');
 
-    async function loadPromozioni() {
-        const checklist = document.getElementById('checklistProdottiPromozione');
-        const promozioniTableBody = document.getElementById('promozioniTableBody');
-
-        const showErrorRow = (msg) => {
-            promozioniTableBody.innerHTML = `
+            // helper per stampare una riga di errore in tabella
+            const showErrorRow = (msg) => {
+                if (!promozioniTableBody) return;
+                promozioniTableBody.innerHTML = `
       <tr>
         <td colspan="6" class="text-center py-4 text-danger">
           <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
           <p>${msg}</p>
         </td>
       </tr>`;
-        };
+            };
 
-        try {
-            // 🔹 carico categorie e menu
-            const [catRes, menuRes, promoRes] = await Promise.all([
-                fetch('/admin/categories'),
-                fetch('/admin/menu'),
-                fetch('/admin/promotions')
-            ]);
+            try {
+                const [menuRes, promoRes] = await Promise.all([
+                    fetch('/admin/menu'),
+                    fetch('/admin/promotions')
+                ]);
 
-            const categories = catRes.ok ? await catRes.json() : [];
-            const menuData = menuRes.ok ? await menuRes.json() : [];
-            const promoData = promoRes.ok ? await promoRes.json() : [];
+                // --- MENU ---
+                if (!menuRes.ok) {
+                    const t = await menuRes.text().catch(() => '');
+                    console.error('GET /admin/menu failed:', menuRes.status, t);
+                    // Non blocco: la tabella promo può comunque tentare di mostrarsi
+                }
+                const menuData = menuRes.ok ? await menuRes.json() : [];
 
-            // === CHECKLIST PRODOTTI ===
-            if (checklist) {
-                const grouped = {};
-
-                menuData.forEach(item => {
-                    const catName = item.categoryName || 'Altro';
-                    (grouped[catName] ||= []).push(item);
-                });
-
-                checklist.innerHTML = '';
-                Object.keys(grouped).sort().forEach(categoria => {
-                    const section = document.createElement('div');
-                    section.classList.add('col-md-6', 'mb-4');
-                    section.innerHTML = `
-          <div class="card h-100 shadow-sm">
+                // Build checklist prodotti (solo se presente il container)
+                if (checklist) {
+                    const grouped = {};
+                    (Array.isArray(menuData) ? menuData : []).forEach(item => {
+                        const cat = item.categoria || 'Altro';
+                        (grouped[cat] ||= []).push(item);
+                    });
+                    checklist.innerHTML = '';
+                    Object.keys(grouped).sort().forEach(categoria => {
+                        const section = document.createElement('div');
+                        section.classList.add('col-md-6', 'mb-4');
+                        section.innerHTML = `
+          <div class="card h-100">
             <div class="card-header bg-light"><strong>${categoria}</strong></div>
             <div class="card-body">
               ${grouped[categoria].map(item => `
                 <div class="form-check mb-2">
                   <input class="form-check-input promo-checkbox" type="checkbox"
-                         value="${item.id}" id="promo-prod-${item.id}"
-                         data-title="${item.titolo}">
-                  <label class="form-check-label" for="promo-prod-${item.id}">
-                    ${escape(item.titolo)} <span class="text-muted">(€${Number(item.prezzo).toFixed(2)})</span>
+                         value="${item.id}" id="prod-${item.id}" data-title="${item.titolo}">
+                  <label class="form-check-label" for="prod-${item.id}">
+                    ${item.titolo} <span class="text-muted">(€${Number(item.prezzo).toFixed(2)})</span>
                   </label>
                 </div>
               `).join('')}
             </div>
           </div>`;
-                    checklist.appendChild(section);
+                        checklist.appendChild(section);
+                    });
+
+                    // listener dei checkbox
+                    document.querySelectorAll('.promo-checkbox').forEach(cb => {
+                        cb.addEventListener('change', updatePromoSummary);
+                    });
+                }
+
+                // --- PROMOZIONI ---
+                if (!promozioniTableBody) return;
+
+                if (!promoRes.ok) {
+                    const t = await promoRes.text().catch(() => '');
+                    console.error('GET /admin/promotions failed:', promoRes.status, t);
+                    showErrorRow('Errore durante il caricamento delle promozioni');
+                    return;
+                }
+
+                let promoData;
+                try {
+                    promoData = await promoRes.json();
+                } catch (e) {
+                    console.error('Promotions JSON parse error:', e);
+                    showErrorRow('Risposta non valida dal server (promozioni)');
+                    return;
+                }
+
+                if (!Array.isArray(promoData)) {
+                    console.error('Promotions not an array:', promoData);
+                    showErrorRow('Risposta inattesa dal server (promozioni)');
+                    return;
+                }
+
+                if (promoData.length === 0) {
+                    promozioniTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-4">
+            <i class="fas fa-tag fa-2x mb-3 text-muted"></i>
+            <p class="mb-0">Nessuna promozione attiva</p>
+          </td>
+        </tr>`;
+                    return;
+                }
+
+                // ordina per dataInizio crescente (se mancano le date, le mette in coda)
+                promoData.sort((a, b) => {
+                    const da = a?.dataInizio ? new Date(a.dataInizio) : null;
+                    const db = b?.dataInizio ? new Date(b.dataInizio) : null;
+                    if (da && db) return da - db;
+                    if (da && !db) return -1;
+                    if (!da && db) return 1;
+                    return 0;
                 });
 
-                document.querySelectorAll('.promo-checkbox').forEach(cb => {
-                    cb.addEventListener('change', updatePromoSummary);
-                });
-            }
+                promozioniTableBody.innerHTML = '';
+                const today = new Date();
 
-            // === TABELLA PROMOZIONI ===
-            if (!Array.isArray(promoData) || promoData.length === 0) {
-                promozioniTableBody.innerHTML = `
-        <tr><td colspan="6" class="text-center py-4 text-muted">
-          <i class="fas fa-info-circle"></i> Nessuna promozione attiva
-        </td></tr>`;
-                return;
-            }
+                promoData.forEach(promo => {
+                    const startDate = promo.dataInizio ? new Date(promo.dataInizio) : null;
+                    const endDate = promo.dataFine ? new Date(promo.dataFine) : null;
+                    const isActive =
+                        (!!startDate ? today >= startDate : true) &&
+                        (!!endDate ? today <= endDate : true);
 
-            promozioniTableBody.innerHTML = '';
-            promoData.sort((a, b) => new Date(a.dataInizio) - new Date(b.dataInizio));
+                    // se la struttura items è diversa, non rompiamo
+                    let sconto = 0;
+                    if (Array.isArray(promo.items) && promo.items.length > 0) {
+                        // supporta sia item.scontoPercentuale che item.sconto
+                        const first = promo.items[0];
+                        sconto = Number(first.scontoPercentuale ?? first.sconto ?? 0);
+                    }
 
-            const today = new Date();
-            promoData.forEach(promo => {
-                const sconto = promo.items?.[0]?.scontoPercentuale || 0;
-                const active =
-                    (!promo.dataInizio || today >= new Date(promo.dataInizio)) &&
-                    (!promo.dataFine || today <= new Date(promo.dataFine));
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-        <td><strong>${escape(promo.nome || '-')}</strong></td>
-        <td>${escape(promo.descrizione || '-')}</td>
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+        <td>
+          <strong>${promo.nome ?? '-'}</strong>
+          <div class="small text-muted">${promo.descrizione || 'Nessuna descrizione'}</div>
+        </td>
+        <td>${promo.descrizione || '-'}</td>
         <td>
           ${promo.dataInizio ? formatDate(promo.dataInizio) : '-'}<br>
-          <small class="text-muted">al</small><br>
+          <span class="text-muted small">al</span><br>
           ${promo.dataFine ? formatDate(promo.dataFine) : '-'}
         </td>
-        <td><span class="badge bg-danger p-2">${sconto}%</span></td>
-        <td><span class="status-badge ${active ? 'bg-success' : 'bg-secondary'}">
-          ${active ? 'Attiva' : 'Non attiva'}
-        </span></td>
+        <td class="text-center">
+          <span class="badge bg-danger p-2">${sconto}%</span>
+        </td>
+        <td>
+          <span class="status-badge ${isActive ? 'bg-success' : 'bg-secondary'}">
+            ${isActive ? 'Attiva' : 'Non attiva'}
+          </span>
+        </td>
         <td class="text-nowrap">
           <button class="btn btn-sm btn-danger btn-action" onclick="eliminaPromozione(${promo.id})">
             <i class="fas fa-trash-alt"></i>
           </button>
         </td>`;
-                promozioniTableBody.appendChild(tr);
-            });
+                    promozioniTableBody.appendChild(tr);
+                });
 
-        } catch (err) {
-            console.error('Errore caricamento promozioni:', err);
-            showErrorRow('Errore durante il caricamento delle promozioni');
+            } catch (err) {
+                console.error('Error loading promotions:', err);
+                showErrorRow('Errore durante il caricamento delle promozioni');
+            }
         }
-    }
 
-    function updatePromoSummary() {
-        const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
-        const box = document.getElementById('selectedPromoSummary');
 
-        if (checked.length > 0) {
-            const list = checked.map(cb => cb.dataset.title).join(', ');
-            box.style.display = 'block';
-            box.innerHTML = `
-      <i class="fas fa-check-circle me-2"></i>
-      <strong>${checked.length} prodotti selezionati:</strong> ${list}`;
-        } else {
-            box.style.display = 'none';
-        }
-    }
 
-    async function eliminaPromozione(id) {
-        if (!confirm('Eliminare questa promozione?')) return;
-        try {
-            const res = await fetch(`/admin/promotions/${id}`, { method: 'DELETE' });
-            if (res.ok) loadPromozioni();
-            else alert('Errore durante l\'eliminazione');
-        } catch (err) {
-            console.error(err);
-            alert('Errore di connessione');
-        }
-    }
+        function updatePromoSummary() {
+            const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
+            const summary = checked.map(c => c.dataset.title).join(', ');
+            const box = document.getElementById('selectedPromoSummary');
 
-    function updatePromoSummary() {
-        const checked = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
-        const summary = checked.map(c => c.dataset.title).join(', ');
-        const box = document.getElementById('selectedPromoSummary');
-
-        if (checked.length > 0) {
-            box.style.display = 'block';
-            box.innerHTML = `
+            if (checked.length > 0) {
+                box.style.display = 'block';
+                box.innerHTML = `
                 <i class="fas fa-check-circle me-2"></i>
                 <strong>${checked.length} prodotti selezionati:</strong> ${summary}
             `;
-        } else {
-            box.style.display = 'none';
-        }
-    }
-
-    document.getElementById('formAddPromozione').addEventListener('submit', async e => {
-        e.preventDefault();
-        const form = e.target;
-        const nome = form.nome.value;
-        const sconto = parseFloat(form.sconto.value);
-        const descrizione = form.descrizione.value;
-        const dataInizio = form.dataInizio.value;
-        const dataFine = form.dataFine.value;
-
-        const selectedCheckboxes = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
-        if (selectedCheckboxes.length === 0) {
-            alert("Seleziona almeno un prodotto!");
-            return;
-        }
-
-        const items = selectedCheckboxes.map(cb => ({
-            menuItemId: parseInt(cb.value),
-            scontoPercentuale: sconto
-        }));
-
-        const payload = {
-            nome,
-            descrizione,
-            dataInizio,
-            dataFine,
-            attiva: true,
-            items
-        };
-
-        try {
-            const res = await fetch('/admin/promotions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                alert("✅ Promozione creata con successo!");
-                form.reset();
-                document.getElementById('selectedPromoSummary').style.display = 'none';
-                loadPromozioni();
             } else {
+                box.style.display = 'none';
+            }
+        }
+
+        document.getElementById('formAddPromozione').addEventListener('submit', async e => {
+            e.preventDefault();
+            const form = e.target;
+            const nome = form.nome.value;
+            const sconto = parseFloat(form.sconto.value);
+            const descrizione = form.descrizione.value;
+            const dataInizio = form.dataInizio.value;
+            const dataFine = form.dataFine.value;
+
+            const selectedCheckboxes = Array.from(document.querySelectorAll('.promo-checkbox:checked'));
+            if (selectedCheckboxes.length === 0) {
+                alert("Seleziona almeno un prodotto!");
+                return;
+            }
+
+            const items = selectedCheckboxes.map(cb => ({
+                menuItemId: parseInt(cb.value),
+                scontoPercentuale: sconto
+            }));
+
+            const payload = {
+                nome,
+                descrizione,
+                dataInizio,
+                dataFine,
+                attiva: true,
+                items
+            };
+
+            try {
+                const res = await fetch('/admin/promotions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert("✅ Promozione creata con successo!");
+                    form.reset();
+                    document.getElementById('selectedPromoSummary').style.display = 'none';
+                    loadPromozioni();
+                } else {
+                    alert("❌ Errore durante la creazione della promozione");
+                }
+            } catch (error) {
+                console.error('Error creating promotion:', error);
                 alert("❌ Errore durante la creazione della promozione");
             }
-        } catch (error) {
-            console.error('Error creating promotion:', error);
-            alert("❌ Errore durante la creazione della promozione");
-        }
-    });
+        });
 
-    async function eliminaPromozione(id) {
-        if (!confirm("Sei sicuro di voler eliminare questa promozione?")) return;
+        async function eliminaPromozione(id) {
+            if (!confirm("Sei sicuro di voler eliminare questa promozione?")) return;
 
-        try {
-            const res = await fetch(`/admin/promotions/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                loadPromozioni();
-            } else {
+            try {
+                const res = await fetch(`/admin/promotions/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadPromozioni();
+                } else {
+                    alert("Errore durante l'eliminazione della promozione");
+                }
+            } catch (error) {
+                console.error('Error deleting promotion:', error);
                 alert("Errore durante l'eliminazione della promozione");
             }
-        } catch (error) {
-            console.error('Error deleting promotion:', error);
-            alert("Errore durante l'eliminazione della promozione");
         }
-    }
 
-    // Utenti functions
-    async function loadUtenti() {
-        try {
-            const res = await fetch('/api/users');
-            const utenti = await res.json();
-            const tbody = document.getElementById('utentiTableBody');
-            tbody.innerHTML = '';
+        // Utenti functions
+        async function loadUtenti() {
+            try {
+                const res = await fetch('/api/users');
+                const utenti = await res.json();
+                const tbody = document.getElementById('utentiTableBody');
+                tbody.innerHTML = '';
 
-            if (utenti.length === 0) {
-                tbody.innerHTML = `
+                if (utenti.length === 0) {
+                    tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center py-4">
                             <i class="fas fa-user-slash fa-2x mb-3 text-muted"></i>
@@ -1719,14 +1822,14 @@
                         </td>
                     </tr>
                 `;
-                return;
-            }
+                    return;
+                }
 
-            utenti.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+                utenti.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
                     <td>${u.id}</td>
-                    <td>${u.name || '-'}</td>
+                    <td>${u.name || '-'} ${u.surname || ''}</td>
                     <td>${u.phone || '-'}</td>
                     <td>${u.email || '-'}</td>
                     <td>${u.createdAt ? formatDateTime(u.createdAt) : '-'}</td>
@@ -1736,11 +1839,11 @@
                         </button>
                     </td>
                 `;
-                tbody.appendChild(tr);
-            });
-        } catch (error) {
-            console.error('Error loading users:', error);
-            document.getElementById('utentiTableBody').innerHTML = `
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('utentiTableBody').innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4 text-danger">
                         <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
@@ -1748,41 +1851,41 @@
                     </td>
                 </tr>
             `;
+            }
         }
-    }
 
-    async function eliminaUtente(id) {
-        if (!confirm("Sei sicuro di voler eliminare questo utente?")) return;
+        async function eliminaUtente(id) {
+            if (!confirm("Sei sicuro di voler eliminare questo utente?")) return;
 
-        try {
-            const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                alert("✅ Utente eliminato con successo");
-                loadUtenti();
-            } else {
+            try {
+                const res = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert("✅ Utente eliminato con successo");
+                    loadUtenti();
+                } else {
+                    alert("❌ Errore durante l'eliminazione dell'utente");
+                }
+            } catch (error) {
+                console.error('Error deleting user:', error);
                 alert("❌ Errore durante l'eliminazione dell'utente");
             }
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            alert("❌ Errore durante l'eliminazione dell'utente");
         }
-    }
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-        showSection('prenotazioni');
-    });
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('prenotazioni');
+        });
 
-    // Eventi functions
-    async function loadEventi() {
-        try {
-            const res = await fetch('/admin/events');
-            const eventi = await res.json();
-            const tbody = document.getElementById('eventiTableBody');
-            tbody.innerHTML = '';
+        // Eventi functions
+        async function loadEventi() {
+            try {
+                const res = await fetch('/admin/events');
+                const eventi = await res.json();
+                const tbody = document.getElementById('eventiTableBody');
+                tbody.innerHTML = '';
 
-            if (eventi.length === 0) {
-                tbody.innerHTML = `
+                if (eventi.length === 0) {
+                    tbody.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center py-4">
                         <i class="fas fa-calendar-times fa-2x mb-3 text-muted"></i>
@@ -1790,24 +1893,24 @@
                     </td>
                 </tr>
             `;
-                return;
-            }
+                    return;
+                }
 
-            eventi.forEach(evento => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
+                eventi.forEach(evento => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
         <td>
             ${evento.posterUrl
-                ? `<img src="${evento.posterUrl}" class="event-thumb" alt="Locandina evento">`
-                : `<div class="event-thumb placeholder"></div>`}
+                            ? `<img src="${evento.posterUrl}" class="event-thumb" alt="Locandina evento">`
+                            : `<div class="event-thumb placeholder"></div>`}
         </td>
         <td><strong>${escape(evento.titolo)}</strong></td>
         <td>${escape(evento.descrizione || '-')}</td>
         <td>${formatDateTime(evento.data)}</td>
         <td>
             ${evento.postiTotali ?
-            `${evento.postiOccupati}/${evento.postiTotali} (${evento.postiDisponibili} disponibili)` :
-            'Illimitati'}
+                            `${evento.postiOccupati}/${evento.postiTotali} (${evento.postiDisponibili} disponibili)` :
+                            'Illimitati'}
         </td>
         <td class="text-nowrap">
             <button class="btn btn-sm btn-info btn-action" onclick="viewIscritti(${evento.id})">
@@ -1821,11 +1924,11 @@
             </button>
         </td>
     `;
-    tbody.appendChild(tr);
-});
-        } catch (error) {
-            console.error('Error loading events:', error);
-            document.getElementById('eventiTableBody').innerHTML = `
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading events:', error);
+                document.getElementById('eventiTableBody').innerHTML = `
             <tr>
                 <td colspan="5" class="text-center py-4 text-danger">
                     <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
@@ -1833,19 +1936,19 @@
                 </td>
             </tr>
         `;
+            }
         }
-    }
 
-    async function viewIscritti(eventId) {
-        try {
-            const res = await fetch(`/admin/events/${eventId}/attendees`);
-            const iscritti = await res.json();
+        async function viewIscritti(eventId) {
+            try {
+                const res = await fetch(`/admin/events/${eventId}/attendees`);
+                const iscritti = await res.json();
 
-            const modalBody = document.getElementById('iscrittiModalBody');
-            modalBody.innerHTML = '';
+                const modalBody = document.getElementById('iscrittiModalBody');
+                modalBody.innerHTML = '';
 
-            if (iscritti.length === 0) {
-                modalBody.innerHTML = `
+                if (iscritti.length === 0) {
+                    modalBody.innerHTML = `
                 <tr>
                     <td colspan="5" class="text-center py-4">
                         <i class="fas fa-user-slash fa-2x mb-3 text-muted"></i>
@@ -1854,184 +1957,184 @@
                 </tr>
                 </tr>
             `;
-            } else {
-                iscritti.forEach(iscritto => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                    <td>${escape(iscritto.name || '-')}</td>
+                } else {
+                    iscritti.forEach(iscritto => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                    <td>${escape(iscritto.name || '-')} ${escape(iscritto.surname || '')}</td>
                     <td>${escape(iscritto.phone || '-')}</td>
                     <td>${formatDateTime(iscritto.createdAt)}</td>
                     <td>${iscritto.partecipanti || 1}</td>
                     <td>${escape(iscritto.note || '-')}</td>
                 `;
-                    modalBody.appendChild(tr);
-                });
+                        modalBody.appendChild(tr);
+                    });
+                }
+
+                $('#iscrittiModal').modal('show');
+            } catch (error) {
+                console.error('Error loading registrations:', error);
+                alert('Errore durante il caricamento degli iscritti');
             }
-
-            $('#iscrittiModal').modal('show');
-        } catch (error) {
-            console.error('Error loading registrations:', error);
-            alert('Errore durante il caricamento degli iscritti');
         }
-    }
 
 
-    async function deleteEvento(id) {
-        if (!confirm('Sei sicuro di voler eliminare questo evento?')) return;
+        async function deleteEvento(id) {
+            if (!confirm('Sei sicuro di voler eliminare questo evento?')) return;
 
-        try {
-            const res = await fetch(`/admin/events/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                loadEventi();
-            } else {
+            try {
+                const res = await fetch(`/admin/events/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadEventi();
+                } else {
+                    alert('Errore durante l\'eliminazione dell\'evento');
+                }
+            } catch (error) {
+                console.error('Error deleting event:', error);
                 alert('Errore durante l\'eliminazione dell\'evento');
             }
-        } catch (error) {
-            console.error('Error deleting event:', error);
-            alert('Errore durante l\'eliminazione dell\'evento');
         }
-    }
 
-document.getElementById('formAddEvento').addEventListener('submit', async e => {
-    e.preventDefault();
-    const form = e.target;
-
-    // Costruisci FormData per invio multipart (no Content-Type esplicito)
-    const formData = new FormData();
-    formData.append('titolo', form.titolo.value);
-    formData.append('descrizione', form.descrizione.value);
-    formData.append('data', form.data.value);
-    if (form.postiTotali.value) formData.append('postiTotali', form.postiTotali.value);
-    if (form.poster && form.poster.files && form.poster.files[0]) {
-        formData.append('poster', form.poster.files[0]);
-    }
-
-    try {
-        const res = await fetch('/admin/events', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (res.ok) {
-            alert('✅ Evento creato con successo!');
-            form.reset();
-            loadEventi();
-        } else {
-            alert('❌ Errore durante la creazione dell\'evento');
-        }
-    } catch (error) {
-        console.error('Error creating event:', error);
-        alert('❌ Errore durante la creazione dell\'evento');
-    }
-});
-    // Gestione Tab Prenotazioni
-    document.addEventListener('DOMContentLoaded', function() {
-        // Imposta data di default per prenotazioni tavolo
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('tableBookingDate').value = today;
-        document.getElementById('tableBookingDate').min = today;
-
-        // Carica gli eventi per la registrazione
-        loadEventsForRegistration();
-
-        // Mostra tab prenotazioni all'inizio
-        loadTableBookings();
-
-        // Gestione cambio tab
-        $('#bookingTabs a').on('click', function(e) {
+        document.getElementById('formAddEvento').addEventListener('submit', async e => {
             e.preventDefault();
-            $(this).tab('show');
+            const form = e.target;
 
-            if (this.getAttribute('href') === '#eventRegistrations') {
-                loadEventRegistrations();
-            } else {
-                loadTableBookings();
+            // Costruisci FormData per invio multipart (no Content-Type esplicito)
+            const formData = new FormData();
+            formData.append('titolo', form.titolo.value);
+            formData.append('descrizione', form.descrizione.value);
+            formData.append('data', form.data.value);
+            if (form.postiTotali.value) formData.append('postiTotali', form.postiTotali.value);
+            if (form.poster && form.poster.files && form.poster.files[0]) {
+                formData.append('poster', form.poster.files[0]);
+            }
+
+            try {
+                const res = await fetch('/admin/events', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    alert('✅ Evento creato con successo!');
+                    form.reset();
+                    loadEventi();
+                } else {
+                    alert('❌ Errore durante la creazione dell\'evento');
+                }
+            } catch (error) {
+                console.error('Error creating event:', error);
+                alert('❌ Errore durante la creazione dell\'evento');
             }
         });
-    });
+        // Gestione Tab Prenotazioni
+        document.addEventListener('DOMContentLoaded', function () {
+            // Imposta data di default per prenotazioni tavolo
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tableBookingDate').value = today;
+            document.getElementById('tableBookingDate').min = today;
 
-    // Carica gli eventi per il form di registrazione
-    // Carica gli eventi per il form di registrazione
-    async function loadEventsForRegistration() {
-        try {
-            const res = await fetch('/admin/events');
-            const eventi = await res.json();
-            const select = document.getElementById('eventRegEvent');
+            // Carica gli eventi per la registrazione
+            loadEventsForRegistration();
 
-            select.innerHTML = eventi.length > 0
-                ? '<option value="">Seleziona Evento</option>'
-                : '<option value="">Nessun evento disponibile</option>';
+            // Mostra tab prenotazioni all'inizio
+            loadTableBookings();
 
-            eventi.forEach(evento => {
-                // Calcola posti disponibili
-                const postiDisponibili = evento.postiTotali
-                    ? evento.postiTotali - (evento.postiOccupati || 0)
-                    : null;
+            // Gestione cambio tab
+            $('#bookingTabs a').on('click', function (e) {
+                e.preventDefault();
+                $(this).tab('show');
 
-                const opt = document.createElement('option');
-                opt.value = evento.id;
-                opt.textContent = `${evento.titolo} (${formatDate(evento.data)})`;
-                opt.dataset.available = postiDisponibili !== null ? postiDisponibili : 'Illimitati';
-                select.appendChild(opt);
-            });
-
-            // Aggiorna posti disponibili quando cambia evento
-            select.addEventListener('change', function() {
-                const selected = this.options[this.selectedIndex];
-                const available = selected.dataset.available;
-
-                const availableInput = document.getElementById('eventRegAvailable');
-                availableInput.value = available;
-
-                // Aggiungi classe CSS in base alla disponibilità
-                if (available === '0') {
-                    availableInput.classList.add('text-danger');
-                    availableInput.classList.remove('text-success');
-                } else if (available === 'Illimitati') {
-                    availableInput.classList.remove('text-danger', 'text-success');
+                if (this.getAttribute('href') === '#eventRegistrations') {
+                    loadEventRegistrations();
                 } else {
-                    availableInput.classList.add('text-success');
-                    availableInput.classList.remove('text-danger');
+                    loadTableBookings();
                 }
             });
-        } catch (error) {
-            console.error('Error loading events:', error);
-            alert('Errore nel caricamento degli eventi');
+        });
+
+        // Carica gli eventi per il form di registrazione
+        // Carica gli eventi per il form di registrazione
+        async function loadEventsForRegistration() {
+            try {
+                const res = await fetch('/admin/events');
+                const eventi = await res.json();
+                const select = document.getElementById('eventRegEvent');
+
+                select.innerHTML = eventi.length > 0
+                    ? '<option value="">Seleziona Evento</option>'
+                    : '<option value="">Nessun evento disponibile</option>';
+
+                eventi.forEach(evento => {
+                    // Calcola posti disponibili
+                    const postiDisponibili = evento.postiTotali
+                        ? evento.postiTotali - (evento.postiOccupati || 0)
+                        : null;
+
+                    const opt = document.createElement('option');
+                    opt.value = evento.id;
+                    opt.textContent = `${evento.titolo} (${formatDate(evento.data)})`;
+                    opt.dataset.available = postiDisponibili !== null ? postiDisponibili : 'Illimitati';
+                    select.appendChild(opt);
+                });
+
+                // Aggiorna posti disponibili quando cambia evento
+                select.addEventListener('change', function () {
+                    const selected = this.options[this.selectedIndex];
+                    const available = selected.dataset.available;
+
+                    const availableInput = document.getElementById('eventRegAvailable');
+                    availableInput.value = available;
+
+                    // Aggiungi classe CSS in base alla disponibilità
+                    if (available === '0') {
+                        availableInput.classList.add('text-danger');
+                        availableInput.classList.remove('text-success');
+                    } else if (available === 'Illimitati') {
+                        availableInput.classList.remove('text-danger', 'text-success');
+                    } else {
+                        availableInput.classList.add('text-success');
+                        availableInput.classList.remove('text-danger');
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading events:', error);
+                alert('Errore nel caricamento degli eventi');
+            }
         }
-    }
 
-    // Carica prenotazioni tavolo
-    async function loadTableBookings() {
-        try {
-            const res = await fetch('/admin/reservations?type=table');
-            const bookings = await res.json();
-            const container = document.getElementById('tableBookingsContainer');
+        // Carica prenotazioni tavolo
+        async function loadTableBookings() {
+            try {
+                const res = await fetch('/admin/reservations?type=table');
+                const bookings = await res.json();
+                const container = document.getElementById('tableBookingsContainer');
 
-            if (bookings.length === 0) {
-                container.innerHTML = `
+                if (bookings.length === 0) {
+                    container.innerHTML = `
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> Nessuna prenotazione tavolo trovata
                 </div>
             `;
-                return;
-            }
+                    return;
+                }
 
-            // Raggruppa per data
-            const grouped = {};
-            bookings.forEach(b => {
-                if (!grouped[b.date]) grouped[b.date] = [];
-                grouped[b.date].push(b);
-            });
+                // Raggruppa per data
+                const grouped = {};
+                bookings.forEach(b => {
+                    if (!grouped[b.date]) grouped[b.date] = [];
+                    grouped[b.date].push(b);
+                });
 
-            // Crea le sezioni per data
-            container.innerHTML = '';
-            Object.keys(grouped).sort().forEach(date => {
-                const section = document.createElement('div');
-                section.classList.add('mb-4');
+                // Crea le sezioni per data
+                container.innerHTML = '';
+                Object.keys(grouped).sort().forEach(date => {
+                    const section = document.createElement('div');
+                    section.classList.add('mb-4');
 
-                const rows = grouped[date].map(b => `
+                    const rows = grouped[date].map(b => `
                     <tr>
-                        <td>${b.name}</td>
+                        <td>${b.name} ${b.surname || ''}</td>
                         <td>${b.phone}</td>
                         <td>${b.time}</td>
                         <td>${b.people}</td>
@@ -2053,7 +2156,7 @@ document.getElementById('formAddEvento').addEventListener('submit', async e => {
 
 
 
-                section.innerHTML = `
+                    section.innerHTML = `
                 <h6 class="text-primary">
                     <i class="fas fa-calendar-day"></i> ${formatDate(date)}
                 </h6>
@@ -2075,91 +2178,91 @@ document.getElementById('formAddEvento').addEventListener('submit', async e => {
                     </table>
                 </div>
             `;
-                container.appendChild(section);
-            });
-        } catch (error) {
-            console.error('Error loading table bookings:', error);
-            document.getElementById('tableBookingsContainer').innerHTML = `
+                    container.appendChild(section);
+                });
+            } catch (error) {
+                console.error('Error loading table bookings:', error);
+                document.getElementById('tableBookingsContainer').innerHTML = `
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-triangle"></i> Errore nel caricamento
             </div>
         `;
+            }
         }
-    }
 
-    // Carica registrazioni eventi
-    async function loadEventRegistrations() {
-        try {
-            const res = await fetch('/admin/events/registrations');
-            const registrations = await res.json();
-            const container = document.getElementById('eventsRegistrationsContainer');
+        // Carica registrazioni eventi
+        async function loadEventRegistrations() {
+            try {
+                const res = await fetch('/admin/events/registrations');
+                const registrations = await res.json();
+                const container = document.getElementById('eventsRegistrationsContainer');
 
-            container.innerHTML = '';
+                container.innerHTML = '';
 
-            if (registrations.length === 0) {
-                container.innerHTML = `
+                if (registrations.length === 0) {
+                    container.innerHTML = `
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> Nessun evento con iscritti
                 </div>
             `;
-                return;
-            }
-
-            // Group registrations by event
-            const eventsMap = new Map();
-            registrations.forEach(reg => {
-                if (!eventsMap.has(reg.event.id)) {
-                    eventsMap.set(reg.event.id, {
-                        event: reg.event,
-                        attendees: []
-                    });
+                    return;
                 }
-                eventsMap.get(reg.event.id).attendees.push(reg);
-            });
 
-            // Create cards for each event with its attendees
-            // Create cards for each event with its attendees
-            eventsMap.forEach((eventData, eventId) => {
-                const eventCard = document.createElement('div');
-                eventCard.className = 'card event-registration-card mb-4';
+                // Group registrations by event
+                const eventsMap = new Map();
+                registrations.forEach(reg => {
+                    if (!eventsMap.has(reg.event.id)) {
+                        eventsMap.set(reg.event.id, {
+                            event: reg.event,
+                            attendees: []
+                        });
+                    }
+                    eventsMap.get(reg.event.id).attendees.push(reg);
+                });
 
-                // Calcola i partecipanti totali
-                const totaleIscritti = eventData.attendees.reduce((sum, a) => sum + (a.partecipanti || 1), 0);
+                // Create cards for each event with its attendees
+                // Create cards for each event with its attendees
+                eventsMap.forEach((eventData, eventId) => {
+                    const eventCard = document.createElement('div');
+                    eventCard.className = 'card event-registration-card mb-4';
 
-                // Event header
-                const header = document.createElement('div');
-                header.className = 'event-registration-header';
-                header.innerHTML = `
+                    // Calcola i partecipanti totali
+                    const totaleIscritti = eventData.attendees.reduce((sum, a) => sum + (a.partecipanti || 1), 0);
+
+                    // Event header
+                    const header = document.createElement('div');
+                    header.className = 'event-registration-header';
+                    header.innerHTML = `
         <div class="d-flex justify-content-between">
             <h5>${escape(eventData.event.titolo)}</h5>
             <span class="badge ${eventData.event.postiTotali && totaleIscritti >= eventData.event.postiTotali ? 'bg-danger' : 'bg-success'}">
                 ${eventData.event.postiTotali
-                    ? `${totaleIscritti}/${eventData.event.postiTotali} iscritti`
-                    : `${totaleIscritti} iscritti`}
+                            ? `${totaleIscritti}/${eventData.event.postiTotali} iscritti`
+                            : `${totaleIscritti} iscritti`}
             </span>
         </div>
         <div class="text-muted small">
             ${formatDateTime(eventData.event.data)} |
             ${eventData.event.postiTotali !== null
-                    ? `${eventData.event.postiTotali - totaleIscritti} posti disponibili`
-                    : 'Posti illimitati'}
+                            ? `${eventData.event.postiTotali - totaleIscritti} posti disponibili`
+                            : 'Posti illimitati'}
         </div>
     `;
 
-                // Attendees table
-                const tableDiv = document.createElement('div');
-                tableDiv.className = 'table-responsive';
+                    // Attendees table
+                    const tableDiv = document.createElement('div');
+                    tableDiv.className = 'table-responsive';
 
-                if (eventData.attendees.length === 0) {
-                    tableDiv.innerHTML = `
+                    if (eventData.attendees.length === 0) {
+                        tableDiv.innerHTML = `
             <div class="alert alert-warning m-3">
                 Nessun iscritto a questo evento
             </div>
         `;
-                } else {
-                    const rows = eventData.attendees.map(attendee => `
+                    } else {
+                        const rows = eventData.attendees.map(attendee => `
     <tr>
-        <td>${escape(attendee.user.name)}</td>
+        <td>${escape(attendee.user.name)} ${escape(attendee.user.surname || '')}</td>
         <td>${escape(attendee.user.phone)}</td>
         <td>${formatDateTime(attendee.createdAt)}</td>
         <td>${attendee.partecipanti || 1}</td>
@@ -2183,7 +2286,7 @@ document.getElementById('formAddEvento').addEventListener('submit', async e => {
 `).join('');
 
 
-                    tableDiv.innerHTML = `
+                        tableDiv.innerHTML = `
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -2199,486 +2302,337 @@ document.getElementById('formAddEvento').addEventListener('submit', async e => {
                 <tbody>${rows}</tbody>
             </table>
         `;
-                }
+                    }
 
-                eventCard.appendChild(header);
-                eventCard.appendChild(tableDiv);
-                container.appendChild(eventCard);
-            });
+                    eventCard.appendChild(header);
+                    eventCard.appendChild(tableDiv);
+                    container.appendChild(eventCard);
+                });
 
-        } catch (error) {
-            console.error('Error loading event registrations:', error);
-            document.getElementById('eventsRegistrationsContainer').innerHTML = `
+            } catch (error) {
+                console.error('Error loading event registrations:', error);
+                document.getElementById('eventsRegistrationsContainer').innerHTML = `
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-triangle"></i> Errore nel caricamento delle registrazioni
             </div>
         `;
-        }
-    }
-
-    // Gestione form prenotazione tavolo
-    document.getElementById('formTableBooking').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const payload = {
-            name: document.getElementById('tableBookingName').value,
-            phone: document.getElementById('tableBookingPhone').value,
-            note: document.getElementById('tableBookingNote').value || null,
-            date: document.getElementById('tableBookingDate').value,
-            time: document.getElementById('tableBookingTime').value,
-            people: parseInt(document.getElementById('tableBookingPeople').value)
-        };
-
-        try {
-            const res = await fetch('/admin/reservations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                alert('Prenotazione salvata!');
-                this.reset();
-                document.getElementById('tableBookingDate').value = new Date().toISOString().split('T')[0];
-                loadTableBookings();
-            } else {
-                const error = await res.json();
-                alert(error.message || 'Errore durante il salvataggio');
             }
-        } catch (error) {
-            console.error('Error saving table booking:', error);
-            alert('Errore durante il salvataggio');
-        }
-    });
-
-    // Gestione form registrazione evento
-    document.getElementById('formEventRegistration').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const eventId = document.getElementById('eventRegEvent').value;
-        if (!eventId) {
-            alert('Seleziona un evento');
-            return;
         }
 
-        const payload = {
-            name: document.getElementById('eventRegName').value,
-            phone: document.getElementById('eventRegPhone').value,
-            note: document.getElementById('eventRegNote').value || null,
-            partecipanti: parseInt(document.getElementById('eventRegPeople').value)
-        };
+        // Gestione form prenotazione tavolo
+        document.getElementById('formTableBooking').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
+            const payload = {
+                name: document.getElementById('tableBookingName').value,
+                surname: document.getElementById('tableBookingSurname').value,
+                phone: document.getElementById('tableBookingPhone').value,
+                note: document.getElementById('tableBookingNote').value || null,
+                date: document.getElementById('tableBookingDate').value,
+                time: document.getElementById('tableBookingTime').value,
+                people: parseInt(document.getElementById('tableBookingPeople').value)
+            };
 
-        try {
-            const res = await fetch(`/admin/events/${eventId}/register`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            try {
+                const res = await fetch('/admin/reservations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
 
-            if (res.ok) {
-                alert('Registrazione salvata!');
-                this.reset();
-                loadEventRegistrations();
-                loadEventsForRegistration(); // Ricarica disponibilità posti
-            } else {
-                const error = await res.json();
-                alert(error.message || 'Errore durante il salvataggio');
+                if (res.ok) {
+                    alert('Prenotazione salvata!');
+                    this.reset();
+                    document.getElementById('tableBookingDate').value = new Date().toISOString().split('T')[0];
+                    loadTableBookings();
+                } else {
+                    const error = await res.json();
+                    alert(error.message || 'Errore durante il salvataggio');
+                }
+            } catch (error) {
+                console.error('Error saving table booking:', error);
+                alert('Errore durante il salvataggio');
             }
-        } catch (error) {
-            console.error('Error saving event registration:', error);
-            alert('Errore durante il salvataggio');
-        }
-    });
+        });
 
-    // Elimina prenotazione tavolo
-    async function deleteTableBooking(id) {
-        console.log("ID prenotazione da eliminare:", id); // <-- DEBUG
-        if (!confirm('Eliminare questa prenotazione?')) return;
+        // Gestione form registrazione evento
+        document.getElementById('formEventRegistration').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-        try {
-            await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
-            loadTableBookings();
-        } catch (error) {
-            console.error('Error deleting booking:', error);
-            alert('Errore durante l\'eliminazione');
-        }
-    }
-
-    // Disiscrivi da evento
-    async function unregisterFromEvent(eventId, userId) {
-        if (!confirm('Rimuovere questo partecipante?')) return;
-
-        try {
-            await fetch(`/admin/events/${eventId}/unregister/${userId}`, { method: 'DELETE' });
-            loadEventRegistrations();
-            loadEventsForRegistration(); // Ricarica disponibilità posti
-        } catch (error) {
-            console.error('Error unregistering:', error);
-            alert('Errore durante la rimozione');
-        }
-    }
-
-    // Mostra la tab selezionata
-    $('#bookingTabs a').on('click', function(e) {
-        e.preventDefault();
-        $(this).tab('show');
-
-        if (this.getAttribute('href') === '#eventRegistrations') {
-            loadEventRegistrations();
-        } else {
-            loadTableBookings();
-        }
-    });
-    async function updateTable(id) {
-        const tableInput = document.getElementById(`table-${id}`);
-        const tableNumber = tableInput.value;
-
-        try {
-            const res = await fetch(`/admin/reservations/${id}/table`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tableNumber })
-            });
-
-            if (res.ok) {
-                alert("✅ Tavolo aggiornato!");
-                loadTableBookings();
-            } else {
-                const error = await res.json();
-                alert("❌ Errore: " + (error.message || 'Impossibile aggiornare il tavolo'));
-            }
-        } catch (error) {
-            console.error("Error updating table:", error);
-            alert("❌ Errore durante l'aggiornamento del tavolo");
-        }
-    }
-    async function updateEventTable(id) {
-        const tableInput = document.getElementById(`event-table-${id}`);
-        const tableNumber = tableInput.value;
-
-        try {
-            const res = await fetch(`/admin/events/registrations/${id}/table`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tableNumber })
-            });
-
-            if (res.ok) {
-                alert("✅ Tavolo aggiornato!");
-                loadEventRegistrations(); // ricarica la lista aggiornata
-            } else {
-                const error = await res.json();
-                alert("❌ Errore: " + (error.message || 'Impossibile aggiornare il tavolo'));
-            }
-        } catch (error) {
-            console.error("Error updating event table:", error);
-            alert("❌ Errore durante l'aggiornamento del tavolo");
-        }
-    }
-
-function openEditEventoModal(id, titolo, descrizione, data, postiTotali) {
-  document.getElementById('editEventoId').value = id;
-  document.getElementById('editEventoTitolo').value = titolo;
-  document.getElementById('editEventoDescrizione').value = descrizione;
-  document.getElementById('editEventoData').value = data.slice(0, 16); // formato compatibile con datetime-local
-  document.getElementById('editEventoPosti').value = postiTotali || '';
-  $('#editEventoModal').modal('show');
-}
-
-async function updateEvento() {
-  const id = document.getElementById('editEventoId').value;
-  const titolo = document.getElementById('editEventoTitolo').value;
-  const descrizione = document.getElementById('editEventoDescrizione').value;
-  const data = document.getElementById('editEventoData').value;
-  const postiTotali = document.getElementById('editEventoPosti').value;
-  const posterInput = document.getElementById('editEventoPoster'); // aggiungilo nel modal
-
-  const formData = new FormData();
-  formData.append('titolo', titolo);
-  formData.append('descrizione', descrizione);
-  formData.append('data', data);
-  if (postiTotali) formData.append('postiTotali', postiTotali);
-  if (posterInput && posterInput.files.length > 0) {
-    formData.append('poster', posterInput.files[0]);
-  }
-
-  try {
-    const res = await fetch(`/admin/events/${id}`, {
-      method: 'PUT',
-      body: formData // 🔥 niente headers espliciti
-    });
-
-    if (res.ok) {
-      alert('✅ Evento aggiornato con successo!');
-      $('#editEventoModal').modal('hide');
-      loadEventi();
-    } else {
-      alert('❌ Errore durante l\'aggiornamento dell\'evento');
-    }
-  } catch (error) {
-    console.error('Errore durante l\'update:', error);
-    alert('❌ Errore di connessione');
-  }
-}
-
-    // =============================
-    //        CATEGORIE
-    // =============================
-
-    async function loadCategorie() {
-        try {
-            const res = await fetch('/admin/categories');
-            const categories = await res.json();
-            const tbody = document.getElementById('categorieTableBody');
-            tbody.innerHTML = '';
-
-            if (categories.length === 0) {
-                tbody.innerHTML = `
-                <tr>
-                    <td colspan="3" class="text-center py-4 text-muted">
-                        <i class="fas fa-info-circle"></i> Nessuna categoria trovata
-                    </td>
-                </tr>`;
+            const eventId = document.getElementById('eventRegEvent').value;
+            if (!eventId) {
+                alert('Seleziona un evento');
                 return;
             }
 
-            categories.forEach(cat => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                <td>${cat.id}</td>
-                <td>${cat.name || cat.nome}</td>
-                <td class="text-nowrap">
-                    <button class="btn btn-sm btn-danger btn-action" onclick="deleteCategory(${cat.id})">
-                        <i class="fas fa-trash-alt"></i> Elimina
-                    </button>
-                </td>`;
-                tbody.appendChild(tr);
-            });
-        } catch (error) {
-            console.error('Errore caricamento categorie:', error);
-            document.getElementById('categorieTableBody').innerHTML = `
-            <tr><td colspan="3" class="text-center text-danger">
-                <i class="fas fa-exclamation-triangle"></i> Errore durante il caricamento
-            </td></tr>`;
-        }
-    }
+            const payload = {
+                name: document.getElementById('eventRegName').value,
+                surname: document.getElementById('eventRegSurname').value,
+                phone: document.getElementById('eventRegPhone').value,
+                note: document.getElementById('eventRegNote').value || null,
+                partecipanti: parseInt(document.getElementById('eventRegPeople').value)
+            };
 
-    document.getElementById('formAddCategory').addEventListener('submit', async e => {
-        e.preventDefault();
-        const form = e.target;
-        const nome = form.nome.value.trim();
-        if (!nome) return alert("Inserisci un nome valido!");
 
-        try {
-            const res = await fetch('/admin/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: nome })
-            });
-            await loadCategorie(); // 🔹 richiama la funzione che ricarica la select
-            if (res.ok) {
-                alert('✅ Categoria aggiunta!');
-                form.reset();
-                loadCategorie();
-                refreshCategorySelects();
-            } else {
-                alert('❌ Errore durante il salvataggio');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('❌ Errore di connessione');
-        }
-    });
-
-    async function deleteCategory(id) {
-        if (!confirm('Eliminare questa categoria?')) return;
-        try {
-            const res = await fetch(`/admin/categories/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                alert('✅ Categoria eliminata!');
-                loadCategorie();
-            } else {
-                alert('❌ Errore durante l\'eliminazione');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('❌ Errore di connessione');
-        }
-    }
-    async function refreshCategorySelects() {
-        try {
-            const res = await fetch('/admin/categories');
-            if (!res.ok) throw new Error('Errore HTTP ' + res.status);
-            const categories = await res.json();
-
-            // Select principale per aggiungere piatti
-            const selectMenu = document.getElementById('categoriaSelectMenu');
-            selectMenu.innerHTML = '<option value="">Seleziona Categoria</option>';
-            categories
-                .filter(c => c.visible !== false) // opzionale
-                .sort((a,b) => a.name.localeCompare(b.name))
-                .forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.name;
-                    opt.textContent = c.name;
-                    selectMenu.appendChild(opt);
+            try {
+                const res = await fetch(`/admin/events/${eventId}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
 
-            // Select per evidenza (se presente)
-            const selectEvidenza = document.getElementById('categoriaSelectEvidenza');
-            if (selectEvidenza) {
-                selectEvidenza.innerHTML = '<option value="">Seleziona Categoria</option>';
-                categories.forEach(c => {
-                    const opt = document.createElement('option');
-                    opt.value = c.name;
-                    opt.textContent = c.name;
-                    selectEvidenza.appendChild(opt);
-                });
+                if (res.ok) {
+                    alert('Registrazione salvata!');
+                    this.reset();
+                    loadEventRegistrations();
+                    loadEventsForRegistration(); // Ricarica disponibilità posti
+                } else {
+                    const error = await res.json();
+                    alert(error.message || 'Errore durante il salvataggio');
+                }
+            } catch (error) {
+                console.error('Error saving event registration:', error);
+                alert('Errore durante il salvataggio');
             }
+        });
 
-        } catch (error) {
-            console.error('Errore caricamento categorie nel menu:', error);
+        // Elimina prenotazione tavolo
+        async function deleteTableBooking(id) {
+            console.log("ID prenotazione da eliminare:", id); // <-- DEBUG
+            if (!confirm('Eliminare questa prenotazione?')) return;
+
+            try {
+                await fetch(`/admin/reservations/${id}`, { method: 'DELETE' });
+                loadTableBookings();
+            } catch (error) {
+                console.error('Error deleting booking:', error);
+                alert('Errore durante l\'eliminazione');
+            }
         }
-    }
-    async function openEditMenuModal(id) {
-        try {
-            const res = await fetch(`/api/menu/${id}`);
-            if (!res.ok) throw new Error('HTTP ' + res.status);
-            const item = await res.json();
 
-            // Popola i campi del form
-            document.getElementById('editMenuId').value = item.id;
-            document.getElementById('editMenuTitolo').value = item.titolo || '';
-            document.getElementById('editMenuDescrizione').value = item.descrizione || '';
-            document.getElementById('editMenuPrezzo').value = item.prezzo || 0;
-            document.getElementById('editMenuVisibile').value = item.visibile ? 'true' : 'false';
+        // Disiscrivi da evento
+        async function unregisterFromEvent(eventId, userId) {
+            if (!confirm('Rimuovere questo partecipante?')) return;
 
-            // Categorie
-            const catSelect = document.getElementById('editMenuCategoria');
-            catSelect.innerHTML = '<option value="">Seleziona Categoria</option>';
-            const catRes = await fetch('/admin/categories');
-            const cats = await catRes.json();
-            cats.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.name;
-                opt.textContent = c.name;
-                if (c.name === item.categoryName) opt.selected = true;
-                catSelect.appendChild(opt);
-            });
-
-            // Allergeni
-            await ensureAllergenCatalog();
-            const pre = {};
-            (item.allergens || []).forEach(a => pre[a.code] = a.status);
-            renderAllergenSelect('allergenSelectEditModal', pre);
-
-            // Mostra il modal
-            $('#editMenuModal').modal('show');
-
-        } catch (err) {
-            console.error('Errore caricamento piatto:', err);
-            alert('Errore durante il caricamento del piatto da modificare.');
+            try {
+                await fetch(`/admin/events/${eventId}/unregister/${userId}`, { method: 'DELETE' });
+                loadEventRegistrations();
+                loadEventsForRegistration(); // Ricarica disponibilità posti
+            } catch (error) {
+                console.error('Error unregistering:', error);
+                alert('Errore durante la rimozione');
+            }
         }
-    }
-    async function updateMenuItemModal() {
-        const id = document.getElementById('editMenuId').value;
-        const titolo = document.getElementById('editMenuTitolo').value;
-        const descrizione = document.getElementById('editMenuDescrizione').value;
-        const prezzo = parseFloat(document.getElementById('editMenuPrezzo').value);
-        const categoria = document.getElementById('editMenuCategoria').value;
-        const visibile = document.getElementById('editMenuVisibile').value === 'true';
-        const imageInput = document.getElementById('editMenuImage');
 
-        const allergens = readAllergenSelect('allergenSelectEditModal');
+        // Mostra la tab selezionata
+        $('#bookingTabs a').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
 
-        const data = { titolo, descrizione, prezzo, categoryName: categoria, visibile, allergens };
-
-        const formData = new FormData();
-        formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
-        if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
-
-        try {
-            const res = await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
-            if (res.ok) {
-                alert('✅ Piatto aggiornato con successo!');
-                $('#editMenuModal').modal('hide');
-                loadMenuItems();
+            if (this.getAttribute('href') === '#eventRegistrations') {
+                loadEventRegistrations();
             } else {
-                alert('❌ Errore durante l\'aggiornamento del piatto');
+                loadTableBookings();
             }
-        } catch (error) {
-            console.error('Errore durante updateMenuItemModal:', error);
-            alert('❌ Errore di connessione durante il salvataggio.');
+        });
+        async function updateTable(id) {
+            const tableInput = document.getElementById(`table-${id}`);
+            const tableNumber = tableInput.value;
+
+            try {
+                const res = await fetch(`/admin/reservations/${id}/table`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tableNumber })
+                });
+
+                if (res.ok) {
+                    alert("✅ Tavolo aggiornato!");
+                    loadTableBookings();
+                } else {
+                    const error = await res.json();
+                    alert("❌ Errore: " + (error.message || 'Impossibile aggiornare il tavolo'));
+                }
+            } catch (error) {
+                console.error("Error updating table:", error);
+                alert("❌ Errore durante l'aggiornamento del tavolo");
+            }
         }
-    }
+        async function updateEventTable(id) {
+            const tableInput = document.getElementById(`event-table-${id}`);
+            const tableNumber = tableInput.value;
 
-</script>
-<!-- Modifica Piatto Modal -->
-<div class="modal fade" id="editMenuModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Modifica Piatto</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Chiudi">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="editMenuForm">
-                    <input type="hidden" id="editMenuId">
+            try {
+                const res = await fetch(`/admin/events/registrations/${id}/table`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tableNumber })
+                });
 
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>Titolo</label>
-                            <input type="text" id="editMenuTitolo" class="form-control" required>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>Categoria</label>
-                            <select id="editMenuCategoria" class="form-control" required></select>
-                        </div>
-                    </div>
+                if (res.ok) {
+                    alert("✅ Tavolo aggiornato!");
+                    loadEventRegistrations(); // ricarica la lista aggiornata
+                } else {
+                    const error = await res.json();
+                    alert("❌ Errore: " + (error.message || 'Impossibile aggiornare il tavolo'));
+                }
+            } catch (error) {
+                console.error("Error updating event table:", error);
+                alert("❌ Errore durante l'aggiornamento del tavolo");
+            }
+        }
 
-                    <div class="form-row">
-                        <div class="form-group col-md-8">
-                            <label>Descrizione</label>
-                            <input type="text" id="editMenuDescrizione" class="form-control">
-                        </div>
-                        <div class="form-group col-md-4">
-                            <label>Prezzo (€)</label>
-                            <input type="number" step="0.01" id="editMenuPrezzo" class="form-control" required>
-                        </div>
-                    </div>
+        function openEditEventoModal(id, titolo, descrizione, data, postiTotali) {
+            document.getElementById('editEventoId').value = id;
+            document.getElementById('editEventoTitolo').value = titolo;
+            document.getElementById('editEventoDescrizione').value = descrizione;
+            document.getElementById('editEventoData').value = data.slice(0, 16); // formato compatibile con datetime-local
+            document.getElementById('editEventoPosti').value = postiTotali || '';
+            $('#editEventoModal').modal('show');
+        }
 
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label>Visibile</label>
-                            <select id="editMenuVisibile" class="form-control">
-                                <option value="true">✅ Sì</option>
-                                <option value="false">❌ No</option>
-                            </select>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label>Immagine (facoltativa)</label>
-                            <input type="file" id="editMenuImage" class="form-control-file" accept="image/*">
-                        </div>
-                    </div>
+        async function updateEvento() {
+            const id = document.getElementById('editEventoId').value;
+            const titolo = document.getElementById('editEventoTitolo').value;
+            const descrizione = document.getElementById('editEventoDescrizione').value;
+            const data = document.getElementById('editEventoData').value;
+            const postiTotali = document.getElementById('editEventoPosti').value;
+            const posterInput = document.getElementById('editEventoPoster'); // aggiungilo nel modal
 
-                    <div class="form-group">
-                        <label><i class="fa-solid fa-triangle-exclamation"></i> Allergeni</label>
-                        <div id="allergenSelectEditModal"></div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
-                <button type="button" class="btn btn-success" onclick="updateMenuItemModal()">
-                    <i class="fas fa-save"></i> Salva modifiche
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+            const formData = new FormData();
+            formData.append('titolo', titolo);
+            formData.append('descrizione', descrizione);
+            formData.append('data', data);
+            if (postiTotali) formData.append('postiTotali', postiTotali);
+            if (posterInput && posterInput.files.length > 0) {
+                formData.append('poster', posterInput.files[0]);
+            }
 
+            try {
+                const res = await fetch(`/admin/events/${id}`, {
+                    method: 'PUT',
+                    body: formData // 🔥 niente headers espliciti
+                });
+
+                if (res.ok) {
+                    alert('✅ Evento aggiornato con successo!');
+                    $('#editEventoModal').modal('hide');
+                    loadEventi();
+                } else {
+                    alert('❌ Errore durante l\'aggiornamento dell\'evento');
+                }
+            } catch (error) {
+                console.error('Errore durante l\'update:', error);
+                alert('❌ Errore di connessione');
+            }
+        }
+
+        // --- Categorie Management Functions ---
+        async function loadCategories() {
+            try {
+                const res = await fetch('/admin/categories');
+                const categories = await res.json();
+                const tbody = document.getElementById('categoriesTableBody');
+                tbody.innerHTML = '';
+
+                if (categories.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" class="text-center">Nessuna categoria trovata. Aggiungine una per iniziare.</td></tr>`;
+                    return;
+                }
+
+                categories.sort((a, b) => a.id - b.id);
+
+                categories.forEach(cat => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${cat.id}</td>
+                        <td>${cat.name}</td>
+                        <td>
+                            <button class="btn btn-sm btn-warning btn-action" onclick="openEditCategoryModal(${cat.id}, '${cat.name.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-edit"></i> Modifica
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-action" onclick="deleteCategory(${cat.id})">
+                                <i class="fas fa-trash-alt"></i> Elimina
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                const tbody = document.getElementById('categoriesTableBody');
+                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Errore caricamento categorie</td></tr>`;
+            }
+        }
+
+        document.getElementById('formAddCategory').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const name = document.getElementById('newCategoryName').value;
+
+            try {
+                const res = await fetch('/admin/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                if (res.ok) {
+                    alert('Categoria aggiunta!');
+                    this.reset();
+                    loadCategories();
+                } else {
+                    alert('Errore nell\'aggiunta della categoria (forse esiste già?)');
+                }
+            } catch (error) {
+                console.error('Error adding category:', error);
+                alert('Errore di connessione');
+            }
+        });
+
+        async function deleteCategory(id) {
+            if (!confirm('ATTENZIONE: Eliminando questa categoria verranno eliminati anche TUTTI i piatti appartenenti ad essa. Sei sicuro di voler procedere?')) return;
+            try {
+                const res = await fetch(`/admin/categories/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadCategories();
+                } else {
+                    alert('Errore eliminazione');
+                }
+            } catch (error) {
+                console.error('Error deleting category:', error);
+            }
+        }
+
+        function openEditCategoryModal(id, name) {
+            document.getElementById('editCategoryId').value = id;
+            document.getElementById('editCategoryName').value = name;
+            $('#editCategoryModal').modal('show');
+        }
+
+        async function submitUpdateCategory() {
+            const id = document.getElementById('editCategoryId').value;
+            const name = document.getElementById('editCategoryName').value;
+
+            try {
+                const res = await fetch(`/admin/categories/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                if (res.ok) {
+                    alert('Categoria aggiornata! Anche i prodotti associati sono stati aggiornati.');
+                    $('#editCategoryModal').modal('hide');
+                    loadCategories();
+                } else {
+                    alert('Errore aggiornamento (forse il nome esiste già?)');
+                }
+            } catch (error) {
+                console.error('Error updating category:', error);
+                alert('Errore di connessione');
+            }
+        }
+    </script>
 </body>
+
 </html>

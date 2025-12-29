@@ -6,6 +6,7 @@ import java.time.LocalTime;
 public class ReservationResponse {
     private Long id;
     private String name;
+    private String surname;
     private String phone;
     private LocalDate date;
     private LocalTime time;
@@ -14,7 +15,7 @@ public class ReservationResponse {
     private Long eventId; // Aggiungi questo campo
     private Boolean isEventRegistration; // Aggiungi questo campo
     private EventResponse event;
-    private String tableNumber;  // aggiunto
+    private String tableNumber; // aggiunto
 
     public String getTableNumber() {
         return tableNumber;
@@ -56,6 +57,14 @@ public class ReservationResponse {
         this.name = name;
     }
 
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -95,6 +104,7 @@ public class ReservationResponse {
     public void setNote(String note) {
         this.note = note;
     }
+
     public Long getEventId() {
         return eventId;
     }

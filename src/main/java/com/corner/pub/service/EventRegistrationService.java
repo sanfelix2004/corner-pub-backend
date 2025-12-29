@@ -30,9 +30,9 @@ public class EventRegistrationService {
     private final MailService mailService;
 
     public EventRegistrationService(UserRepository userRepository,
-                                    EventRepository eventRepository,
-                                    EventRegistrationRepository registrationRepository,
-                                    MailService mailService) {
+            EventRepository eventRepository,
+            EventRegistrationRepository registrationRepository,
+            MailService mailService) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
@@ -40,14 +40,22 @@ public class EventRegistrationService {
     }
 
     // -----------------------------
-    //           CREATE
+    // CREATE
     // -----------------------------
     @Transactional
     public EventRegistrationResponse register(Long eventId, EventRegistrationRequest request) {
         User user = userRepository.findByPhone(request.getPhone())
+                .map(existingUser -> {
+                    if (request.getSurname() != null && !request.getSurname().isBlank()) {
+                        existingUser.setSurname(request.getSurname());
+                        return userRepository.save(existingUser);
+                    }
+                    return existingUser;
+                })
                 .orElseGet(() -> {
                     User newUser = new User();
                     newUser.setName(request.getName());
+                    newUser.setSurname(request.getSurname());
                     newUser.setPhone(request.getPhone());
                     return userRepository.save(newUser);
                 });
@@ -94,7 +102,7 @@ public class EventRegistrationService {
     }
 
     // -----------------------------
-    //           UPDATE
+    // UPDATE
     // -----------------------------
     @Transactional
     public EventRegistrationResponse assignTable(Long registrationId, String tableNumber) {
@@ -106,7 +114,7 @@ public class EventRegistrationService {
     }
 
     // -----------------------------
-    //           DELETE
+    // DELETE
     // -----------------------------
     @Transactional
     public void unregister(Long eventId, Long userId) {
@@ -150,7 +158,7 @@ public class EventRegistrationService {
     }
 
     // -----------------------------
-    //           READ
+    // READ
     // -----------------------------
     @Transactional(readOnly = true)
     public long getTotalePartecipantiByEventId(Long eventId) {
@@ -195,7 +203,7 @@ public class EventRegistrationService {
     }
 
     // -----------------------------
-    //        MAPPING
+    // MAPPING
     // -----------------------------
     public EventRegistrationResponse toResponse(EventRegistration reg) {
         long totalePartecipanti = registrationRepository.findByEventId(reg.getEvent().getId())
@@ -219,13 +227,13 @@ public class EventRegistrationService {
                 reg.getCreatedAt(),
                 eventResponse,
                 userResponse,
-                reg.getPartecipanti()
-        );
+                reg.getPartecipanti());
         resp.setNote(reg.getNote());
         resp.setTableNumber(reg.getTableNumber());
 
         if (userResponse != null) {
             resp.setName(userResponse.getName());
+            resp.setSurname(userResponse.getSurname());
             resp.setPhone(userResponse.getPhone());
         }
 

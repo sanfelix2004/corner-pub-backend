@@ -4,6 +4,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public class EventRegistrationRequest {
     private String name;
+    private String surname;
     private String phone;
     private String note; // <-- aggiunto
     private int partecipanti = 1; // default 1
@@ -16,6 +17,14 @@ public class EventRegistrationRequest {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
     }
 
     public String getPhone() {

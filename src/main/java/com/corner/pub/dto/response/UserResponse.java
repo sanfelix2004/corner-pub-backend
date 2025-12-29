@@ -5,6 +5,7 @@ import com.corner.pub.model.User;
 public class UserResponse {
     private Long id;
     private String name;
+    private String surname;
     private String phone;
 
     public UserResponse(UserResponse user) {
@@ -17,16 +18,40 @@ public class UserResponse {
     public UserResponse(User user) {
         this.id = user.getId();
         this.name = user.getName();
+        this.surname = user.getSurname();
         this.phone = user.getPhone();
     }
 
     // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 }

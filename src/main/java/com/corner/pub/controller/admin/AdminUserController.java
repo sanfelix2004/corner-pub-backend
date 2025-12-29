@@ -27,6 +27,7 @@ public class AdminUserController {
 
     /**
      * Recupera un utente per numero di telefono.
+     * 
      * @param phone numero di telefono
      * @return UserResponse con id, name e phone
      */
@@ -45,12 +46,13 @@ public class AdminUserController {
 
     /**
      * Crea un nuovo utente, o lo restituisce se esiste già.
+     * 
      * @param req UserRequest con name e phone
      * @return UserResponse
      */
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest req) {
-        User u = userService.findOrCreate(req.getName(), req.getPhone());
+        User u = userService.findOrCreate(req.getName(), req.getSurname(), req.getPhone());
         UserResponse dto = toResponse(u);
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
@@ -64,12 +66,12 @@ public class AdminUserController {
         return ResponseEntity.ok(users);
     }
 
-
     // Utility di mapping entity → DTO
     private UserResponse toResponse(User user) {
         UserResponse r = new UserResponse();
         r.setId(user.getId());
         r.setName(user.getName());
+        r.setSurname(user.getSurname());
         r.setPhone(user.getPhone());
         return r;
     }

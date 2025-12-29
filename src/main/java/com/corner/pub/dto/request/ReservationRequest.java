@@ -2,13 +2,14 @@ package com.corner.pub.dto.request;
 
 public class ReservationRequest {
     private String name;
+    private String surname;
     private String phone;
-    private String date;   // formato: "2025-07-02"
-    private String time;   // formato: "19:30"
+    private String date; // formato: "2025-07-02"
+    private String time; // formato: "19:30"
     private int people;
     private String note;
     private Long eventId; // null per prenotazione normale
-    private String tableNumber;  // aggiunto
+    private String tableNumber; // aggiunto
 
     // Getters & Setters
 
@@ -20,23 +21,61 @@ public class ReservationRequest {
         this.tableNumber = tableNumber;
     }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getName() {
+        return name;
+    }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public String getDate() { return date; }
-    public void setDate(String date) { this.date = date; }
+    public String getSurname() {
+        return surname;
+    }
 
-    public String getTime() { return time; }
-    public void setTime(String time) { this.time = time; }
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
 
-    public int getPeople() { return people; }
-    public void setPeople(int people) { this.people = people; }
+    public String getPhone() {
+        return phone;
+    }
 
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getTime() {
+        return time;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
+    }
+
+    public int getPeople() {
+        return people;
+    }
+
+    public void setPeople(int people) {
+        this.people = people;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
 
     public Long getEventId() {
         return eventId;

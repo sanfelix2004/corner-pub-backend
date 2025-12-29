@@ -42,11 +42,19 @@ public class UserService {
     /**
      * Trova un utente per telefono o lo crea se non esiste.
      */
-    public User findOrCreate(String name, String phone) {
+    public User findOrCreate(String name, String surname, String phone) {
         return userRepository.findByPhone(phone)
+                .map(existingUser -> {
+                    if (surname != null && !surname.isBlank()) {
+                        existingUser.setSurname(surname);
+                        return userRepository.save(existingUser);
+                    }
+                    return existingUser;
+                })
                 .orElseGet(() -> {
                     User u = new User();
                     u.setName(name);
+                    u.setSurname(surname);
                     u.setPhone(phone);
                     return userRepository.save(u);
                 });

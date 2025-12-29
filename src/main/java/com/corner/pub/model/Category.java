@@ -1,15 +1,13 @@
 package com.corner.pub.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "categories")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Category {
 
     @Id
@@ -19,9 +17,7 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
-    private String description;
-
-    private boolean visible = true;
-
-    private Integer orderIndex;
+    public Category(String name) {
+        this.name = name;
+    }
 }

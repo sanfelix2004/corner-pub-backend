@@ -51,7 +51,8 @@ public class ReservationService {
 
     // -----------------------------
     /**
-     * Esegue il task solo dopo il commit della transazione. Se non c'è transazione attiva, esegue subito.
+     * Esegue il task solo dopo il commit della transazione. Se non c'è transazione
+     * attiva, esegue subito.
      */
     private void runAfterCommit(Runnable task) {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -73,7 +74,7 @@ public class ReservationService {
             }
         }
     }
-    //           CAPACITY HELPERS
+    // CAPACITY HELPERS
     // -----------------------------
 
     private List<Reservation> getReservationsAt(LocalDate date, LocalTime time) {
@@ -87,7 +88,8 @@ public class ReservationService {
             throw new BadRequestException("Il numero di persone deve essere maggiore di 0");
         }
         if (people > MAX_PEOPLE_PER_RESERVATION) {
-            throw new BadRequestException("Prenotazione troppo numerosa per un singolo tavolo (max " + MAX_PEOPLE_PER_RESERVATION + ")");
+            throw new BadRequestException(
+                    "Prenotazione troppo numerosa per un singolo tavolo (max " + MAX_PEOPLE_PER_RESERVATION + ")");
         }
         List<Reservation> atSlot = getReservationsAt(date, time);
         // escludi la prenotazione che stiamo aggiornando (se presente)
@@ -115,13 +117,14 @@ public class ReservationService {
                 .collect(Collectors.toSet());
         for (int i = 1; i <= MAX_TABLES; i++) {
             String tn = String.valueOf(i);
-            if (!used.contains(tn)) return tn;
+            if (!used.contains(tn))
+                return tn;
         }
         return null; // nessun tavolo libero (dovrebbe essere intercettato da enforceCapacity)
     }
 
     // -----------------------------
-    //           CREATE / UPDATE
+    // CREATE / UPDATE
     // -----------------------------
 
     @Transactional(readOnly = true)
@@ -132,15 +135,16 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request) {
-        User user = userService.findOrCreate(request.getName(), request.getPhone());
+        User user = userService.findOrCreate(request.getName(), request.getSurname(), request.getPhone());
         LocalDate date = parseDate(request.getDate());
         LocalTime time = parseTime(request.getTime());
 
         reservationRepository.findByUserPhoneAndDate(user.getPhone(), date)
-                .ifPresent(r -> { throw new ReservationAlreadyExistsException(user.getPhone(), request.getDate()); });
+                .ifPresent(r -> {
+                    throw new ReservationAlreadyExistsException(user.getPhone(), request.getDate());
+                });
 
         enforceCapacity(date, time, request.getPeople(), null);
 
@@ -162,11 +166,12 @@ public class ReservationService {
             // Registra l'utente all'evento
             EventRegistrationRequest eventRegRequest = new EventRegistrationRequest();
             eventRegRequest.setName(request.getName());
+            eventRegRequest.setSurname(request.getSurname());
             eventRegRequest.setPhone(request.getPhone());
             eventRegistrationService.register(request.getEventId(), eventRegRequest);
 
             // Crea anche la prenotazione associata
-            User user = userService.findOrCreate(request.getName(), request.getPhone());
+            User user = userService.findOrCreate(request.getName(), request.getSurname(), request.getPhone());
             LocalDate date = parseDate(request.getDate());
             LocalTime time = parseTime(request.getTime());
 
@@ -193,7 +198,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException("ID", id.toString()));
 
-        User user = userService.findOrCreate(request.getName(), request.getPhone());
+        User user = userService.findOrCreate(request.getName(), request.getSurname(), request.getPhone());
         reservation.setUser(user);
         LocalDate date = parseDate(request.getDate());
         LocalTime time = parseTime(request.getTime());
@@ -227,7 +232,8 @@ public class ReservationService {
         }
         // verifica non occupato nello stesso slot
         boolean taken = getReservationsAt(reservation.getDate(), reservation.getTime()).stream()
-                .anyMatch(r -> !Objects.equals(r.getId(), reservation.getId()) && String.valueOf(tn).equals(r.getTableNumber()));
+                .anyMatch(r -> !Objects.equals(r.getId(), reservation.getId())
+                        && String.valueOf(tn).equals(r.getTableNumber()));
         if (taken) {
             throw new BadRequestException("Tavolo già occupato per questo orario");
         }
@@ -235,7 +241,6 @@ public class ReservationService {
         reservation.setTableNumber(String.valueOf(tn));
         return toResponse(reservationRepository.save(reservation));
     }
-
 
     @Transactional
     public void deleteById(Long id) {
@@ -258,7 +263,7 @@ public class ReservationService {
     }
 
     // -----------------------------
-    //             READ
+    // READ
     // -----------------------------
 
     @Transactional(readOnly = true)
@@ -339,7 +344,8 @@ public class ReservationService {
 
     /**
      * La tua vecchia implementazione prendeva solo "oggi".
-     * Mantengo il senso logico ma la rendo utile (future >= today per quell'utente).
+     * Mantengo il senso logico ma la rendo utile (future >= today per
+     * quell'utente).
      */
     @Transactional(readOnly = true)
     public List<ReservationResponse> getFutureReservationsByPhone(String phone) {
@@ -358,7 +364,8 @@ public class ReservationService {
     }
 
     /**
-     * La tua getTodayReservations usava "from today". Mantengo l’attuale comportamento:
+     * La tua getTodayReservations usava "from today". Mantengo l’attuale
+     * comportamento:
      * “da oggi in poi”, come nel repository (non solo oggi).
      */
     @Transactional(readOnly = true)
@@ -369,13 +376,14 @@ public class ReservationService {
     }
 
     // -----------------------------
-    //          MAPPING
+    // MAPPING
     // -----------------------------
 
     public ReservationResponse toResponse(Reservation reservation) {
         ReservationResponse response = new ReservationResponse();
         response.setId(reservation.getId());
         response.setName(reservation.getUser().getName());
+        response.setSurname(reservation.getUser().getSurname());
         response.setPhone(reservation.getUser().getPhone());
         response.setDate(reservation.getDate());
         response.setTime(reservation.getTime());
@@ -388,13 +396,14 @@ public class ReservationService {
     }
 
     // -----------------------------
-    //       PARSING & HELPERS
+    // PARSING & HELPERS
     // -----------------------------
 
     private static String clean(String in) {
-        if (in == null) return null;
-        String s = in.replace('\u00A0', ' ')  // NBSP -> space
-                .replace("\u200B", "")   // zero width space
+        if (in == null)
+            return null;
+        String s = in.replace('\u00A0', ' ') // NBSP -> space
+                .replace("\u200B", "") // zero width space
                 .trim();
         if (s.length() >= 2 && s.startsWith("\"") && s.endsWith("\"")) {
             s = s.substring(1, s.length() - 1).trim();
@@ -415,7 +424,8 @@ public class ReservationService {
             log.warn("❌ DEBUG PARSE DATE - Not ISO_LOCAL_DATE: {}", e.getMessage());
         }
 
-        // 2) se arriva ISO datetime (2025-08-26T00:00:00Z/±offset) o con spazio, prendo i primi 10 char
+        // 2) se arriva ISO datetime (2025-08-26T00:00:00Z/±offset) o con spazio, prendo
+        // i primi 10 char
         if (dateString != null && dateString.length() >= 10) {
             String head10 = dateString.substring(0, 10);
             if (head10.matches("\\d{4}-\\d{2}-\\d{2}")) {
@@ -423,7 +433,8 @@ public class ReservationService {
                     LocalDate parsed = LocalDate.parse(head10, DATE_FMT);
                     log.info("✅ DEBUG PARSE DATE - Parsed head(10): {}", parsed);
                     return parsed;
-                } catch (DateTimeParseException ignored) { /* no-op */ }
+                } catch (DateTimeParseException ignored) {
+                    /* no-op */ }
             }
         }
 

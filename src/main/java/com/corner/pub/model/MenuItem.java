@@ -2,8 +2,6 @@ package com.corner.pub.model;
 
 import jakarta.persistence.*;
 
-import java.util.Set;
-
 @Entity
 @Table(name = "menu_items")
 public class MenuItem {
@@ -12,9 +10,8 @@ public class MenuItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @Column
+    private String categoria; // ← nuovo campo
 
     private String titolo;
     private String descrizione;
@@ -30,67 +27,69 @@ public class MenuItem {
     @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.Set<MenuItemAllergen> allergens = new java.util.HashSet<>();
 
-    public Long getId() {
-        return id;
+    // Getters & Setters
+
+    public java.util.Set<MenuItemAllergen> getAllergens() {
+        return allergens;
     }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public String getTitolo() {
-        return titolo;
-    }
-
-    public String getDescrizione() {
-        return descrizione;
-    }
-
-    public double getPrezzo() {
-        return prezzo;
-    }
-
-    public boolean isVisibile() {
-        return visibile;
+    public void setAllergens(java.util.Set<MenuItemAllergen> allergens) {
+        this.allergens = allergens;
     }
 
     public String getImageUrl() {
         return imageUrl;
     }
 
-    public Set<MenuItemAllergen> getAllergens() {
-        return allergens;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public void setId(Long id) {
         this.id = id;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
+    public String getTitolo() {
+        return titolo;
     }
 
     public void setTitolo(String titolo) {
         this.titolo = titolo;
     }
 
+    public String getDescrizione() {
+        return descrizione;
+    }
+
     public void setDescrizione(String descrizione) {
         this.descrizione = descrizione;
+    }
+
+    public double getPrezzo() {
+        return prezzo;
     }
 
     public void setPrezzo(double prezzo) {
         this.prezzo = prezzo;
     }
 
+    public boolean isVisibile() {
+        return visibile;
+    }
+
     public void setVisibile(boolean visibile) {
         this.visibile = visibile;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public void setAllergens(Set<MenuItemAllergen> allergens) {
-        this.allergens = allergens;
     }
 }
