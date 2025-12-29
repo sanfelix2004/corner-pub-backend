@@ -1621,7 +1621,7 @@
                 if (checklist) {
                     const grouped = {};
                     (Array.isArray(menuData) ? menuData : []).forEach(item => {
-                        const cat = item.categoria || 'Altro';
+                        const cat = item.categoryName || 'Altro';
                         (grouped[cat] ||= []).push(item);
                     });
                     checklist.innerHTML = '';
