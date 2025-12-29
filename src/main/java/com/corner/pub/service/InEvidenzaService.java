@@ -29,20 +29,18 @@ public class InEvidenzaService {
         return repo.findAll().stream().map(e -> {
             // forza inizializzazione LAZY durante la transazione
             MenuItem prodotto = e.getProdotto();
-            prodotto.getId();   // ⚠️ forza il fetch LAZY qui
+            prodotto.getId(); // ⚠️ forza il fetch LAZY qui
             prodotto.getTitolo();
 
             InEvidenzaResponse r = new InEvidenzaResponse();
             r.setId(e.getId());
-            r.setCategoria(e.getCategoria());
+            r.setCategoryName(prodotto.getCategoria());
             r.setItemId(prodotto.getId());
             r.setTitolo(prodotto.getTitolo());
             r.setCreatedAt(e.getCreatedAt());
             return r;
         }).collect(Collectors.toList());
     }
-
-
 
     @Transactional
     public void add(InEvidenzaRequest req) {
@@ -56,7 +54,8 @@ public class InEvidenzaService {
 
     @Transactional
     public void remove(Long id) {
-        if (!repo.existsById(id)) throw new IllegalArgumentException("Highlight non trovato");
+        if (!repo.existsById(id))
+            throw new IllegalArgumentException("Highlight non trovato");
         repo.deleteById(id);
     }
 }

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public class InEvidenzaResponse {
     private Long id;
-    private String categoria;
+    private String categoryName;
     private Long itemId;
     private String titolo;
     private LocalDateTime createdAt;
@@ -19,12 +19,12 @@ public class InEvidenzaResponse {
         this.id = id;
     }
 
-    public String getCategoria() {
-        return categoria;
+    public String getCategoryName() {
+        return categoryName;
     }
 
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public Long getItemId() {

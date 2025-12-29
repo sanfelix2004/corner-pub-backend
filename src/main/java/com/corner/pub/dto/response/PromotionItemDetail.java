@@ -9,18 +9,18 @@ public class PromotionItemDetail {
     private Long itemId;
     private String nome;
     private String imageUrl;
-    private Double prezzoOriginale;     // lasciamo Double per non rompere il FE
-    private Double scontoPercentuale;   // idem
-    private Double prezzoScontato;      // idem
-    private String categoria;
+    private Double prezzoOriginale; // lasciamo Double per non rompere il FE
+    private Double scontoPercentuale; // idem
+    private Double prezzoScontato; // idem
+    private String categoryName;
 
     public PromotionItemDetail(MenuItemResponse menuItem, Double scontoPercentuale) {
         this.itemId = menuItem.getId();
         this.nome = menuItem.getTitolo();
         this.imageUrl = menuItem.getImageUrl();
-        this.prezzoOriginale = menuItem.getPrezzo();       // può essere null
+        this.prezzoOriginale = menuItem.getPrezzo(); // può essere null
         this.scontoPercentuale = scontoPercentuale == null ? 0.0 : scontoPercentuale;
-        this.categoria = menuItem.getCategoryName();
+        this.categoryName = menuItem.getCategoryName();
 
         // Calcolo sicuro del prezzo scontato
         if (this.prezzoOriginale != null) {
