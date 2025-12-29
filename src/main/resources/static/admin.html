@@ -1262,7 +1262,7 @@
             <td>-</td>
             <td class="text-nowrap">
               <button class="btn btn-sm btn-warning btn-action"
-                onclick="makeEditable(${safeId}, '${escape(item.titolo || '')}', '${escape(item.categoria || '')}', '${escape(item.descrizione || '')}', ${Number(item.prezzo || 0)})">
+                onclick="openEditItemModal(${safeId})">
                 <i class="fas fa-edit"></i> Modifica
               </button>
               <button class="btn btn-sm btn-danger btn-action" onclick="deleteMenuItem(${safeId})">
@@ -1361,70 +1361,97 @@
             }
         }
 
-        async function makeEditable(id, titolo, categoria, descrizione, prezzo) {
-            if (CURRENT_EDIT_ID !== null && CURRENT_EDIT_ID !== id) {
-                alert('Puoi modificare solo un elemento alla volta. Prima salva o annulla quello in modifica.');
-                return;
-            }
-            CURRENT_EDIT_ID = id;
-            const row = document.getElementById(`menu-row-${id}`);
-            row.innerHTML = `
-    <td><input type="file" id="edit-image-${id}" accept="image/*" class="form-control-file" /></td>
-    <td><input type="text" id="edit-titolo-${id}" value="${titolo}" class="form-control" /></td>
-    <td><input type="text" id="edit-desc-${id}" value="${descrizione}" class="form-control" /></td>
-    <td><input type="number" id="edit-prezzo-${id}" value="${prezzo}" step="0.01" class="form-control" /></td>
-    <td><input type="text" id="edit-cat-${id}" value="${categoria}" class="form-control" /></td>
-    <td colspan="2">
-      <div class="mb-2"><strong>Allergeni</strong></div>
-      <div id="allergenSelectEdit-${id}"></div>
-    </td>
-    <td class="text-nowrap">
-      <button class="btn btn-sm btn-success btn-action" onclick="submitEdit(${id})">
-        <i class="fas fa-check"></i> Salva
-      </button>
-      <button class="btn btn-sm btn-secondary btn-action" onclick="CURRENT_EDIT_ID=null; loadMenuItems();">
-        <i class="fas fa-times"></i> Annulla
-      </button>
-    </td>
-  `;
-
+        // NEW: Open Edit Modal
+        async function openEditItemModal(id) {
             try {
+                // Ensure helper data is ready
                 await ensureAllergenCatalog();
-                const detailRes = await fetch(`/api/menu/${id}`);
-                const item = await detailRes.json();
 
+                // Fetch Item Details
+                const res = await fetch(`/api/menu/${id}`);
+                if (!res.ok) throw new Error('Errore nel caricamento del piatto');
+                const item = await res.json();
+
+                // Populate Categories Select (reuse existing loader or fetch)
+                const catRes = await fetch('/admin/categories');
+                const categories = await catRes.json();
+                const catSelect = document.getElementById('editItemCategory');
+                catSelect.innerHTML = categories.map(c =>
+                    `<option value="${c.name}">${c.name}</option>`
+                ).join('');
+
+                // Populate Fields
+                document.getElementById('editItemId').value = item.id;
+                document.getElementById('editItemTitolo').value = item.titolo;
+                document.getElementById('editItemDesc').value = item.descrizione || '';
+                document.getElementById('editItemPrezzo').value = item.prezzo;
+                document.getElementById('editItemVisibile').value = String(item.visibile);
+
+                // Select Category (safe match)
+                catSelect.value = item.categoryName || '';
+
+                // Image Preview
+                const imgContainer = document.getElementById('editItemImagePreview');
+                if (item.imageUrl) {
+                    imgContainer.innerHTML = `<img src="${item.imageUrl}" class="img-thumbnail" style="max-height: 150px;">`;
+                } else {
+                    imgContainer.innerHTML = '<div class="text-muted">Nessuna immagine</div>';
+                }
+                document.getElementById('editItemImage').value = ''; // Reset file input
+
+                // Allergens
                 const pre = {};
-                (item.allergens || []).forEach(a => pre[a.code] = a.status); // CONTAINS/MAY_CONTAIN
-                renderAllergenSelect(`allergenSelectEdit-${id}`, pre);
-            } catch (e) {
-                console.error('Impossibile caricare allergeni per edit:', e);
-                renderAllergenSelect(`allergenSelectEdit-${id}`, {});
+                (item.allergens || []).forEach(a => pre[a.code] = a.status);
+                renderAllergenSelect('allergenSelectEditModal', pre);
+
+                // Show Modal
+                $('#editMenuItemModal').modal('show');
+
+            } catch (error) {
+                console.error('Error opening edit modal:', error);
+                alert('Impossibile caricare i dettagli del piatto.');
             }
         }
 
-        async function submitEdit(id) {
-            const titolo = document.getElementById(`edit-titolo-${id}`).value;
-            const descrizione = document.getElementById(`edit-desc-${id}`).value;
-            const prezzo = parseFloat(document.getElementById(`edit-prezzo-${id}`).value);
-            const categoria = document.getElementById(`edit-cat-${id}`).value;
-            const imageInput = document.getElementById(`edit-image-${id}`);
+        async function submitUpdateMenuItem() {
+            const id = document.getElementById('editItemId').value;
+            const titolo = document.getElementById('editItemTitolo').value;
+            const categoryName = document.getElementById('editItemCategory').value;
+            const descrizione = document.getElementById('editItemDesc').value;
+            const prezzo = parseFloat(document.getElementById('editItemPrezzo').value);
+            const visibile = document.getElementById('editItemVisibile').value === 'true';
 
-            const allergens = readAllergenSelect(`allergenSelectEdit-${id}`);
+            const allergens = readAllergenSelect('allergenSelectEditModal');
+            const imageInput = document.getElementById('editItemImage');
 
-            const data = { titolo, descrizione, prezzo, categoryName: categoria, allergens };
+            const data = {
+                titolo,
+                categoryName,
+                descrizione,
+                prezzo,
+                visibile,
+                allergens
+            };
 
             const formData = new FormData();
             formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
-            if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
+
+            if (imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+            }
 
             try {
                 const res = await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
-                if (!res.ok) throw new Error('Update failed');
-                CURRENT_EDIT_ID = null;
-                loadMenuItems();
+                if (res.ok) {
+                    $('#editMenuItemModal').modal('hide');
+                    alert('✅ Piatto aggiornato con successo');
+                    loadMenuItems();
+                } else {
+                    alert('❌ Errore durante l\'aggiornamento');
+                }
             } catch (error) {
                 console.error('Error updating menu item:', error);
-                alert('Errore durante l\'aggiornamento del piatto');
+                alert('Errore di connessione');
             }
         }
 
@@ -2635,6 +2662,75 @@
             }
         }
     </script>
+    <!-- MODALE MODIFICA PIATTO -->
+    <div class="modal fade" id="editMenuItemModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Modifica Piatto</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formEditMenuItem">
+                        <input type="hidden" id="editItemId">
+
+                        <div class="form-row">
+                            <div class="form-group col-md-4 text-center">
+                                <label>Immagine Attuale</label>
+                                <div id="editItemImagePreview" class="mb-2"></div>
+                                <input type="file" id="editItemImage" class="form-control-file" accept="image/*">
+                            </div>
+
+                            <div class="form-group col-md-8">
+                                <div class="form-row">
+                                    <div class="form-group col-md-12">
+                                        <label>Titolo</label>
+                                        <input type="text" id="editItemTitolo" class="form-control" required>
+                                    </div>
+                                    <div class="form-group col-md-12">
+                                        <label>Categoria</label>
+                                        <select id="editItemCategory" class="form-control" required></select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descrizione</label>
+                            <textarea id="editItemDesc" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label>Prezzo (€)</label>
+                                <input type="number" id="editItemPrezzo" class="form-control" step="0.01" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label>Visibile</label>
+                                <select id="editItemVisibile" class="form-control">
+                                    <option value="true">✅ Sì</option>
+                                    <option value="false">❌ No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-exclamation-triangle"></i> Allergeni</label>
+                            <div id="allergenSelectEditModal"></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+                    <button type="button" class="btn btn-primary" onclick="submitUpdateMenuItem()">
+                        <i class="fas fa-save"></i> Salva Modifiche
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

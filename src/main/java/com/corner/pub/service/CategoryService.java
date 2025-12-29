@@ -2,7 +2,7 @@ package com.corner.pub.service;
 
 import com.corner.pub.model.Category;
 import com.corner.pub.repository.CategoryRepository;
-import com.corner.pub.repository.MenuItemRepository;
+// import com.corner.pub.repository.MenuItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
