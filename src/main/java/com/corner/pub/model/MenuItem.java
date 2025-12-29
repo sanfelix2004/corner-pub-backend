@@ -10,8 +10,9 @@ public class MenuItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
-    private String categoria; // ← nuovo campo
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     private String titolo;
     private String descrizione;
@@ -53,13 +54,22 @@ public class MenuItem {
         this.id = id;
     }
 
-    public String getCategoria() {
-        return categoria;
+    public Category getCategory() {
+        return category;
     }
 
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
+    public void setCategory(Category category) {
+        this.category = category;
     }
+
+    // Compatibilità per il codice che usa getCategoria()
+    public String getCategoria() {
+        return category != null ? category.getName() : null;
+    }
+
+    // Rimuoviamo setCategoria perché non possiamo settare una Category da stringa
+    // qui senza repository.
+    // Il service deve occuparsene.
 
     public String getTitolo() {
         return titolo;

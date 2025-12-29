@@ -13,8 +13,10 @@ import com.corner.pub.model.AllergenStatus;
 import com.corner.pub.model.MenuItem;
 import com.corner.pub.model.MenuItemAllergen;
 import com.corner.pub.repository.AllergenRepository;
+import com.corner.pub.repository.CategoryRepository;
 import com.corner.pub.repository.MenuItemAllergenRepository;
 import com.corner.pub.repository.MenuItemRepository;
+import com.corner.pub.model.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -41,14 +43,18 @@ public class MenuItemService {
     @Value("${cloudinary.cloud-name}")
     private String cloudName;
 
+    private final CategoryRepository categoryRepository;
+
     @Autowired
     public MenuItemService(MenuItemRepository menuItemRepository,
             MenuItemAllergenRepository menuItemAllergenRepository,
             AllergenRepository allergenRepository,
+            CategoryRepository categoryRepository,
             Cloudinary cloudinary) {
         this.menuItemRepository = menuItemRepository;
         this.menuItemAllergenRepository = menuItemAllergenRepository;
         this.allergenRepository = allergenRepository;
+        this.categoryRepository = categoryRepository;
         this.cloudinary = cloudinary;
     }
 
@@ -67,13 +73,21 @@ public class MenuItemService {
         String titolo = request.getTitolo().trim();
 
         boolean exists = menuItemRepository.findAll().stream()
-                .anyMatch(i -> i.getCategoria().equalsIgnoreCase(categoria)
+                .anyMatch(i -> i.getCategoria() != null
+                        && i.getCategoria().equalsIgnoreCase(categoria)
                         && i.getTitolo().equalsIgnoreCase(titolo));
         if (exists)
             throw new MenuItemDuplicateException(titolo);
 
+        // Find or create category if absolutely needed, but usually we expect it to
+        // exist if selected from UI
+        // However, user might have old UI or direct API. We will throw error if not
+        // found to enforce integrity
+        Category cat = categoryRepository.findByName(categoria)
+                .orElseThrow(() -> new IllegalArgumentException("Categoria non trovata: " + categoria));
+
         MenuItem item = new MenuItem();
-        item.setCategoria(categoria);
+        item.setCategory(cat); // Set REAL relationship
         item.setTitolo(titolo);
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
@@ -124,7 +138,12 @@ public class MenuItemService {
         MenuItem item = menuItemRepository.findById(id)
                 .orElseThrow(() -> new MenuItemNotFoundException(id));
 
-        item.setCategoria(request.getCategoryName().trim());
+        // Update Category
+        String catName = request.getCategoryName().trim();
+        Category cat = categoryRepository.findByName(catName)
+                .orElseThrow(() -> new IllegalArgumentException("Categoria non trovata: " + catName));
+        item.setCategory(cat);
+
         item.setTitolo(request.getTitolo().trim());
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
@@ -304,7 +323,7 @@ public class MenuItemService {
 
     @Transactional
     public void deleteMenuItemsByCategory(String category) {
-        List<MenuItem> items = menuItemRepository.findByCategoria(category);
+        List<MenuItem> items = menuItemRepository.findByCategory_Name(category);
         for (MenuItem item : items) {
             deleteMenuItem(item.getId());
         }

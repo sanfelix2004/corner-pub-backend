@@ -14,7 +14,7 @@ import java.util.List;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
-    private final MenuItemRepository menuItemRepository;
+    // private final MenuItemRepository menuItemRepository; // removed unused
     private final MenuItemService menuItemService;
 
     public List<Category> getAllCategories() {
@@ -38,7 +38,8 @@ public class CategoryService {
                 throw new IllegalArgumentException("Una categoria con questo nome esiste già: " + newName);
             }
             // Aggiorna anche i menu items
-            menuItemRepository.updateCategoryName(category.getName(), newName);
+            // menuItemRepository.updateCategoryName(category.getName(), newName);
+            // Non serve più con la relazione @ManyToOne, basta rinominare la categoria!
 
             category.setName(newName);
             return categoryRepository.save(category);
