@@ -19,6 +19,9 @@ public class User {
 
     private LocalDateTime createdAt;
 
+    @Column(name = "privacy_policy_version")
+    private String privacyPolicyVersion;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -63,5 +66,13 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getPrivacyPolicyVersion() {
+        return privacyPolicyVersion;
+    }
+
+    public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
+        this.privacyPolicyVersion = privacyPolicyVersion;
     }
 }

@@ -16,6 +16,12 @@ public class ReservationRequest {
     private Long eventId; // null per prenotazione normale
     private String tableNumber; // aggiunto
 
+    private Boolean privacyAccepted;
+
+    // Allergeni (facoltativo)
+    private String allergensNote;
+    private Boolean allergensConsent;
+
     // Getters & Setters
 
     public String getTableNumber() {
@@ -88,5 +94,29 @@ public class ReservationRequest {
 
     public void setEventId(Long eventId) {
         this.eventId = eventId;
+    }
+
+    public Boolean getPrivacyAccepted() {
+        return privacyAccepted;
+    }
+
+    public void setPrivacyAccepted(Boolean privacyAccepted) {
+        this.privacyAccepted = privacyAccepted;
+    }
+
+    public String getAllergensNote() {
+        return allergensNote;
+    }
+
+    public void setAllergensNote(String allergensNote) {
+        this.allergensNote = allergensNote;
+    }
+
+    public Boolean getAllergensConsent() {
+        return allergensConsent;
+    }
+
+    public void setAllergensConsent(Boolean allergensConsent) {
+        this.allergensConsent = allergensConsent;
     }
 }

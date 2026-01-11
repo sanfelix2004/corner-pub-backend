@@ -16,6 +16,8 @@ public class ReservationResponse {
     private Boolean isEventRegistration; // Aggiungi questo campo
     private EventResponse event;
     private String tableNumber; // aggiunto
+    private String allergensNote; // aggiunto
+    private String privacyPolicyVersion; // aggiunto
 
     public String getTableNumber() {
         return tableNumber;
@@ -119,5 +121,21 @@ public class ReservationResponse {
 
     public void setIsEventRegistration(Boolean eventRegistration) {
         isEventRegistration = eventRegistration;
+    }
+
+    public String getAllergensNote() {
+        return allergensNote;
+    }
+
+    public void setAllergensNote(String allergensNote) {
+        this.allergensNote = allergensNote;
+    }
+
+    public String getPrivacyPolicyVersion() {
+        return privacyPolicyVersion;
+    }
+
+    public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
+        this.privacyPolicyVersion = privacyPolicyVersion;
     }
 }

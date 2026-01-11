@@ -73,6 +73,7 @@ public class AdminUserController {
         r.setName(user.getName());
         r.setSurname(user.getSurname());
         r.setPhone(user.getPhone());
+        r.setPrivacyPolicyVersion(user.getPrivacyPolicyVersion());
         return r;
     }
 }

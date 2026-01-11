@@ -28,7 +28,19 @@ public class Reservation {
     private Event event; // Aggiungi questa relazione
 
     @Column(name = "table_number")
-    private String tableNumber;  // es. "T1", "Tavolo 8", "Sala esterna"
+    private String tableNumber; // es. "T1", "Tavolo 8", "Sala esterna"
+
+    @Column(name = "privacy_accepted_at")
+    private java.time.Instant privacyAcceptedAt;
+
+    @Column(name = "privacy_policy_version")
+    private String privacyPolicyVersion;
+
+    @Column(name = "allergens_note")
+    private String allergensNote;
+
+    @Column(name = "allergens_consent")
+    private Boolean allergensConsent;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -41,7 +53,6 @@ public class Reservation {
 
     // Getters e Setters
 
-
     public String getTableNumber() {
         return tableNumber;
     }
@@ -50,26 +61,61 @@ public class Reservation {
         this.tableNumber = tableNumber;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalTime getTime() { return time; }
-    public void setTime(LocalTime time) { this.time = time; }
+    public LocalDate getDate() {
+        return date;
+    }
 
-    public int getPeople() { return people; }
-    public void setPeople(int people) { this.people = people; }
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
 
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
+    public LocalTime getTime() {
+        return time;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setTime(LocalTime time) {
+        this.time = time;
+    }
 
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
+    public int getPeople() {
+        return people;
+    }
+
+    public void setPeople(int people) {
+        this.people = people;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 
     public Event getEvent() {
         return event;
@@ -77,5 +123,37 @@ public class Reservation {
 
     public void setEvent(Event event) {
         this.event = event;
+    }
+
+    public java.time.Instant getPrivacyAcceptedAt() {
+        return privacyAcceptedAt;
+    }
+
+    public void setPrivacyAcceptedAt(java.time.Instant privacyAcceptedAt) {
+        this.privacyAcceptedAt = privacyAcceptedAt;
+    }
+
+    public String getPrivacyPolicyVersion() {
+        return privacyPolicyVersion;
+    }
+
+    public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
+        this.privacyPolicyVersion = privacyPolicyVersion;
+    }
+
+    public String getAllergensNote() {
+        return allergensNote;
+    }
+
+    public void setAllergensNote(String allergensNote) {
+        this.allergensNote = allergensNote;
+    }
+
+    public Boolean getAllergensConsent() {
+        return allergensConsent;
+    }
+
+    public void setAllergensConsent(Boolean allergensConsent) {
+        this.allergensConsent = allergensConsent;
     }
 }

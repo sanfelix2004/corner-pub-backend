@@ -21,11 +21,17 @@ public class MailService {
 
     // --- SMTP / indirizzi ----------------------------------------------
 
-    /** Con SendGrid via SMTP lo "username" deve essere la stringa letterale "apikey". */
+    /**
+     * Con SendGrid via SMTP lo "username" deve essere la stringa letterale
+     * "apikey".
+     */
     @Value("${spring.mail.username}")
     private String smtpUser;
 
-    /** Mittente visualizzato: metti un indirizzo reale del tuo dominio (verificato su SendGrid). */
+    /**
+     * Mittente visualizzato: metti un indirizzo reale del tuo dominio (verificato
+     * su SendGrid).
+     */
     @Value("${mail.from.noreply:noreply@corner.pub}")
     private String from;
 
@@ -54,7 +60,8 @@ public class MailService {
     }
 
     private static boolean looksLikeRateLimit(Throwable e) {
-        if (e == null) return false;
+        if (e == null)
+            return false;
         String s = String.valueOf(e.getMessage()).toLowerCase();
         // alcuni provider rispondono con "rate", "too many", "throttl"
         return s.contains("too many") || s.contains("rate") || s.contains("throttl");
@@ -63,47 +70,41 @@ public class MailService {
     private synchronized void waitForSlot() {
         long now = System.currentTimeMillis();
         long elapsed = now - lastSendAt;
-        if (elapsed < minGapMs) sleepQuiet(minGapMs - elapsed);
+        if (elapsed < minGapMs)
+            sleepQuiet(minGapMs - elapsed);
         lastSendAt = System.currentTimeMillis();
     }
 
-    private void send(String subject, String body) {
+    private void sendHtml(String subject, String htmlBody) {
         if (!enabled) {
             log.info("📭 Mail disabilitata (mail.enabled=false). Skippato '{}'", subject);
             return;
         }
 
-        // normalizza lista destinatari
         String[] recipients = Arrays.stream(adminTo.split("[,;\\s]+"))
                 .filter(s -> s != null && !s.isBlank())
                 .toArray(String[]::new);
 
-        // piccolo throttle locale
         waitForSlot();
 
         int attempts = 0;
-        long backoff = 1000; // 1s -> 2s -> 4s
+        long backoff = 1000;
 
         while (true) {
             attempts++;
             try {
-                SimpleMailMessage msg = new SimpleMailMessage();
+                jakarta.mail.internet.MimeMessage mimeMessage = mailSender.createMimeMessage();
+                org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(
+                        mimeMessage, "utf-8");
 
-                /*
-                 * Con SendGrid: l’SMTP username è letteralmente "apikey" e il mittente
-                 * DEVE essere un indirizzo autorizzato/verified in SendGrid (from).
-                 */
-                msg.setFrom(from);
+                helper.setFrom(from);
+                helper.setReplyTo(from);
+                helper.setTo(recipients);
+                helper.setSubject(subject);
+                helper.setText(htmlBody, true);
 
-                // Imposto Reply-To al mittente “logico” (facoltativo)
-                msg.setReplyTo(from);
-
-                msg.setTo(recipients);
-                msg.setSubject(subject);
-                msg.setText(body);
-
-                mailSender.send(msg);
-                log.info("📧 Email inviata: '{}' -> {}", subject, String.join(", ", recipients));
+                mailSender.send(mimeMessage);
+                log.info("📧 Email HTML inviata: '{}' -> {}", subject, String.join(", ", recipients));
                 return;
 
             } catch (Exception e) {
@@ -119,36 +120,92 @@ public class MailService {
         }
     }
 
-    // ================== Notifiche dominio Piattaforma ===================
+    private String generateWhatsAppLink(String name, String phone, java.time.LocalDate date, java.time.LocalTime time,
+            int people) {
+        try {
+            String cleanPhone = phone.replaceAll("[^0-9]", "");
+            if (!cleanPhone.startsWith("39")) {
+                cleanPhone = "39" + cleanPhone;
+            }
 
-    // ---------- Prenotazioni ----------
+            String msg = String.format(
+                    "Ciao %s, sono il Corner Pub! Ti confermo la prenotazione per %d persone il giorno %s alle %s. A presto! 🍺",
+                    name, people,
+                    date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                    time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")));
+
+            return "https://wa.me/" + cleanPhone + "?text="
+                    + java.net.URLEncoder.encode(msg, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "#";
+        }
+    }
+
+    private String generateEventWhatsAppLink(String name, String phone, String eventTitle,
+            java.time.LocalDateTime eventDate) {
+        try {
+            String cleanPhone = phone.replaceAll("[^0-9]", "");
+            if (!cleanPhone.startsWith("39")) {
+                cleanPhone = "39" + cleanPhone;
+            }
+
+            String msg = String.format(
+                    "Ciao %s, sono il Corner Pub! Ti confermo la registrazione all'evento '%s' del %s. A presto! 🍺",
+                    name, eventTitle,
+                    eventDate.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+
+            return "https://wa.me/" + cleanPhone + "?text="
+                    + java.net.URLEncoder.encode(msg, java.nio.charset.StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return "#";
+        }
+    }
+
     public void notifyReservationCreated(Reservation r) {
         DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
 
+        String waLink = generateWhatsAppLink(r.getUser().getName(), r.getUser().getPhone(), r.getDate(), r.getTime(),
+                r.getPeople());
+
         String body = """
-                Nuova prenotazione creata ✅
+                <html>
+                <body style="font-family: sans-serif; line-height: 1.6; color: #333;">
+                    <h2 style="color: #2c3e50;">Nuova prenotazione creata ✅</h2>
+                    <ul style="list-style: none; padding: 0;">
+                        <li><strong>Nome:</strong> %s</li>
+                        <li><strong>Telefono:</strong> %s</li>
+                        <li><strong>Data:</strong> %s</li>
+                        <li><strong>Ora:</strong> %s</li>
+                        <li><strong>Persone:</strong> %d</li>
+                        <li><strong>Tavolo:</strong> %s</li>
+                        <li><strong>Note:</strong> %s</li>
+                        <li><strong>Allergeni:</strong> %s</li>
+                        <li><strong>Privacy:</strong> Accettata (%s)</li>
+                        <li><strong>ID:</strong> %d</li>
+                    </ul>
+                    <div style="margin-top: 20px;">
+                        <a href="%s" style="background-color: #25D366; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">
+                           CONFERMA SU WHATSAPP
+                        </a>
+                    </div>
+                </body>
+                </html>
+                """
+                .formatted(
+                        safe(r.getUser().getName()),
+                        safe(r.getUser().getPhone()),
+                        r.getDate().format(df),
+                        r.getTime().format(tf),
+                        r.getPeople(),
+                        r.getTableNumber() == null ? "-" : r.getTableNumber(),
+                        r.getNote() == null ? "-" : r.getNote(),
+                        r.getAllergensNote() == null ? "-" : r.getAllergensNote(),
+                        r.getPrivacyPolicyVersion() == null ? "Sì" : r.getPrivacyPolicyVersion(),
+                        r.getId(),
+                        waLink);
 
-                Nome: %s
-                Telefono: %s
-                Data: %s
-                Ora: %s
-                Persone: %d
-                Tavolo: %s
-                Note: %s
-                ID prenotazione: %d
-                """.formatted(
-                safe(r.getUser().getName()),
-                safe(r.getUser().getPhone()),
-                r.getDate().format(df),
-                r.getTime().format(tf),
-                r.getPeople(),
-                r.getTableNumber() == null ? "-" : r.getTableNumber(),
-                r.getNote() == null ? "-" : r.getNote(),
-                r.getId()
-        );
-
-        send("Corner • Nuova prenotazione", body);
+        sendHtml("Corner • Nuova prenotazione", body);
     }
 
     public void notifyReservationCancelled(Reservation r) {
@@ -156,73 +213,86 @@ public class MailService {
         DateTimeFormatter tf = DateTimeFormatter.ofPattern("HH:mm");
 
         String body = """
-                Prenotazione cancellata ❌
-
-                Nome: %s
-                Telefono: %s
-                Data: %s
-                Ora: %s
-                Persone: %d
-                Tavolo: %s
-                Note: %s
-                ID prenotazione: %d
+                <html>
+                <body style="font-family: sans-serif; color: #333;">
+                    <h2 style="color: #c0392b;">Prenotazione cancellata ❌</h2>
+                    <ul>
+                        <li><strong>Nome:</strong> %s</li>
+                        <li><strong>Data:</strong> %s</li>
+                        <li><strong>Ora:</strong> %s</li>
+                        <li><strong>ID:</strong> %d</li>
+                    </ul>
+                </body>
+                </html>
                 """.formatted(
                 safe(r.getUser().getName()),
-                safe(r.getUser().getPhone()),
                 r.getDate().format(df),
                 r.getTime().format(tf),
-                r.getPeople(),
-                r.getTableNumber() == null ? "-" : r.getTableNumber(),
-                r.getNote() == null ? "-" : r.getNote(),
-                r.getId()
-        );
+                r.getId());
 
-        send("Corner • Prenotazione cancellata", body);
+        sendHtml("Corner • Prenotazione cancellata", body);
     }
 
-    // ---------- Eventi ----------
     public void notifyEventRegistrationCreated(EventRegistration reg) {
+        java.time.LocalDateTime dt = reg.getEvent().getData();
+        String waLink = generateEventWhatsAppLink(reg.getUser().getName(), reg.getUser().getPhone(),
+                reg.getEvent().getTitolo(), dt);
+
         String body = """
-                Nuova iscrizione evento ✅
+                <html>
+                <body style="font-family: sans-serif; line-height: 1.6; color: #333;">
+                    <h2 style="color: #2c3e50;">Nuova iscrizione evento ✅</h2>
+                    <ul style="list-style: none; padding: 0;">
+                        <li><strong>Evento:</strong> %s</li>
+                        <li><strong>Data Evento:</strong> %s</li>
+                        <li><strong>Iscritto:</strong> %s (%s)</li>
+                        <li><strong>Partecipanti:</strong> %d</li>
+                        <li><strong>Note:</strong> %s</li>
+                        <li><strong>Allergeni:</strong> %s</li>
+                        <li><strong>Privacy:</strong> Accettata (%s)</li>
+                        <li><strong>ID:</strong> %d</li>
+                    </ul>
+                    <div style="margin-top: 20px;">
+                        <a href="%s" style="background-color: #25D366; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block;">
+                           CONFERMA SU WHATSAPP
+                        </a>
+                    </div>
+                </body>
+                </html>
+                """
+                .formatted(
+                        safe(reg.getEvent().getTitolo()),
+                        dt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
+                        safe(reg.getUser().getName()),
+                        safe(reg.getUser().getPhone()),
+                        reg.getPartecipanti(),
+                        reg.getNote() == null ? "-" : reg.getNote(),
+                        reg.getAllergensNote() == null ? "-" : reg.getAllergensNote(),
+                        reg.getPrivacyPolicyVersion() == null ? "Sì" : reg.getPrivacyPolicyVersion(),
+                        reg.getId(),
+                        waLink);
 
-                Evento: %s
-                Data/Ora: %s
-                Iscritto: %s (%s)
-                Partecipanti: %d
-                Note: %s
-                ID registrazione: %d
-                """.formatted(
-                safe(reg.getEvent().getTitolo()),
-                String.valueOf(reg.getEvent().getData()),
-                safe(reg.getUser().getName()),
-                safe(reg.getUser().getPhone()),
-                reg.getPartecipanti(),
-                reg.getNote() == null ? "-" : reg.getNote(),
-                reg.getId()
-        );
-
-        send("Corner • Nuova iscrizione evento", body);
+        sendHtml("Corner • Nuova iscrizione evento", body);
     }
 
     public void notifyEventRegistrationCancelled(EventRegistration reg) {
         String body = """
-                Iscrizione evento cancellata ❌
-
-                Evento: %s
-                Data/Ora: %s
-                Utente: %s (%s)
-                Partecipanti: %d
-                ID registrazione: %d
+                <html>
+                <body style="font-family: sans-serif; color: #333;">
+                    <h2 style="color: #c0392b;">Iscrizione evento cancellata ❌</h2>
+                    <ul>
+                        <li><strong>Evento:</strong> %s</li>
+                        <li><strong>Utente:</strong> %s</li>
+                        <li><strong>ID:</strong> %d</li>
+                    </ul>
+                </body>
+                </html>
                 """.formatted(
                 safe(reg.getEvent().getTitolo()),
-                String.valueOf(reg.getEvent().getData()),
                 safe(reg.getUser().getName()),
-                safe(reg.getUser().getPhone()),
-                reg.getPartecipanti(),
-                reg.getId()
-        );
+                reg.getId());
 
-        send("Corner • Iscrizione evento cancellata", body);
+        sendHtml("Corner • Iscrizione evento cancellata", body);
     }
 
     // -------------------------------------------------------------------

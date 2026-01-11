@@ -38,6 +38,7 @@
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/request/PromotionMenuItemRequest.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/config/WebConfig.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/service/CategoryService.java
+/Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/exception/badrequest/PrivacyException.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/exception/resourcenotfound/ResourceNotFoundException.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/repository/InEvidenzaRepository.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/service/InEvidenzaService.java
@@ -73,6 +74,7 @@
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/request/EventTableAssignmentRequest.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/response/PromotionItemDetail.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/config/SecurityConfig.java
+/Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/exception/badrequest/AllergenException.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/response/PromotionMenuItemResponse.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/PubApplication.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/controller/admin/AdminCategoryController.java

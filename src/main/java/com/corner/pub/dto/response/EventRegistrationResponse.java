@@ -16,6 +16,8 @@ public class EventRegistrationResponse {
     private String phone;
     private String note;
     private String tableNumber; // 🔹 nuovo campo
+    private String allergensNote; // 🔹 nuovo campo
+    private String privacyPolicyVersion; // 🔹 nuovo campo
 
     public EventRegistrationResponse() {
     }
@@ -44,6 +46,8 @@ public class EventRegistrationResponse {
 
         this.note = reg.getNote();
         this.tableNumber = reg.getTableNumber(); // 🔹 assegno il tavolo
+        this.allergensNote = reg.getAllergensNote();
+        this.privacyPolicyVersion = reg.getPrivacyPolicyVersion();
     }
 
     public EventRegistrationResponse(Long id, LocalDateTime createdAt, EventResponse eventResponse,
@@ -134,5 +138,21 @@ public class EventRegistrationResponse {
 
     public void setTableNumber(String tableNumber) {
         this.tableNumber = tableNumber;
+    }
+
+    public String getAllergensNote() {
+        return allergensNote;
+    }
+
+    public void setAllergensNote(String allergensNote) {
+        this.allergensNote = allergensNote;
+    }
+
+    public String getPrivacyPolicyVersion() {
+        return privacyPolicyVersion;
+    }
+
+    public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
+        this.privacyPolicyVersion = privacyPolicyVersion;
     }
 }

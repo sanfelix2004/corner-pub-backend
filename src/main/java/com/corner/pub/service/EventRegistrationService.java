@@ -12,11 +12,12 @@ import com.corner.pub.model.User;
 import com.corner.pub.repository.EventRegistrationRepository;
 import com.corner.pub.repository.EventRepository;
 import com.corner.pub.repository.UserRepository;
-import com.corner.pub.service.MailService;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.beans.factory.annotation.Value; // aggiunto
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,15 +29,18 @@ public class EventRegistrationService {
     private final EventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
     private final MailService mailService;
+    private final String privacyPolicyVersion;
 
     public EventRegistrationService(UserRepository userRepository,
             EventRepository eventRepository,
             EventRegistrationRepository registrationRepository,
-            MailService mailService) {
+            MailService mailService,
+            @Value("${privacy.policy.version}") String privacyPolicyVersion) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.mailService = mailService;
+        this.privacyPolicyVersion = privacyPolicyVersion;
     }
 
     // -----------------------------
@@ -48,20 +52,29 @@ public class EventRegistrationService {
                 .map(existingUser -> {
                     if (request.getSurname() != null && !request.getSurname().isBlank()) {
                         existingUser.setSurname(request.getSurname());
-                        return userRepository.save(existingUser);
                     }
-                    return existingUser;
+                    if (existingUser.getPrivacyPolicyVersion() == null) {
+                        existingUser.setPrivacyPolicyVersion(privacyPolicyVersion);
+                    }
+                    return userRepository.save(existingUser);
                 })
                 .orElseGet(() -> {
                     User newUser = new User();
                     newUser.setName(request.getName());
                     newUser.setSurname(request.getSurname());
                     newUser.setPhone(request.getPhone());
+                    newUser.setPrivacyPolicyVersion(privacyPolicyVersion); // Imposta versione
                     return userRepository.save(newUser);
                 });
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CornerPubException("Evento non trovato"));
+
+        // GDPR Strict Compliance
+        if (!Boolean.TRUE.equals(request.getPrivacyAccepted())) {
+            throw new com.corner.pub.exception.badrequest.PrivacyException(
+                    "Per iscriverti all'evento devi accettare il trattamento dei dati personali.");
+        }
 
         // 🔒 controllo: stesso giorno
         LocalDate eventDate = event.getData().toLocalDate();
@@ -80,11 +93,25 @@ public class EventRegistrationService {
             }
         }
 
+        // Allergeni Guard
+        if (request.getAllergensNote() != null && !request.getAllergensNote().trim().isEmpty()) {
+            if (!Boolean.TRUE.equals(request.getAllergensConsent())) {
+                throw new com.corner.pub.exception.badrequest.AllergenException(
+                        "Per inserire allergeni è necessario acconsentire al trattamento di questi dati.");
+            }
+        }
+
         EventRegistration registration = new EventRegistration();
         registration.setUser(user);
         registration.setEvent(event);
         registration.setNote(request.getNote());
         registration.setPartecipanti(request.getPartecipanti());
+        registration.setPrivacyPolicyVersion(privacyPolicyVersion); // Imposta versione
+
+        if (request.getAllergensNote() != null && !request.getAllergensNote().trim().isEmpty()) {
+            registration.setAllergensNote(request.getAllergensNote());
+            registration.setAllergensConsent(true);
+        }
 
         EventRegistration saved = registrationRepository.save(registration);
         // notifica via email l'amministratore DOPO il commit della transazione
@@ -230,6 +257,8 @@ public class EventRegistrationService {
                 reg.getPartecipanti());
         resp.setNote(reg.getNote());
         resp.setTableNumber(reg.getTableNumber());
+        resp.setAllergensNote(reg.getAllergensNote()); // 🔹 Mappa allergeni
+        resp.setPrivacyPolicyVersion(reg.getPrivacyPolicyVersion()); // 🔹 Mappa privacy
 
         if (userResponse != null) {
             resp.setName(userResponse.getName());

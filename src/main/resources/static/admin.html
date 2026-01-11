@@ -681,6 +681,7 @@
                             <th>Telefono</th>
                             <th>Email</th>
                             <th>Registrazione</th>
+                            <th>Policy</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
@@ -776,6 +777,8 @@
                                             <th>Telefono</th>
                                             <th>Data Iscrizione</th>
                                             <th>Persone</th>
+                                            <th>Policy</th>
+                                            <th>Allergeni</th>
                                             <th>Note</th> <!-- AGGIUNTO -->
                                         </tr>
                                     </thead>
@@ -1862,6 +1865,7 @@
                     <td>${u.phone || '-'}</td>
                     <td>${u.email || '-'}</td>
                     <td>${u.createdAt ? formatDateTime(u.createdAt) : '-'}</td>
+                    <td><span class="badge badge-info">${u.privacyPolicyVersion || '-'}</span></td>
                     <td class="text-nowrap">
                         <button class="btn btn-sm btn-danger btn-action" onclick="eliminaUtente(${u.id})">
                             <i class="fas fa-trash-alt"></i>
@@ -1994,6 +1998,8 @@
                     <td>${escape(iscritto.phone || '-')}</td>
                     <td>${formatDateTime(iscritto.createdAt)}</td>
                     <td>${iscritto.partecipanti || 1}</td>
+                    <td><span class="badge badge-info">${iscritto.privacyPolicyVersion || '-'}</span></td>
+                    <td>${iscritto.allergensNote ? `<span class="badge badge-warning">${iscritto.allergensNote}</span>` : '-'}</td>
                     <td>${escape(iscritto.note || '-')}</td>
                 `;
                         modalBody.appendChild(tr);
@@ -2167,6 +2173,8 @@
                         <td>${b.phone}</td>
                         <td>${b.time}</td>
                         <td>${b.people}</td>
+                        <td><span class="badge badge-info">${b.privacyPolicyVersion || '-'}</span></td>
+                        <td>${b.allergensNote ? `<span class="badge badge-warning">${b.allergensNote}</span>` : '-'}</td>
                         <td>${b.note || '-'}</td>
                         <td>
                             <input type="text" id="table-${b.id}" class="form-control form-control-sm"
@@ -2197,6 +2205,8 @@
                                 <th>Telefono</th>
                                 <th>Orario</th>
                                 <th>Persone</th>
+                                <th>Policy</th>
+                                <th>Allergeni</th>
                                 <th>Note</th>
                                 <th>Tavolo</th>
                                 <th>Azioni</th>
@@ -2295,6 +2305,8 @@
         <td>${escape(attendee.user.phone)}</td>
         <td>${formatDateTime(attendee.createdAt)}</td>
         <td>${attendee.partecipanti || 1}</td>
+        <td><span class="badge badge-info">${attendee.privacyPolicyVersion || '-'}</span></td>
+        <td>${attendee.allergensNote ? `<span class="badge badge-warning">${attendee.allergensNote}</span>` : '-'}</td>
         <td>${escape(attendee.note || '-')}</td>
         <td>
             <input type="text" id="event-table-${attendee.id}"
@@ -2323,6 +2335,8 @@
                         <th>Telefono</th>
                         <th>Data Registrazione</th>
                         <th>Persone</th>
+                        <th>Policy</th>
+                        <th>Allergeni</th>
                         <th>Note</th>
                         <th>Tavolo</th>
                         <th>Azioni</th>

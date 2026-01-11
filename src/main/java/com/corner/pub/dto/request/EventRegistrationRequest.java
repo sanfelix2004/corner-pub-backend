@@ -12,6 +12,12 @@ public class EventRegistrationRequest {
     @jakarta.validation.constraints.Pattern(regexp = "^\\d+$", message = "Il telefono deve contenere solo numeri")
     private String phone;
     private String note; // <-- aggiunto
+    private Boolean privacyAccepted; // Aggiunto per GDPR
+
+    // Allergeni
+    private String allergensNote;
+    private Boolean allergensConsent;
+
     private int partecipanti = 1; // default 1
     private MultipartFile poster;
 
@@ -48,6 +54,22 @@ public class EventRegistrationRequest {
         this.note = note;
     }
 
+    public String getAllergensNote() {
+        return allergensNote;
+    }
+
+    public void setAllergensNote(String allergensNote) {
+        this.allergensNote = allergensNote;
+    }
+
+    public Boolean getAllergensConsent() {
+        return allergensConsent;
+    }
+
+    public void setAllergensConsent(Boolean allergensConsent) {
+        this.allergensConsent = allergensConsent;
+    }
+
     public int getPartecipanti() {
         return partecipanti;
     }
@@ -62,5 +84,13 @@ public class EventRegistrationRequest {
 
     public void setPoster(MultipartFile poster) {
         this.poster = poster;
+    }
+
+    public Boolean getPrivacyAccepted() {
+        return privacyAccepted;
+    }
+
+    public void setPrivacyAccepted(Boolean privacyAccepted) {
+        this.privacyAccepted = privacyAccepted;
     }
 }

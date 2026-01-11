@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "event_registration", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "event_id"}))
+@Table(name = "event_registration", uniqueConstraints = @UniqueConstraint(columnNames = { "user_id", "event_id" }))
 public class EventRegistration {
 
     @Id
@@ -29,14 +29,49 @@ public class EventRegistration {
     @Column
     private String note;
 
+    @Column(name = "allergens_note")
+    private String allergensNote;
+
+    @Column(name = "allergens_consent")
+    private Boolean allergensConsent;
+
     @Column
     private String tableNumber;
 
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
+    @Column(name = "privacy_policy_version")
+    private String privacyPolicyVersion;
 
-    public int getPartecipanti() { return partecipanti; }
-    public void setPartecipanti(int partecipanti) { this.partecipanti = partecipanti; }
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public String getAllergensNote() {
+        return allergensNote;
+    }
+
+    public void setAllergensNote(String allergensNote) {
+        this.allergensNote = allergensNote;
+    }
+
+    public Boolean getAllergensConsent() {
+        return allergensConsent;
+    }
+
+    public void setAllergensConsent(Boolean allergensConsent) {
+        this.allergensConsent = allergensConsent;
+    }
+
+    public int getPartecipanti() {
+        return partecipanti;
+    }
+
+    public void setPartecipanti(int partecipanti) {
+        this.partecipanti = partecipanti;
+    }
 
     public Long getId() {
         return id;
@@ -76,5 +111,13 @@ public class EventRegistration {
 
     public void setTableNumber(String tableNumber) {
         this.tableNumber = tableNumber;
+    }
+
+    public String getPrivacyPolicyVersion() {
+        return privacyPolicyVersion;
+    }
+
+    public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
+        this.privacyPolicyVersion = privacyPolicyVersion;
     }
 }

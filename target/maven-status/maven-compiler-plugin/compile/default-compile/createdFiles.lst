@@ -1,3 +1,4 @@
+com/corner/pub/exception/badrequest/AllergenException.class
 com/corner/pub/controller/MenuItemController.class
 com/corner/pub/repository/EventRepository.class
 com/corner/pub/dto/request/PromotionMenuItemRequest.class
@@ -73,6 +74,7 @@ com/corner/pub/model/Allergen.class
 com/corner/pub/repository/InEvidenzaRepository.class
 com/corner/pub/service/InEvidenzaService.class
 com/corner/pub/dto/request/EventRegistrationRequest.class
+com/corner/pub/exception/badrequest/PrivacyException.class
 com/corner/pub/exception/badrequest/CapacityExceededException.class
 com/corner/pub/dto/request/UserRequest.class
 com/corner/pub/dto/CategoryDTO.class

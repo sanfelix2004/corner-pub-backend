@@ -7,6 +7,7 @@ public class UserResponse {
     private String name;
     private String surname;
     private String phone;
+    private String privacyPolicyVersion;
 
     public UserResponse(UserResponse user) {
         this.id = user.getId();
@@ -20,6 +21,7 @@ public class UserResponse {
         this.name = user.getName();
         this.surname = user.getSurname();
         this.phone = user.getPhone();
+        this.privacyPolicyVersion = user.getPrivacyPolicyVersion();
     }
 
     // Getters & Setters
@@ -53,5 +55,13 @@ public class UserResponse {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getPrivacyPolicyVersion() {
+        return privacyPolicyVersion;
+    }
+
+    public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
+        this.privacyPolicyVersion = privacyPolicyVersion;
     }
 }
