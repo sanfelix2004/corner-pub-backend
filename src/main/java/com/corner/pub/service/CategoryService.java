@@ -18,7 +18,29 @@ public class CategoryService {
     private final MenuItemService menuItemService;
 
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        List<Category> categories = categoryRepository.findAll();
+        List<String> explicitOrder = List.of("panini", "fritti", "polpette", "pinse", "bevande");
+
+        categories.sort((c1, c2) -> {
+            int index1 = explicitOrder.indexOf(c1.getName().toLowerCase());
+            int index2 = explicitOrder.indexOf(c2.getName().toLowerCase());
+
+            if (index1 != -1 && index2 != -1)
+                return Integer.compare(index1, index2);
+            if (index1 != -1)
+                return -1;
+            if (index2 != -1)
+                return 1;
+
+            Integer s1 = c1.getSortOrder() != null ? c1.getSortOrder() : 999;
+            Integer s2 = c2.getSortOrder() != null ? c2.getSortOrder() : 999;
+            if (!s1.equals(s2))
+                return s1.compareTo(s2);
+
+            return c1.getName().compareToIgnoreCase(c2.getName());
+        });
+
+        return categories;
     }
 
     public Category addCategory(String name) {

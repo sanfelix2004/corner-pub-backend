@@ -1,0 +1,203 @@
+/* iPad/Kitchen First Dashboard */
+
+body {
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.kitchen-header {
+    background: var(--surface-color);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.kitchen-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.realtime-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.indicator-dot {
+    width: 10px;
+    height: 10px;
+    background-color: var(--danger);
+    /* Red if off */
+    border-radius: 50%;
+}
+
+.indicator-dot.connected {
+    background-color: var(--primary);
+    /* Green if connected */
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+}
+
+/* Kanban Grid */
+.kitchen-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    align-items: start;
+}
+
+/* Order Ticket */
+.ticket {
+    background: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    border-top: 6px solid var(--status-draft);
+    transition: var(--transition);
+}
+
+.ticket[data-status="SENT"] {
+    border-top-color: var(--status-sent);
+}
+
+.ticket[data-status="TO_PREPARE"] {
+    border-top-color: var(--status-prepare);
+}
+
+.ticket[data-status="IN_PREPARATION"] {
+    border-top-color: var(--status-preparation);
+}
+
+.ticket[data-status="DONE"] {
+    border-top-color: var(--status-done);
+}
+
+.ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.ticket-table {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.ticket-time {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.ticket-notes {
+    background: #FEF3C7;
+    /* Light yellow */
+    color: #92400E;
+    padding: 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+/* Order Items */
+.ticket-items {
+    flex-grow: 1;
+}
+
+.item-row {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #F3F4F6;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-row:last-child {
+    border-bottom: none;
+}
+
+.item-main {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.item-qty {
+    color: var(--primary);
+    margin-right: 0.5rem;
+    font-weight: 700;
+}
+
+.item-note {
+    font-size: 0.875rem;
+    color: #DC2626;
+    /* Red for high visibility on notes */
+    margin-top: 0.25rem;
+    font-style: italic;
+    font-weight: 500;
+    background: #FFF1F2;
+    padding: 2px 6px;
+    border-radius: 4px;
+    align-self: flex-start;
+}
+
+/* Actions */
+.ticket-actions {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    color: white;
+}
+
+.btn-prepare {
+    background-color: var(--status-preparation);
+}
+
+.btn-done {
+    background-color: var(--status-done);
+}
+
+.btn-archive {
+    background-color: var(--text-secondary);
+}
+
+/* Animation when ticket appears/disappears */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ticket.new-ticket {
+    animation: slideIn 0.3s ease-out forwards;
+}

@@ -17,6 +17,12 @@ public class Category {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
+    @Column(columnDefinition = "boolean default true")
+    private Boolean active = true;
+
     public Category(String name) {
         this.name = name;
     }

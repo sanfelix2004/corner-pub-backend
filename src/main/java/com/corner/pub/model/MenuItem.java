@@ -24,6 +24,12 @@ public class MenuItem {
     @Column(name = "imageurl")
     private String imageUrl;
 
+    @Column(name = "sort_order")
+    private Integer sortOrder;
+
+    @Column(columnDefinition = "boolean default true")
+    private Boolean available = true;
+
     // ... esistente ...
     @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.Set<MenuItemAllergen> allergens = new java.util.HashSet<>();
@@ -36,6 +42,22 @@ public class MenuItem {
 
     public void setAllergens(java.util.Set<MenuItemAllergen> allergens) {
         this.allergens = allergens;
+    }
+
+    public Integer getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(Integer sortOrder) {
+        this.sortOrder = sortOrder;
+    }
+
+    public Boolean getAvailable() {
+        return available;
+    }
+
+    public void setAvailable(Boolean available) {
+        this.available = available;
     }
 
     public String getImageUrl() {

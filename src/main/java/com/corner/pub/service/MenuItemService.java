@@ -61,7 +61,42 @@ public class MenuItemService {
     /** Restituisce l’intero menu (visibili + nascosti). */
     @Transactional(readOnly = true)
     public List<MenuItemResponse> getAllMenuItems() {
-        return menuItemRepository.findAll().stream()
+        List<MenuItem> items = menuItemRepository.findAll();
+        List<String> explicitOrder = List.of("panini", "fritti", "polpette", "pinse", "bevande");
+
+        items.sort((i1, i2) -> {
+            String c1 = i1.getCategoria() != null ? i1.getCategoria() : "";
+            String c2 = i2.getCategoria() != null ? i2.getCategoria() : "";
+
+            int index1 = explicitOrder.indexOf(c1.toLowerCase());
+            int index2 = explicitOrder.indexOf(c2.toLowerCase());
+
+            if (index1 != -1 && index2 != -1) {
+                if (index1 != index2)
+                    return Integer.compare(index1, index2);
+            } else if (index1 != -1) {
+                return -1;
+            } else if (index2 != -1) {
+                return 1;
+            } else {
+                int catComp = c1.compareToIgnoreCase(c2);
+                if (catComp != 0)
+                    return catComp;
+            }
+
+            // if same category
+            Integer s1 = i1.getSortOrder() != null ? i1.getSortOrder() : 999;
+            Integer s2 = i2.getSortOrder() != null ? i2.getSortOrder() : 999;
+            if (!s1.equals(s2))
+                return s1.compareTo(s2);
+
+            if (i1.getTitolo() != null && i2.getTitolo() != null) {
+                return i1.getTitolo().compareToIgnoreCase(i2.getTitolo());
+            }
+            return 0;
+        });
+
+        return items.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
