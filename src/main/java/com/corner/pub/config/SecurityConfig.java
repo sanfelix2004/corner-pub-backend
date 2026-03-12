@@ -50,6 +50,8 @@ public class SecurityConfig {
                                                 .requestMatchers(
                                                                 "/api/auth/**",
                                                                 "/api/menu/**",
+                                                                "/api/in_evidenza/**",
+                                                                "/api/promotions/**",
                                                                 "/api/reservations/**",
                                                                 "/api/events/**",
                                                                 "/api/users/**")
