@@ -85,12 +85,12 @@ public class WaiterController {
 
     @GetMapping("/orders/active")
     public ResponseEntity<List<KitchenOrder>> getActiveOrders() {
-        return ResponseEntity.ok(kitchenOrderService.getActiveKitchenOrders());
+        return ResponseEntity.ok(kitchenOrderService.getActiveKitchenOrdersForWaiter());
     }
 
     @GetMapping("/orders/archived")
     public ResponseEntity<List<KitchenOrder>> getArchivedOrders() {
-        return ResponseEntity.ok(kitchenOrderService.getArchivedKitchenOrders());
+        return ResponseEntity.ok(kitchenOrderService.getArchivedKitchenOrdersForWaiter());
     }
 
     @PostMapping("/tables/{tableId}/orders")

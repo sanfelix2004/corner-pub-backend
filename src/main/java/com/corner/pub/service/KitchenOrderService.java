@@ -6,6 +6,7 @@ import com.corner.pub.model.KitchenOrder;
 import com.corner.pub.model.MenuItem;
 import com.corner.pub.model.OrderItem;
 import com.corner.pub.model.TableSession;
+import com.corner.pub.model.enums.TableStatus;
 import com.corner.pub.model.enums.KitchenOrderStatus;
 import com.corner.pub.model.enums.OrderItemStatus;
 import com.corner.pub.model.enums.TableStatus;
@@ -185,6 +186,27 @@ public class KitchenOrderService {
                 .toList();
     }
 
+    /**
+     * Per il cameriere: non mostrare più le comande "finite" o archiviate tra le attive.
+     * (Nel flusso cucina, DONE resta ancora "attiva" finché non viene archiviata esplicitamente.)
+     */
+    @Transactional(readOnly = true)
+    public List<KitchenOrder> getActiveKitchenOrdersForWaiter() {
+        return kitchenOrderRepository.findByStatusNotIn(List.of(KitchenOrderStatus.DONE, KitchenOrderStatus.ARCHIVED));
+    }
+
+    /**
+     * Per il cameriere: storico ultime 12h include sia ARCHIVED che DONE.
+     */
+    @Transactional(readOnly = true)
+    public List<KitchenOrder> getArchivedKitchenOrdersForWaiter() {
+        LocalDateTime twelveHoursAgo = LocalDateTime.now().minusHours(12);
+        return kitchenOrderRepository.findByStatusIn(List.of(KitchenOrderStatus.DONE, KitchenOrderStatus.ARCHIVED))
+                .stream()
+                .filter(o -> o.getUpdatedAt() != null && o.getUpdatedAt().isAfter(twelveHoursAgo))
+                .toList();
+    }
+
     public KitchenOrder getKitchenOrderById(Long orderId) {
         return kitchenOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -219,6 +241,21 @@ public class KitchenOrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(KitchenOrderStatus.ARCHIVED);
         kitchenOrderRepository.save(order);
+
+        // Se non esistono altre comande non archiviate per quel tavolo,
+        // chiudi automaticamente la sessione tavolo così non appare più tra i "tavoli aperti".
+        TableSession table = order.getTableSession();
+        if (table != null) {
+            Long tableId = table.getId();
+            boolean hasOtherActiveOrders = kitchenOrderRepository
+                    .findByTableSessionIdAndStatusNot(tableId, KitchenOrderStatus.ARCHIVED)
+                    .isPresent();
+            if (!hasOtherActiveOrders) {
+                table.setStatus(TableStatus.CLOSED);
+                table.setClosedAt(LocalDateTime.now());
+                tableSessionRepository.save(table);
+            }
+        }
         notifyKitchen();
     }
 }

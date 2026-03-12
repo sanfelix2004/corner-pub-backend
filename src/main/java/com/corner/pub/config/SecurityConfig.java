@@ -83,6 +83,10 @@ public class SecurityConfig {
                                                                 "/images/**",
                                                                 "/login.html",
                                                                 "/index.html",
+                                                                "/cameriere",
+                                                                "/cameriere.html",
+                                                                "/cucina",
+                                                                "/cucina.html",
                                                                 "/menu/**",
                                                                 "/events/**")
                                                 .permitAll()
