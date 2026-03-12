@@ -4,6 +4,7 @@ import com.corner.pub.security.JwtAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,23 +38,42 @@ public class SecurityConfig {
         }
 
         @Bean
-        public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        @Order(1)
+        public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
                 http
+                                .securityMatcher("/api/**", "/ws-orders/**")
                                 .cors(withDefaults())
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
-                                                // Permitted logic from earlier
                                                 .requestMatchers(
-                                                                "/",
                                                                 "/api/auth/**",
                                                                 "/api/menu/**",
                                                                 "/api/reservations/**",
                                                                 "/api/events/**",
-                                                                "/api/users/**", // Expose standard API public
-                                                                                 // interactions (if they were open
-                                                                                 // before)
+                                                                "/api/users/**")
+                                                .permitAll()
+                                                .requestMatchers("/api/cameriere/**").authenticated()
+                                                .requestMatchers("/api/cucina/**").authenticated()
+                                                .anyRequest().authenticated())
+                                .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(
+                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                                new AntPathRequestMatcher("/api/**")))
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
+
+        @Bean
+        @Order(2)
+        public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
+                http
+                                .cors(withDefaults())
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/",
                                                                 "/js/**",
                                                                 "/css/**",
                                                                 "/img/**",
@@ -62,24 +82,10 @@ public class SecurityConfig {
                                                                 "/login.html",
                                                                 "/index.html",
                                                                 "/menu/**",
-                                                                "/events/**",
-                                                                "/ws-orders/**", // enable websocket handshake
-                                                                "/cameriere.html",
-                                                                "/cameriere",
-                                                                "/cucina.html",
-                                                                "/cucina")
+                                                                "/events/**")
                                                 .permitAll()
-                                                // Protected staff routes
-                                                .requestMatchers("/api/cameriere/**").authenticated()
-                                                .requestMatchers("/api/cucina/**").authenticated()
                                                 .requestMatchers("/admin/**", "/admin.html").authenticated()
-                                                // Default
                                                 .anyRequest().authenticated())
-                                .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(
-                                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                                new AntPathRequestMatcher("/api/**")))
-                                // Add JWT before username/pass filter
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                                 .formLogin(form -> form
                                                 .loginPage("/login.html")
                                                 .loginProcessingUrl("/login")
