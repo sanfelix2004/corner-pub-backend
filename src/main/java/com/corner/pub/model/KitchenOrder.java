@@ -40,6 +40,13 @@ public class KitchenOrder {
 
     private LocalDateTime sentAt;
 
+    /**
+     * Numero progressivo della comanda all'interno del tavolo (1, 2, 3...).
+     * Impostato al momento dell'invio.
+     */
+    @Column
+    private Integer commandaNumber;
+
     @OneToMany(mappedBy = "kitchenOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 

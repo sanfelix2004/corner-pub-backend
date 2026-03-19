@@ -1,5 +1,10 @@
 /* Waiter Mobile-First Styles */
 
+* {
+    /* Elimina il ritardo 300ms su tap in tutti i browser mobile */
+    touch-action: manipulation;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -123,12 +128,19 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 0.9rem 1rem;
     background: var(--surface-color);
     border-radius: var(--border-radius);
     margin-bottom: 0.75rem;
     box-shadow: var(--shadow-sm);
     border: 1px solid #E5E7EB;
+    /* Altezza minima per target touch comodo */
+    min-height: 64px;
+    transition: background 0.1s;
+}
+
+.menu-item-row:active {
+    background: #F9FAFB;
 }
 
 .menu-info h4 {
@@ -150,8 +162,9 @@ body {
 }
 
 .btn-round {
-    width: 40px;
-    height: 40px;
+    /* Touch target minimo 52px per uso rapido in sala */
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: #F3F4F6;
     color: var(--text-primary);
@@ -160,10 +173,12 @@ body {
     justify-content: center;
     font-size: 1.25rem;
     font-weight: 600;
+    transition: background 0.1s;
 }
 
 .btn-round:active {
-    background: #E5E7EB;
+    background: #D1D5DB;
+    transform: scale(0.95);
 }
 
 /* Modali (Custom) */
@@ -230,7 +245,55 @@ body {
 
 .btn-send {
     width: 100%;
-    padding: 1rem;
+    padding: 1.1rem;
     font-size: 1.125rem;
     letter-spacing: 0.5px;
+}
+
+/* Checkout buttons row — altezza uniforme 52px */
+.checkout-bar .btn {
+    min-height: 52px;
+    font-size: 0.95rem;
+}
+
+/* Tabs top — height garantita */
+.tabs-cameriere .btn {
+    min-height: 52px;
+    font-size: 1rem;
+}
+
+/* Table card — feedback tap istantaneo */
+.table-card {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Category pills — più grandi su mobile */
+#menu-categories .btn {
+    min-height: 44px;
+    padding: 0.5rem 1.1rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Nasconde scrollbar orizzontale ma mantiene scroll */
+#menu-categories {
+    scrollbar-width: none;
+}
+
+#menu-categories::-webkit-scrollbar {
+    display: none;
+}
+
+/* Tablet: 2 colonne per i tavoli */
+@media (min-width: 640px) {
+    .grid-mobile-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .grid-mobile-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }

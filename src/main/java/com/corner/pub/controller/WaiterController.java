@@ -85,12 +85,12 @@ public class WaiterController {
 
     @GetMapping("/orders/active")
     public ResponseEntity<List<KitchenOrder>> getActiveOrders() {
-        return ResponseEntity.ok(kitchenOrderService.getActiveKitchenOrdersForWaiter());
+        return ResponseEntity.ok(kitchenOrderService.getActiveKitchenOrders());
     }
 
     @GetMapping("/orders/archived")
     public ResponseEntity<List<KitchenOrder>> getArchivedOrders() {
-        return ResponseEntity.ok(kitchenOrderService.getArchivedKitchenOrdersForWaiter());
+        return ResponseEntity.ok(kitchenOrderService.getArchivedKitchenOrders());
     }
 
     @PostMapping("/tables/{tableId}/orders")
@@ -131,5 +131,10 @@ public class WaiterController {
     @PostMapping("/orders/{id}/send")
     public ResponseEntity<KitchenOrder> sendOrder(@PathVariable Long id) {
         return ResponseEntity.ok(kitchenOrderService.sendOrder(id));
+    }
+
+    @GetMapping("/tables/{tableId}/orders/history")
+    public ResponseEntity<List<KitchenOrder>> getTableOrderHistory(@PathVariable Long tableId) {
+        return ResponseEntity.ok(kitchenOrderService.getOrdersByTableSession(tableId));
     }
 }

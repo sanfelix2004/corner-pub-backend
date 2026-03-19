@@ -22,6 +22,7 @@ public class TableSessionService {
         TableSession session = new TableSession();
         session.setTableNumber(request.getTableNumber());
         session.setGeneralNotes(request.getGeneralNotes());
+        session.setCopeRti(request.getCopeRti());
         session.setOpenedByUsername(username);
         return tableSessionRepository.save(session);
     }

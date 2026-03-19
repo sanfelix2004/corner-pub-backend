@@ -1,12 +1,12 @@
 package com.corner.pub.service;
 
+import com.corner.pub.dto.KitchenEventPayload;
 import com.corner.pub.dto.request.AddOrderItemRequest;
 import com.corner.pub.dto.request.UpdateOrderItemRequest;
 import com.corner.pub.model.KitchenOrder;
 import com.corner.pub.model.MenuItem;
 import com.corner.pub.model.OrderItem;
 import com.corner.pub.model.TableSession;
-import com.corner.pub.model.enums.TableStatus;
 import com.corner.pub.model.enums.KitchenOrderStatus;
 import com.corner.pub.model.enums.OrderItemStatus;
 import com.corner.pub.model.enums.TableStatus;
@@ -37,8 +37,27 @@ public class KitchenOrderService {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    private void notifyKitchen() {
-        messagingTemplate.convertAndSend("/topic/kitchen/orders", "UPDATE");
+    /**
+     * Invia un payload strutturato via WebSocket a tutti i client connessi.
+     * Sostituisce la vecchia stringa generica "UPDATE" con un oggetto tipizzato
+     * che permette ai client di discriminare il tipo di evento.
+     *
+     * eventType può essere:
+     * NEW_ORDER — nuova comanda inviata dal cameriere (triggera audio + toast in
+     * cucina)
+     * STATUS_CHANGED — stato della comanda aggiornato dalla cucina
+     * ARCHIVED — comanda archiviata
+     * ITEM_CHANGED — item aggiunto/modificato/rimosso su comanda già inviata
+     */
+    private void notifyKitchen(KitchenOrder order, String eventType) {
+        TableSession ts = order.getTableSession();
+        KitchenEventPayload payload = new KitchenEventPayload(
+                eventType,
+                order.getId(),
+                ts != null ? ts.getTableNumber() : null,
+                ts != null ? ts.getCopeRti() : null,
+                order.getStatus().name());
+        messagingTemplate.convertAndSend("/topic/kitchen/orders", payload);
     }
 
     @Transactional
@@ -46,11 +65,15 @@ public class KitchenOrderService {
         TableSession table = tableSessionRepository.findById(tableSessionId)
                 .orElseThrow(() -> new RuntimeException("Table not found"));
 
-        Optional<KitchenOrder> activeOrder = kitchenOrderRepository.findByTableSessionIdAndStatusNot(
-                tableSessionId, KitchenOrderStatus.ARCHIVED);
+        // Cerca SOLO una comanda in stato DRAFT per questo tavolo.
+        // Se il cameriere ha già inviato la comanda #1 (SENT/IN_PREPARATION/DONE),
+        // questo metodo crea una nuova DRAFT (comanda #2) invece di restituire quella
+        // in corso.
+        Optional<KitchenOrder> existingDraft = kitchenOrderRepository
+                .findByTableSessionIdAndStatus(tableSessionId, KitchenOrderStatus.DRAFT);
 
-        if (activeOrder.isPresent()) {
-            return activeOrder.get();
+        if (existingDraft.isPresent()) {
+            return existingDraft.get();
         }
 
         KitchenOrder newOrder = new KitchenOrder();
@@ -60,7 +83,10 @@ public class KitchenOrderService {
     }
 
     public KitchenOrder getCurrentOrder(Long tableSessionId) {
-        return kitchenOrderRepository.findByTableSessionIdAndStatusNot(tableSessionId, KitchenOrderStatus.ARCHIVED)
+        // Cerca solo il DRAFT corrente: la comanda che il cameriere sta componendo.
+        // Le comande già inviate (SENT, IN_PREPARATION, DONE) rimangono visibili
+        // nello storico ma non sono la "comanda corrente".
+        return kitchenOrderRepository.findByTableSessionIdAndStatus(tableSessionId, KitchenOrderStatus.DRAFT)
                 .orElse(null);
     }
 
@@ -96,7 +122,7 @@ public class KitchenOrderService {
 
         OrderItem saved = orderItemRepository.save(item);
         if (order.getStatus() != KitchenOrderStatus.DRAFT) {
-            notifyKitchen();
+            notifyKitchen(order, "ITEM_CHANGED");
         }
         return saved;
     }
@@ -116,7 +142,7 @@ public class KitchenOrderService {
 
         OrderItem saved = orderItemRepository.save(item);
         if (item.getKitchenOrder().getStatus() != KitchenOrderStatus.DRAFT) {
-            notifyKitchen();
+            notifyKitchen(item.getKitchenOrder(), "ITEM_CHANGED");
         }
         return saved;
     }
@@ -131,7 +157,7 @@ public class KitchenOrderService {
         }
         orderItemRepository.delete(item);
         if (order.getStatus() != KitchenOrderStatus.DRAFT) {
-            notifyKitchen();
+            notifyKitchen(order, "ITEM_CHANGED");
         }
     }
 
@@ -142,7 +168,7 @@ public class KitchenOrderService {
         order.setGeneralNotes(notes);
         KitchenOrder saved = kitchenOrderRepository.save(order);
         if (saved.getStatus() != KitchenOrderStatus.DRAFT) {
-            notifyKitchen();
+            notifyKitchen(saved, "ITEM_CHANGED");
         }
         return saved;
     }
@@ -160,6 +186,15 @@ public class KitchenOrderService {
             order.setStatus(KitchenOrderStatus.SENT);
             order.setSentAt(LocalDateTime.now());
 
+            // Calcola il numero progressivo della comanda per questo tavolo.
+            // Conta quante comande (non DRAFT) esistono già per lo stesso tavolo.
+            Long tableSessionId = order.getTableSession().getId();
+            long previouslySent = kitchenOrderRepository.findByTableSessionId(tableSessionId)
+                    .stream()
+                    .filter(o -> o.getStatus() != KitchenOrderStatus.DRAFT && !o.getId().equals(orderId))
+                    .count();
+            order.setCommandaNumber((int) previouslySent + 1);
+
             // update table status
             TableSession table = order.getTableSession();
             table.setStatus(TableStatus.SENT_TO_KITCHEN);
@@ -167,44 +202,22 @@ public class KitchenOrderService {
         }
 
         KitchenOrder saved = kitchenOrderRepository.save(order);
-        notifyKitchen();
+        // NEW_ORDER è l'evento che triggera suono + toast in cucina
+        notifyKitchen(saved, "NEW_ORDER");
         return saved;
     }
 
     // --- Kitchen Flow ---
 
     public List<KitchenOrder> getActiveKitchenOrders() {
-        return kitchenOrderRepository.findByStatusNot(KitchenOrderStatus.ARCHIVED);
+        return kitchenOrderRepository.findByStatusNotInOrderByCreatedAtAsc(
+                java.util.Arrays.asList(KitchenOrderStatus.ARCHIVED, KitchenOrderStatus.DRAFT));
     }
 
     public List<KitchenOrder> getArchivedKitchenOrders() {
         LocalDateTime twelveHoursAgo = LocalDateTime.now().minusHours(12);
-        return kitchenOrderRepository.findAll().stream()
-                .filter(o -> o.getStatus() == KitchenOrderStatus.ARCHIVED &&
-                        o.getUpdatedAt() != null &&
-                        o.getUpdatedAt().isAfter(twelveHoursAgo))
-                .toList();
-    }
-
-    /**
-     * Per il cameriere: non mostrare più le comande "finite" o archiviate tra le attive.
-     * (Nel flusso cucina, DONE resta ancora "attiva" finché non viene archiviata esplicitamente.)
-     */
-    @Transactional(readOnly = true)
-    public List<KitchenOrder> getActiveKitchenOrdersForWaiter() {
-        return kitchenOrderRepository.findByStatusNotIn(List.of(KitchenOrderStatus.DONE, KitchenOrderStatus.ARCHIVED));
-    }
-
-    /**
-     * Per il cameriere: storico ultime 12h include sia ARCHIVED che DONE.
-     */
-    @Transactional(readOnly = true)
-    public List<KitchenOrder> getArchivedKitchenOrdersForWaiter() {
-        LocalDateTime twelveHoursAgo = LocalDateTime.now().minusHours(12);
-        return kitchenOrderRepository.findByStatusIn(List.of(KitchenOrderStatus.DONE, KitchenOrderStatus.ARCHIVED))
-                .stream()
-                .filter(o -> o.getUpdatedAt() != null && o.getUpdatedAt().isAfter(twelveHoursAgo))
-                .toList();
+        return kitchenOrderRepository.findByStatusAndUpdatedAtAfterOrderByUpdatedAtDesc(
+                KitchenOrderStatus.ARCHIVED, twelveHoursAgo);
     }
 
     public KitchenOrder getKitchenOrderById(Long orderId) {
@@ -217,8 +230,25 @@ public class KitchenOrderService {
         KitchenOrder order = kitchenOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(status);
+
+        // Ottimizzazione stato di produzione:
+        // Quando un ticket tavolo intero avanza in produzione in cucina,
+        // cascatamento automatico del relativo stato ai singoli piatti contenuti.
+        OrderItemStatus targetItemStatus = null;
+        if (status == KitchenOrderStatus.IN_PREPARATION) {
+            targetItemStatus = OrderItemStatus.IN_PREPARATION;
+        } else if (status == KitchenOrderStatus.DONE) {
+            targetItemStatus = OrderItemStatus.DONE;
+        }
+
+        if (targetItemStatus != null) {
+            for (OrderItem item : order.getItems()) {
+                item.setStatus(targetItemStatus);
+            }
+        }
+
         KitchenOrder saved = kitchenOrderRepository.save(order);
-        notifyKitchen();
+        notifyKitchen(saved, "STATUS_CHANGED");
         return saved;
     }
 
@@ -231,7 +261,7 @@ public class KitchenOrderService {
         }
         item.setStatus(status);
         OrderItem saved = orderItemRepository.save(item);
-        notifyKitchen();
+        notifyKitchen(item.getKitchenOrder(), "STATUS_CHANGED");
         return saved;
     }
 
@@ -240,22 +270,44 @@ public class KitchenOrderService {
         KitchenOrder order = kitchenOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(KitchenOrderStatus.ARCHIVED);
-        kitchenOrderRepository.save(order);
+        KitchenOrder saved = kitchenOrderRepository.save(order);
 
-        // Se non esistono altre comande non archiviate per quel tavolo,
-        // chiudi automaticamente la sessione tavolo così non appare più tra i "tavoli aperti".
-        TableSession table = order.getTableSession();
-        if (table != null) {
-            Long tableId = table.getId();
-            boolean hasOtherActiveOrders = kitchenOrderRepository
-                    .findByTableSessionIdAndStatusNot(tableId, KitchenOrderStatus.ARCHIVED)
-                    .isPresent();
-            if (!hasOtherActiveOrders) {
-                table.setStatus(TableStatus.CLOSED);
-                table.setClosedAt(LocalDateTime.now());
-                tableSessionRepository.save(table);
+        // Chiude il tavolo quando tutte le comande INVIATE (non-DRAFT) sono archiviate.
+        // I DRAFT vuoti pendenti vengono ignorati nel check e poi eliminati.
+        // Senza questo fix la bozza vuota della comanda successiva bloccava la
+        // chiusura.
+        TableSession ts = order.getTableSession();
+        if (ts != null && ts.getStatus() != com.corner.pub.model.enums.TableStatus.CLOSED) {
+            List<KitchenOrder> allOrders = kitchenOrderRepository.findByTableSessionId(ts.getId());
+
+            // Considera solo le comande realmente inviate (non DRAFT)
+            List<KitchenOrder> sentOrders = allOrders.stream()
+                    .filter(o -> o.getStatus() != KitchenOrderStatus.DRAFT)
+                    .toList();
+
+            boolean allArchived = !sentOrders.isEmpty() &&
+                    sentOrders.stream().allMatch(o -> o.getStatus() == KitchenOrderStatus.ARCHIVED);
+
+            if (allArchived) {
+                // Elimina eventuali bozze vuote rimaste aperte prima di chiudere il tavolo
+                allOrders.stream()
+                        .filter(o -> o.getStatus() == KitchenOrderStatus.DRAFT)
+                        .forEach(kitchenOrderRepository::delete);
+
+                ts.setStatus(com.corner.pub.model.enums.TableStatus.CLOSED);
+                ts.setClosedAt(LocalDateTime.now());
+                tableSessionRepository.save(ts);
             }
         }
-        notifyKitchen();
+
+        notifyKitchen(saved, "ARCHIVED");
+    }
+
+    /**
+     * Restituisce tutte le comande (incluse ARCHIVED) per un dato tavolo.
+     * Usato dal cameriere per vedere lo storico completo del tavolo.
+     */
+    public List<KitchenOrder> getOrdersByTableSession(Long tableSessionId) {
+        return kitchenOrderRepository.findByTableSessionId(tableSessionId);
     }
 }

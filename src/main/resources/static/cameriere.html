@@ -71,7 +71,11 @@
     <div id="view-order" style="display: none;">
         <header class="app-header">
             <button id="btn-back-tables" class="btn-round">←</button>
-            <div class="app-title">Tavolo <span id="current-table-display">--</span> <span id="current-order-status"
+            <div class="app-title">
+                Tavolo <span id="current-table-display">--</span>
+                <span id="current-table-coperti"
+                    style="margin-left: 0.4rem; font-size: 0.8rem; color: var(--text-secondary);"></span>
+                <span id="current-order-status"
                     style="margin-left: 0.5rem; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600;"></span>
             </div>
             <div class="table-badge" id="order-badge">0 Righe</div>
@@ -95,9 +99,13 @@
         </div>
 
         <div class="checkout-bar">
-            <button id="btn-view-cart" class="btn"
-                style="background:var(--surface-color); border:1px solid #E5E7EB; margin-bottom:0.5rem;">Riepilogo e
-                Note Comanda</button>
+            <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                <button id="btn-view-cart" class="btn"
+                    style="background:var(--surface-color); border:1px solid #E5E7EB; flex:1;">📋 Riepilogo</button>
+                <button id="btn-table-history" class="btn"
+                    style="background:var(--surface-color); border:1px solid #E5E7EB; flex:1;">🕐 Storico
+                    Tavolo</button>
+            </div>
             <button id="btn-send-order" class="btn btn-primary btn-send">Invia Comanda</button>
         </div>
     </div>

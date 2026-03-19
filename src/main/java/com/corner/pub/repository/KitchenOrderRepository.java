@@ -14,7 +14,21 @@ public interface KitchenOrderRepository extends JpaRepository<KitchenOrder, Long
 
     Optional<KitchenOrder> findByTableSessionIdAndStatusNot(Long tableSessionId, KitchenOrderStatus status);
 
-    List<KitchenOrder> findByStatusNotIn(List<KitchenOrderStatus> statuses);
+    List<KitchenOrder> findByTableSessionId(Long tableSessionId);
 
-    List<KitchenOrder> findByStatusIn(List<KitchenOrderStatus> statuses);
+    /** Cerca una comanda con uno status specifico per un dato tavolo (es. DRAFT) */
+    Optional<KitchenOrder> findByTableSessionIdAndStatus(Long tableSessionId, KitchenOrderStatus status);
+
+    /**
+     * Query nativa per velocizzare storico cucina escludendo caricamento in RAM
+     * intero db
+     */
+    List<KitchenOrder> findByStatusAndUpdatedAtAfterOrderByUpdatedAtDesc(KitchenOrderStatus status,
+            java.time.LocalDateTime date);
+
+    /**
+     * Query nativa per dashboard attiva ignorando archivio e draft, ordinate per
+     * creazione
+     */
+    List<KitchenOrder> findByStatusNotInOrderByCreatedAtAsc(List<KitchenOrderStatus> statuses);
 }

@@ -34,6 +34,9 @@ public class TableSession {
 
     private String openedByUsername;
 
+    @Column
+    private Integer copeRti;
+
     @PrePersist
     protected void onCreate() {
         if (this.openedAt == null) {
