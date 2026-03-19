@@ -1,14 +1,22 @@
-# 1. Usa immagine base con Java 21
-FROM eclipse-temurin:21-jdk
-  
-  # 2. Imposta cartella di lavoro
+# 1. Stage di Build: usa Maven per compilare il JAR
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
-  
-  # 3. Copia il JAR buildato
-COPY target/*.jar app.jar
-  
-  # 4. Espone la porta 8080 (quella usata da Spring Boot)
+
+# Copia il file pom.xml e scarica le dipendenze
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copia il codice sorgente e compila
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# 2. Stage di Runtime: usa JRE leggera per l'esecuzione
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+
+# Copia solo il JAR dallo stage di build
+COPY --from=build /app/target/*.jar app.jar
+
+# Espone la porta e comando di avvio
 EXPOSE 8080
-  
-  # 5. Comando di avvio
 ENTRYPOINT ["java", "-Dlogging.level.root=DEBUG", "-jar", "app.jar"]
