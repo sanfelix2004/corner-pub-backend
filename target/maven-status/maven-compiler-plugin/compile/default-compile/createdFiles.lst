@@ -17,6 +17,7 @@ com/corner/pub/dto/response/MenuItemResponse.class
 com/corner/pub/repository/MenuItemRepository.class
 com/corner/pub/controller/admin/AdminUserController.class
 com/corner/pub/model/MenuItemAllergen$Key.class
+com/corner/pub/dto/KitchenEventPayload.class
 com/corner/pub/model/AllergenStatus.class
 com/corner/pub/dto/response/EventRegistrationResponse.class
 com/corner/pub/service/KitchenOrderService.class

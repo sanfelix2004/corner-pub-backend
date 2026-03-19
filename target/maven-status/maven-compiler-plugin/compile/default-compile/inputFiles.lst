@@ -17,6 +17,7 @@
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/repository/EventRepository.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/security/JwtAuthenticationFilter.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/request/PromotionRequest.java
+/Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/KitchenEventPayload.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/model/enums/OrderItemStatus.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/model/Category.java
 /Users/frasanf004/Desktop/corner/corner-pub-backend/src/main/java/com/corner/pub/dto/request/PromotionMenuItemRequest.java
