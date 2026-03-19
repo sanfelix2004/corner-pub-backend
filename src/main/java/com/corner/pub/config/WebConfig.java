@@ -13,8 +13,8 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:5501", // Live Server default
-                        "http://127.0.0.1:5501", // Alternative Live Server
+                  //      "http://localhost:5501", // Live Server default
+                 //       "http://127.0.0.1:5501", // Alternative Live Server
                         "https://cornerpubgiovinazzo.onrender.com")
                 .allowedMethods("*")
                 .allowedHeaders("*")
