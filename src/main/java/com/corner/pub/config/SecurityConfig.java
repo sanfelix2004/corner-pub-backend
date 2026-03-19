@@ -23,8 +23,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import static org.springframework.security.config.Customizer.withDefaults;
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -42,19 +45,19 @@ public class SecurityConfig {
         public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .securityMatcher("/api/**", "/ws-orders/**")
-                                .cors(withDefaults())
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/api/auth/**",
-                                                                "/api/menu/**",
-                                                                "/api/in_evidenza/**",
-                                                                "/api/promotions/**",
-                                                                "/api/reservations/**",
-                                                                "/api/events/**",
-                                                                "/api/users/**")
+                                                                "/api/menu", "/api/menu/**",
+                                                                "/api/in_evidenza", "/api/in_evidenza/**",
+                                                                "/api/promotions", "/api/promotions/**",
+                                                                "/api/reservations", "/api/reservations/**",
+                                                                "/api/events", "/api/events/**",
+                                                                "/api/users", "/api/users/**")
                                                 .permitAll()
                                                 .requestMatchers("/api/cameriere/**").authenticated()
                                                 .requestMatchers("/api/cucina/**").authenticated()
@@ -71,7 +74,7 @@ public class SecurityConfig {
         @Order(2)
         public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .cors(withDefaults())
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
@@ -103,6 +106,28 @@ public class SecurityConfig {
                                                 .permitAll());
 
                 return http.build();
+        }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:5501",
+                                "http://127.0.0.1:5501",
+                                "http://localhost:3000",
+                                "http://127.0.0.1:3000",
+                                "https://cornerpubgiovinazzo.onrender.com",
+                                "https://corner-pub-backend.onrender.com"));
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+                configuration.setAllowedHeaders(
+                                Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+                configuration.setAllowCredentials(true);
+                configuration.setMaxAge(3600L);
+                configuration.setExposedHeaders(Arrays.asList("Authorization"));
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
         }
 
         @Bean
