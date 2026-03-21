@@ -30,19 +30,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String requestTokenHeader = request.getHeader("Authorization");
+        final String requestTokenParam = request.getParameter("token");
 
         String username = null;
         String jwtToken = null;
 
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
-            try {
-                username = jwtUtils.getUsernameFromToken(jwtToken);
-            } catch (Exception e) {
-                logger.warn("Unable to get JWT Token or Token has expired");
+        } else if (requestTokenParam != null && !requestTokenParam.isEmpty()) {
+            jwtToken = requestTokenParam;
+            // SockJS client appends "/info?t=..." to the base URL. If the token is passed
+            // in the URL, the parameter value gets corrupted with this suffix.
+            // Since a valid JWT (Base64URL encoded) never contains '/', we can safely
+            // split.
+            if (jwtToken.contains("/")) {
+                jwtToken = jwtToken.substring(0, jwtToken.indexOf("/"));
             }
         } else if (requestTokenHeader != null && !requestTokenHeader.startsWith("Bearer ")) {
             logger.warn("JWT Token does not begin with Bearer String");
+        }
+
+        if (jwtToken != null) {
+            try {
+                username = jwtUtils.getUsernameFromToken(jwtToken);
+            } catch (Exception e) {
+                logger.debug("Unable to get JWT Token or Token has expired");
+            }
         }
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

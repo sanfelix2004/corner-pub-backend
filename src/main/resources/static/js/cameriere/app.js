@@ -35,12 +35,14 @@ class CameriereApp {
     }
 
     startPolling() {
-        // Intervallo di polling adattivo: 
-        // 30s se il WebSocket è connesso e funzionante, 5s se siamo disconnessi (fallback puro).
+        // Fallback polling intelligente: lavora SOLO se il WebSocket muore.
         const tick = async () => {
-            if (Auth.isAuthenticated()) await this.pollUpdates();
-            const nextDelay = (this.wsClient && this.wsClient.isConnected) ? 30000 : 5000;
-            this._pollTimer = setTimeout(tick, nextDelay);
+            if (Auth.isAuthenticated()) {
+                if (!this.wsClient || !this.wsClient.isConnected) {
+                    await this.pollUpdates();
+                }
+            }
+            this._pollTimer = setTimeout(tick, 5000);
         };
         this._pollTimer = setTimeout(tick, 5000);
     }
@@ -66,14 +68,8 @@ class CameriereApp {
         });
 
         document.getElementById('btn-tab-tables')?.addEventListener('click', () => {
-            document.getElementById('btn-tab-tables').className = 'btn btn-primary';
-            document.getElementById('btn-tab-tables').style.background = '';
-            document.getElementById('btn-tab-tables').style.color = '';
-
-            document.getElementById('btn-tab-archived').className = 'btn';
-            document.getElementById('btn-tab-archived').style.background = 'var(--surface-color)';
-            document.getElementById('btn-tab-archived').style.border = '1px solid #ccc';
-            document.getElementById('btn-tab-archived').style.color = '#333';
+            document.getElementById('btn-tab-tables').classList.add('active');
+            document.getElementById('btn-tab-archived').classList.remove('active');
 
             document.getElementById('tables-list').style.display = 'grid';
             document.getElementById('archived-list').style.display = 'none';
@@ -81,14 +77,8 @@ class CameriereApp {
         });
 
         document.getElementById('btn-tab-archived')?.addEventListener('click', () => {
-            document.getElementById('btn-tab-archived').className = 'btn btn-primary';
-            document.getElementById('btn-tab-archived').style.background = '';
-            document.getElementById('btn-tab-archived').style.color = '';
-
-            document.getElementById('btn-tab-tables').className = 'btn';
-            document.getElementById('btn-tab-tables').style.background = 'var(--surface-color)';
-            document.getElementById('btn-tab-tables').style.border = '1px solid #ccc';
-            document.getElementById('btn-tab-tables').style.color = '#333';
+            document.getElementById('btn-tab-archived').classList.add('active');
+            document.getElementById('btn-tab-tables').classList.remove('active');
 
             document.getElementById('tables-list').style.display = 'none';
             document.getElementById('archived-list').style.display = 'grid';
@@ -141,6 +131,10 @@ class CameriereApp {
         document.getElementById('view-order').style.display = 'none';
         document.getElementById(`view-${viewName}`).style.display = viewName === 'login' ? 'flex' : 'block';
         window.scrollTo(0, 0);
+
+        if (viewName === 'tables') {
+            this.renderTables();
+        }
     }
 
     connectWebSocket() {
@@ -148,6 +142,19 @@ class CameriereApp {
         this.wsClient = new WSClient(endpoint, {
             '/topic/kitchen/orders': (msg) => this.handleKitchenEvent(msg)
         });
+
+        this.wsClient.onStatusChange = (connected) => {
+            const btn = document.getElementById('btn-logout');
+            if (connected) {
+                btn.style.color = '#10B981'; // Green
+                btn.title = 'Connesso (Click per Esci)';
+                this.fetchTables();
+            } else {
+                btn.style.color = '#EF4444'; // Red
+                btn.title = 'Disconnesso (Riconnessione...)';
+            }
+        };
+
         this.wsClient.connect().catch(e => console.error('WS Cameriere Error', e));
     }
 
@@ -157,26 +164,50 @@ class CameriereApp {
     async handleKitchenEvent(rawMsg) {
         let payload = null;
         try { payload = JSON.parse(rawMsg); }
-        catch (_) { payload = { eventType: 'STATUS_CHANGED' }; }
+        catch (_) { return; }
 
-        // Debounce del pollUpdates per evitare doppi refetch quando arrivano eventi multipli ravvicinati
-        clearTimeout(this._wsDebounceTimer);
-        this._wsDebounceTimer = setTimeout(async () => {
-            await this.pollUpdates();
-        }, 50);
+        const { eventType, orderId, tableNumber, copeRti, order } = payload || {};
 
-        // Se c'è un cambio di stato su un ordine aperto, mostra toast
-        if (payload && payload.eventType === 'STATUS_CHANGED' && payload.status) {
-            if (this.state.currentOrderId && document.getElementById('view-order').style.display !== 'none') {
-                const statusLabels = {
-                    IN_PREPARATION: '👨‍🍳 In Preparazione',
-                    DONE: '✅ Pronta per il Servizio',
-                    ARCHIVED: '🗄️ Archiviata'
-                };
-                const label = statusLabels[payload.status];
-                if (label) {
-                    Swal.fire({ toast: true, position: 'top', showConfirmButton: false, timer: 3500, icon: 'info', title: label });
+        // Visual Feedback
+        console.log(`[WS Event] ${eventType}`, payload);
+        Swal.fire({ toast: true, position: 'top', showConfirmButton: false, timer: 1000, icon: 'info', title: `Aggiornamento: ${eventType}` });
+
+        // Se l'ordinazione ha dati del tavolo ma l'oggetto order.tableSession è monco/assente, ricostruiamolo
+        if (order && !order.tableSession && tableNumber) {
+            order.tableSession = { tableNumber, copeRti };
+        }
+
+        // 1. Aggiornamento autoritativo via Fetch (ora sicuro post-commit)
+        await this.fetchTables();
+
+        // 2. Patching specifico per la vista "Dettaglio Tavolo" (se l'utente lo sta guardando)
+        if (order && this.state.currentTableId) {
+            // Verifichiamo se l'ordine appartiene al tavolo corrente (per ID o Numero)
+            const isSameTable = (order.tableSession?.id == this.state.currentTableId) ||
+                (String(order.tableSession?.tableNumber) === String(this.state.currentTableData?.tableNumber));
+
+            if (isSameTable) {
+                const hIdx = this.state.currentTableHistory.findIndex(o => o.id == order.id);
+                if (hIdx >= 0) this.state.currentTableHistory[hIdx] = order;
+                else {
+                    this.state.currentTableHistory.push(order);
+                    this.state.currentTableHistory.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
                 }
+
+                if (order.id == this.state.currentOrderId) {
+                    this.state.currentOrderStatus = order.status;
+                }
+
+                this.updateBadge();
+                this.updateOrderStatusUI();
+            }
+        }
+
+        // Se il tavolo che stiamo guardando è stato archiviato/chiuso, torniamo alla lista
+        if (eventType === 'TABLE_CLOSED' || eventType === 'ARCHIVED') {
+            const isClosingCurrent = (this.state.currentTableData && String(this.state.currentTableData.tableNumber) === String(tableNumber));
+            if (isClosingCurrent) {
+                this.showView('tables');
             }
         }
     }
@@ -208,10 +239,14 @@ class CameriereApp {
 
         if (this.state.currentTableId && document.getElementById('view-order').style.display !== 'none') {
             try {
-                const draftOrder = await API.get(`/api/cameriere/tables/${this.state.currentTableId}/orders/current`);
+                const [draftOrder, history] = await Promise.all([
+                    API.get(`/api/cameriere/tables/${this.state.currentTableId}/orders/current`),
+                    API.get(`/api/cameriere/tables/${this.state.currentTableId}/orders/history`)
+                ]);
                 const dJson = JSON.stringify(draftOrder);
+                const hJson = JSON.stringify(history);
 
-                if (this.lastDraftJson !== dJson) {
+                if (this.lastDraftJson !== dJson || this.lastHistoryJson !== hJson) {
                     if (this.state.currentOrderStatus !== draftOrder.status) {
                         if (draftOrder.status !== 'DRAFT') {
                             const statusLabels = {
@@ -225,7 +260,9 @@ class CameriereApp {
                     }
                     this.state.cartOpenItems = draftOrder.items || [];
                     this.state.currentOrderStatus = draftOrder.status;
+                    this.state.currentTableHistory = history || [];
                     this.lastDraftJson = dJson;
+                    this.lastHistoryJson = hJson;
                     this.updateBadge();
                     this.updateOrderStatusUI();
 
@@ -260,7 +297,27 @@ class CameriereApp {
     }
 
     async fetchTables() {
-        this.pollUpdates();
+        try {
+            const [tables, activeOrders] = await Promise.all([
+                API.get('/api/cameriere/tables/open'),
+                API.get('/api/cameriere/orders/active')
+            ]);
+            this.state.tables = tables;
+            this.state.activeOrders = activeOrders;
+
+            // Sync dello stato dell'ordine corrente se siamo in vista dettaglio
+            if (this.state.currentOrderId) {
+                const updated = activeOrders.find(o => o.id == this.state.currentOrderId);
+                if (updated) {
+                    this.state.currentOrderStatus = updated.status;
+                    this.updateOrderStatusUI();
+                }
+            }
+
+            this.renderTables();
+        } catch (e) {
+            console.error('fetchTables failed', e);
+        }
     }
 
     // --- Tables Rendering --- //
@@ -274,16 +331,36 @@ class CameriereApp {
         }
 
         this.state.tables.forEach(t => {
-            const order = this.state.activeOrders.find(o => o.tableSession.id === t.id && o.status !== 'DRAFT');
+            const orders = this.state.activeOrders.filter(o => {
+                if (o.status === 'DRAFT' || o.status === 'ARCHIVED') return false;
+                const tsId = o?.tableSession?.id;
+                const tsNum = o?.tableSession?.tableNumber;
+                return (tsId == t.id) || (String(tsNum) === String(t.tableNumber));
+            });
+
             let orderStatusHtml = '';
-            if (order) {
+            let canArchive = false;
+
+            if (orders.length > 0) {
                 const colors = {
-                    DONE: { color: '#059669', bg: '#D1FAE5' },
-                    IN_PREPARATION: { color: '#1D4ED8', bg: '#DBEAFE' },
-                    SENT: { color: '#D97706', bg: '#FEF3C7' }
+                    DONE: { color: '#059669', bg: '#D1FAE5', label: 'PRONTA' },
+                    IN_PREPARATION: { color: '#1D4ED8', bg: '#DBEAFE', label: 'PREP' },
+                    SENT: { color: '#D97706', bg: '#FEF3C7', label: 'SENT' },
+                    ARCHIVED: { color: '#6B7280', bg: '#F3F4F6', label: 'ARCH' }
                 };
-                const c = colors[order.status] || { color: '#6B7280', bg: '#F3F4F6' };
-                orderStatusHtml = `<div style="margin-top:0.5rem; font-size:0.75rem; background:${c.bg}; color:${c.color}; padding:2px 8px; border-radius:12px; display:inline-block; font-weight:600;">Ordine: ${order.status}</div>`;
+
+                // Generiamo un badge per ogni comanda
+                orders.forEach(order => {
+                    const c = colors[order.status] || { color: '#6B7280', bg: '#F3F4F6', label: order.status };
+                    const num = order.commandaNumber ? `#${order.commandaNumber}` : '';
+                    orderStatusHtml += `
+                        <div style="margin-top:0.4rem; font-size:0.7rem; background:${c.bg}; color:${c.color}; padding:2px 8px; border-radius:12px; display:inline-block; font-weight:700; border: 1px solid ${c.color}33; margin-right:4px;">
+                            ${num} ${c.label}
+                        </div>`;
+                });
+            } else {
+                // Se non c'è nessuna comanda attiva, permettiamo l'archiviazione
+                canArchive = true;
             }
 
             const copeRtiHtml = t.copeRti
@@ -302,7 +379,10 @@ class CameriereApp {
                     Aperto: ${new Date(t.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
                 ${t.generalNotes ? `<div style="margin-top:0.5rem; font-size:0.875rem; color:#D97706;">📝 ${t.generalNotes}</div>` : ''}
-                ${orderStatusHtml}
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    ${orderStatusHtml}
+                    ${canArchive ? `<button class="btn btn-danger btn-archive-table" style="padding: 4px 8px; font-size: 0.75rem; border-radius: 6px;" onclick="event.stopPropagation(); window.app.closeTable(${t.id})">Archivia ✕</button>` : ''}
+                </div>
             `;
             div.addEventListener('click', () => this.openTableSession(t));
             container.appendChild(div);
@@ -549,6 +629,34 @@ class CameriereApp {
 
         const btnSend = document.getElementById('btn-send-order');
         btnSend.style.display = this.state.currentOrderStatus !== 'DRAFT' ? 'none' : 'block';
+    }
+
+    async closeTable(tableId) {
+        const id = tableId || this.state.currentTableId;
+        const res = await Swal.fire({
+            title: 'Chiudere il Tavolo?',
+            text: 'Questa operazione archivierà la sessione e tutte le sue comande.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#EF4444',
+            confirmButtonText: 'Sì, Archivia',
+            cancelButtonText: 'Annulla'
+        });
+
+        if (res.isConfirmed) {
+            try {
+                Swal.fire({ title: 'Archiviazione...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                // Usiamo l'endpoint di cucina che gestisce l'archiviazione di tutte le comande
+                await API.post(`/api/cucina/tables/${id}/archive`);
+                await Swal.fire({ icon: 'success', title: 'Tavolo Archiviato!', timer: 1500, showConfirmButton: false });
+                await this.fetchTables();
+                if (id === this.state.currentTableId) {
+                    this.showView('tables');
+                }
+            } catch (e) {
+                Swal.fire('Errore', "Impossibile chiudere il tavolo", 'error');
+            }
+        }
     }
 
     // --- Menu Rendering --- //

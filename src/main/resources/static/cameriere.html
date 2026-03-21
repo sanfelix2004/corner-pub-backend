@@ -3,8 +3,20 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Corner Pub - Waiter</title>
+    <!--
+      FIX: Removed maximum-scale=1.0 and user-scalable=no.
+      These attributes block accessibility zoom (WCAG 1.4.4 violation) and can
+      cause interaction issues on some Android browsers. The correct way to
+      prevent unwanted iOS input zoom is to keep font-size >= 16px on inputs
+      (already done in base.css). viewport-fit=cover enables env(safe-area-inset-*)
+      support on notched iPhones.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Corner Pub - Cameriere</title>
+    <!-- PWA / iOS home screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#10B981">
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- SweetAlert2 for Modals -->
@@ -28,11 +40,11 @@
             <form id="login-form">
                 <div class="form-group">
                     <label>Username</label>
-                    <input type="text" id="username" required>
+                    <input type="text" id="username" autocomplete="username" required>
                 </div>
                 <div class="form-group">
                     <label>Password</label>
-                    <input type="password" id="password" required>
+                    <input type="password" id="password" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="btn btn-primary">Accedi</button>
             </form>
@@ -46,12 +58,14 @@
             <button id="btn-logout" class="btn-round" aria-label="Esci">🔌</button>
         </header>
 
-        <div class="tabs-cameriere"
-            style="display:flex; gap:1rem; margin-bottom: 1rem; padding: 0 1.5rem; justify-content: center; margin-top: 1rem;">
-            <button id="btn-tab-tables" class="btn btn-primary" style="flex: 1;">Tavoli Aperti</button>
-            <button id="btn-tab-archived" class="btn"
-                style="flex: 1; background:var(--surface-color); border:1px solid #ccc; color:#333;">Storico Ultime
-                12h</button>
+        <!--
+          FIX: Replaced inline flex styles with .tabs-cameriere class (defined in cameriere.css).
+          Tab active state is now managed via .tab-btn / .tab-btn.active CSS classes
+          instead of brittle JS inline style overrides.
+        -->
+        <div class="tabs-cameriere">
+            <button id="btn-tab-tables" class="tab-btn active">Tavoli Aperti</button>
+            <button id="btn-tab-archived" class="tab-btn">Storico Ultime 12h</button>
         </div>
 
         <div class="container">
@@ -63,14 +77,14 @@
                 <!-- Archived orders injected here -->
             </div>
 
-            <button id="btn-new-table" class="fab-bottom">+</button>
+            <button id="btn-new-table" class="fab-bottom" aria-label="Apri nuovo tavolo">+</button>
         </div>
     </div>
 
     <!-- ORDER VIEW (Inside a table) -->
     <div id="view-order" style="display: none;">
         <header class="app-header">
-            <button id="btn-back-tables" class="btn-round">←</button>
+            <button id="btn-back-tables" class="btn-round" aria-label="Torna ai tavoli">←</button>
             <div class="app-title">
                 Tavolo <span id="current-table-display">--</span>
                 <span id="current-table-coperti"
@@ -82,13 +96,15 @@
         </header>
 
         <div class="container">
-            <!-- Search & Categories -->
-            <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem;">
+            <!--
+              FIX: Added .search-scroll-row class (defined in cameriere.css) which
+              hides the scrollbar consistently with #menu-categories.
+            -->
+            <div class="search-scroll-row">
                 <input type="text" id="menu-search" placeholder="Cerca piatto...">
             </div>
 
-            <div id="menu-categories"
-                style="display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 1rem; margin-bottom: 0.5rem;">
+            <div id="menu-categories">
                 <!-- Categories toggle -->
             </div>
 
@@ -99,7 +115,7 @@
         </div>
 
         <div class="checkout-bar">
-            <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+            <div style="display:flex; gap:0.5rem;">
                 <button id="btn-view-cart" class="btn"
                     style="background:var(--surface-color); border:1px solid #E5E7EB; flex:1;">📋 Riepilogo</button>
                 <button id="btn-table-history" class="btn"
@@ -115,15 +131,15 @@
         <div class="bottom-sheet">
             <div class="sheet-header">
                 <h3 id="modal-item-name">Aggiungi Piatto</h3>
-                <button id="btn-close-modal" class="btn-round">✕</button>
+                <button id="btn-close-modal" class="btn-round" aria-label="Chiudi">✕</button>
             </div>
             <div
                 style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.5rem;">
-                <button id="btn-qty-minus" class="btn-round"
-                    style="width:50px; height:50px; font-size:1.5rem;">-</button>
-                <span id="modal-qty" style="font-size: 2rem; font-weight: 700;">1</span>
-                <button id="btn-qty-plus" class="btn-round"
-                    style="width:50px; height:50px; font-size:1.5rem;">+</button>
+                <button id="btn-qty-minus" class="btn-round" style="width:52px; height:52px; font-size:1.5rem;"
+                    aria-label="Riduci quantità">−</button>
+                <span id="modal-qty" style="font-size: 2rem; font-weight: 700;" aria-live="polite">1</span>
+                <button id="btn-qty-plus" class="btn-round" style="width:52px; height:52px; font-size:1.5rem;"
+                    aria-label="Aumenta quantità">+</button>
             </div>
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label>Note variante (es. Senza pomodoro)</label>

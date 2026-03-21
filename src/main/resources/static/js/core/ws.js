@@ -1,5 +1,6 @@
 // WebSocket client con reconnect esponenziale automatico
 // e callback onStatusChange per aggiornare l'indicatore UI.
+import Auth from './auth.js';
 
 class WSClient {
     constructor(endpoint, topicListenerMappings) {
@@ -22,7 +23,10 @@ class WSClient {
     _doConnect(resolve, reject) {
         if (this._destroyed) return;
 
-        const socket = new SockJS(this.endpoint);
+        const token = Auth.getToken();
+        const urlWithToken = token ? `${this.endpoint}?token=${token}` : this.endpoint;
+
+        const socket = new SockJS(urlWithToken);
         this.stompClient = Stomp.over(socket);
         this.stompClient.debug = null; // zero spam in console
 

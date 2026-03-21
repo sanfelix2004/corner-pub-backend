@@ -3,6 +3,7 @@ package com.corner.pub.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.corner.pub.model.KitchenOrder;
 
 /**
  * Payload strutturato inviato via WebSocket ai client (cucina e cameriere)
@@ -27,4 +28,5 @@ public class KitchenEventPayload {
     private String tableNumber;
     private Integer copeRti;
     private String status;
+    private KitchenOrder order;
 }

@@ -9,14 +9,21 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    /* Prevent overscroll bounce on mobile */
+    overscroll-behavior-y: none;
 }
 
 .kitchen-header {
     background: var(--surface-color);
+    /* FIX: Use padding with safe-area-inset for notched phones */
     padding: 1rem 2rem;
+    padding-left: calc(2rem + env(safe-area-inset-left));
+    padding-right: calc(2rem + env(safe-area-inset-right));
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
     box-shadow: var(--shadow-sm);
     position: sticky;
     top: 0;
@@ -50,12 +57,19 @@ body {
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
 }
 
-/* Kanban Grid */
+/* Kanban Grid
+   FIX: Added explicit mobile breakpoint — auto-fill with minmax(320px) can
+   produce a 0-column grid on 360px screens because 320px + gap > 360px.
+   Force single column on small viewports, let grid auto-expand on wider ones.
+*/
 .kitchen-board {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-    padding: 1.5rem;
+    grid-template-columns: 1fr;
+    /* Mobile default: single column */
+    gap: 1.25rem;
+    padding: 1.25rem;
+    padding-left: calc(1.25rem + env(safe-area-inset-left));
+    padding-right: calc(1.25rem + env(safe-area-inset-right));
     align-items: start;
 }
 
@@ -417,4 +431,104 @@ body {
 
 .kitchen-toast-close:hover {
     color: #F9FAFB;
+}
+
+/* =============================================
+   TAB BUTTONS — cucina
+   Replaces brittle inline styles managed by JS
+   ============================================= */
+
+.tabs-cucina {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    padding-left: calc(1.5rem + env(safe-area-inset-left));
+    padding-right: calc(1.5rem + env(safe-area-inset-right));
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tab-btn-cucina {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    background: var(--surface-color);
+    border: 1px solid #4B5563;
+    color: var(--text-secondary);
+    border-radius: var(--border-radius-pill);
+    font-weight: 600;
+    font-size: 0.95rem;
+    min-height: 52px;
+    flex: 0 1 auto;
+    white-space: nowrap;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.tab-btn-cucina.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* =============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================= */
+
+/* Tablet and up: multi-column Kanban */
+@media (min-width: 640px) {
+    .kitchen-board {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+}
+
+/* Large screens: ensure tickets don't get too wide */
+@media (min-width: 1280px) {
+    .kitchen-board {
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    }
+}
+
+/* Landscape on phone: compact header */
+@media (orientation: landscape) and (max-height: 500px) {
+    .kitchen-header {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .kitchen-board {
+        gap: 1rem;
+        padding: 1rem;
+    }
+}
+
+/* =============================================
+   AUDIO UNLOCK BANNER (iOS/iPad Safari Fix)
+   ============================================= */
+#audio-unlock-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10000;
+    background: #10B981;
+    /* Emeraude Green */
+    color: white;
+    text-align: center;
+    padding: 1.25rem 1rem;
+    font-weight: 800;
+    font-size: 1.15rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: none;
+    transform: translateY(-100%);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#audio-unlock-banner.visible {
+    display: block;
+    transform: translateY(0);
 }

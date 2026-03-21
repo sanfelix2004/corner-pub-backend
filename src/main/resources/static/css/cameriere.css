@@ -16,8 +16,12 @@ body {
 .app-header {
     position: sticky;
     top: 0;
+    /* FIX: Add top safe area inset for notched phones in landscape */
+    padding-top: calc(1rem + env(safe-area-inset-top));
+    padding-bottom: 1rem;
+    padding-left: calc(1rem + env(safe-area-inset-left));
+    padding-right: calc(1rem + env(safe-area-inset-right));
     background-color: var(--surface-color);
-    padding: 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -25,10 +29,24 @@ body {
     z-index: 100;
 }
 
+/* FIX: Only add top safe area on the very first sticky header (portrait) */
+@media (orientation: portrait) {
+    .app-header {
+        padding-top: 1rem;
+    }
+}
+
 .app-title {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
+    /* Prevent title from being clipped on very small screens */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+    margin: 0 0.5rem;
 }
 
 .table-badge {
@@ -38,13 +56,20 @@ body {
     border-radius: var(--border-radius-pill);
     font-size: 0.875rem;
     font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
-/* Container */
+/* Container
+   FIX: padding-bottom was 80px — too small. The checkout-bar is ~140px tall
+   (2 rows of buttons + padding) + up to 34px safe area on iPhone.
+   Use a generous value that always clears the bar on any device.
+*/
 .container {
     padding: 1rem;
-    padding-bottom: 80px;
-    /* Space for FAB or bottom nav */
+    padding-left: calc(1rem + env(safe-area-inset-left));
+    padding-right: calc(1rem + env(safe-area-inset-right));
+    padding-bottom: calc(160px + env(safe-area-inset-bottom));
 }
 
 /* Grid per liste (es. tavoli) */
@@ -64,6 +89,8 @@ body {
     box-shadow: var(--shadow-sm);
     border: 1px solid #E5E7EB;
     transition: var(--transition);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .table-card:active {
@@ -88,6 +115,7 @@ body {
     font-weight: 600;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
+    white-space: nowrap;
 }
 
 .status-open {
@@ -105,11 +133,14 @@ body {
     color: #15803D;
 }
 
-/* FAB */
+/* FAB
+   FIX: Added env(safe-area-inset-bottom) so the FAB never lands under the
+   iOS home indicator. Also added right inset for landscape notch.
+*/
 .fab-bottom {
     position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    right: calc(1.5rem + env(safe-area-inset-right));
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -137,15 +168,28 @@ body {
     /* Altezza minima per target touch comodo */
     min-height: 64px;
     transition: background 0.1s;
+    /* FIX: Prevent content overflow on small screens */
+    gap: 0.75rem;
+    min-width: 0;
 }
 
 .menu-item-row:active {
     background: #F9FAFB;
 }
 
+.menu-info {
+    flex: 1;
+    min-width: 0;
+    /* Allow text to shrink and truncate on small screens */
+}
+
 .menu-info h4 {
     margin: 0;
     font-size: 1rem;
+    /* Prevent very long dish names from breaking layout */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .menu-info p.price {
@@ -159,6 +203,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .btn-round {
@@ -174,6 +219,7 @@ body {
     font-size: 1.25rem;
     font-weight: 600;
     transition: background 0.1s;
+    flex-shrink: 0;
 }
 
 .btn-round:active {
@@ -181,21 +227,29 @@ body {
     transform: scale(0.95);
 }
 
-/* Modali (Custom) */
+/* Modali (Custom)
+   FIX #1: height: 100vh → height: 100dvh with 100vh fallback.
+   dvh = "dynamic viewport height" = accounts for browser chrome on iOS.
+   FIX #2: Added overscroll-behavior: contain to prevent background scroll
+   when user scrolls inside the sheet.
+*/
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
+    /* Fallback */
+    height: 100dvh;
+    /* Modern: adapts to dynamic browser chrome */
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: flex-end;
-    /* Bottom sheet su mobile */
     z-index: 1000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity 0.25s ease;
+    overscroll-behavior: contain;
 }
 
 .modal-overlay.active {
@@ -203,14 +257,35 @@ body {
     pointer-events: auto;
 }
 
+/* Bottom Sheet
+   FIX #1: max-height + overflow-y: auto → content scrolls internally,
+   "Conferma" button always visible even if content grows.
+   FIX #2: padding-bottom with safe-area-inset-bottom → button never under
+   the iOS home indicator on iPhone X/11/12/13/14/15.
+   FIX #3: will-change + backface-visibility → smoother animation on iOS.
+*/
 .bottom-sheet {
     background: var(--surface-color);
     width: 100%;
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     padding: 1.5rem;
+    padding-left: calc(1.5rem + env(safe-area-inset-left));
+    padding-right: calc(1.5rem + env(safe-area-inset-right));
+    /* FIX: safe area padding at the bottom */
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    /* FIX: limits height and enables internal scroll */
+    max-height: 85vh;
+    max-height: 85dvh;
+    overflow-y: auto;
+    /* Prevent bounce scroll from escaping */
+    overscroll-behavior: contain;
+    /* FIX: smoother GPU animation on iOS */
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .modal-overlay.active .bottom-sheet {
@@ -226,9 +301,20 @@ body {
 
 .sheet-header h3 {
     font-size: 1.25rem;
+    /* Prevent long item names from overflowing */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    padding-right: 0.5rem;
 }
 
-/* Checkout bar */
+/* Checkout bar
+   FIX #1: Added env(safe-area-inset-bottom) so the bar and its buttons never
+   land behind the iOS home indicator.
+   FIX #2: Added left/right inset for landscape notch (e.g. iPhone in landscape).
+*/
 .checkout-bar {
     position: fixed;
     bottom: 0;
@@ -236,11 +322,16 @@ body {
     width: 100%;
     background: var(--surface-color);
     border-top: 1px solid #E5E7EB;
-    padding: 1rem;
+    padding: 0.875rem;
+    padding-left: calc(0.875rem + env(safe-area-inset-left));
+    padding-right: calc(0.875rem + env(safe-area-inset-right));
+    /* FIX: push content above home indicator */
+    padding-bottom: calc(0.875rem + env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     z-index: 100;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .btn-send {
@@ -256,19 +347,75 @@ body {
     font-size: 0.95rem;
 }
 
+/* Search row — horizontal scroll without visible scrollbar */
+.search-scroll-row {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.search-scroll-row::-webkit-scrollbar {
+    display: none;
+}
+
 /* Tabs top — height garantita */
+.tabs-cameriere {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    padding-left: calc(1rem + env(safe-area-inset-left));
+    padding-right: calc(1rem + env(safe-area-inset-right));
+    justify-content: center;
+}
+
 .tabs-cameriere .btn {
     min-height: 52px;
     font-size: 1rem;
+    flex: 1;
 }
 
-/* Table card — feedback tap istantaneo */
-.table-card {
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+/* Tab button states — replaces brittle inline JS styles */
+.tab-btn {
+    background: var(--surface-color);
+    border: 1px solid #D1D5DB;
+    color: var(--text-primary);
+    border-radius: var(--border-radius-pill);
+    min-height: 52px;
+    font-size: 1rem;
+    font-weight: 600;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.tab-btn.active,
+.tab-btn-active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
 }
 
 /* Category pills — più grandi su mobile */
+#menu-categories {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#menu-categories::-webkit-scrollbar {
+    display: none;
+}
+
 #menu-categories .btn {
     min-height: 44px;
     padding: 0.5rem 1.1rem;
@@ -276,24 +423,32 @@ body {
     flex-shrink: 0;
 }
 
-/* Nasconde scrollbar orizzontale ma mantiene scroll */
-#menu-categories {
-    scrollbar-width: none;
-}
-
-#menu-categories::-webkit-scrollbar {
-    display: none;
-}
-
 /* Tablet: 2 colonne per i tavoli */
 @media (min-width: 640px) {
     .grid-mobile-list {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .container {
+        padding-bottom: calc(120px + env(safe-area-inset-bottom));
     }
 }
 
 @media (min-width: 1024px) {
     .grid-mobile-list {
         grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Landscape: reduce vertical spacing and ensure bars stay compact */
+@media (orientation: landscape) and (max-height: 500px) {
+    .bottom-sheet {
+        max-height: 95dvh;
+        max-height: 95vh;
+    }
+
+    .app-header {
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
     }
 }

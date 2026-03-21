@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1E1E1E">
     <title>Corner Pub - Cucina Dashboard</title>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,10 +23,15 @@
 </head>
 
 <body data-theme="dark">
+    <!-- AUDIO UNLOCK BANNER (iOS Safari) -->
+    <div id="audio-unlock-banner">
+        🔊 Tocca qui per abilitare il suono delle comande! 🔊
+    </div>
 
     <!-- LOGIN VIEW -->
-    <div id="view-login" class="auth-wrapper"
-        style="display: flex; height: 100vh; align-items: center; justify-content: center; width: 100%;">
+    <div id="view-login" class="auth-wrapper">
+        <!-- FIX: Removed inline height:100vh — .auth-wrapper in base.css now
+             correctly uses min-height: 100svh with a 100vh fallback. -->
         <div class="auth-card">
             <h2>Accesso Cucina</h2>
             <p>Corner Pub</p>
@@ -51,16 +59,14 @@
                     <span id="ws-label">Offline</span>
                 </div>
                 <button id="btn-logout" class="btn"
-                    style="background:#374151; color:white; padding:0.5rem 1rem;">Esci</button>
+                    style="background:#374151; color:white; padding:0.5rem 1.25rem; min-height:44px; flex-shrink:0;"
+                    aria-label="Esci">Esci</button>
             </div>
         </header>
 
-        <div class="tabs-cucina"
-            style="display:flex; gap:1rem; margin-bottom: 1rem; padding: 0 1.5rem; justify-content: center;">
-            <button id="btn-tab-active" class="btn btn-primary" style="flex: 0 1 200px;">Attive</button>
-            <button id="btn-tab-archived" class="btn"
-                style="flex: 0 1 300px; background:var(--surface-color); border:1px solid #ccc; color:#333;">Archiviate
-                (Ultime 12h)</button>
+        <div class="tabs-cucina">
+            <button id="btn-tab-active" class="tab-btn-cucina active">Attive</button>
+            <button id="btn-tab-archived" class="tab-btn-cucina">Archiviate (Ultime 12h)</button>
         </div>
 
         <div id="kanban-board" class="kitchen-board">

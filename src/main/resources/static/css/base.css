@@ -4,12 +4,15 @@
   --surface-color: #FFFFFF;
   --text-primary: #1F2937;
   --text-secondary: #6B7280;
-  
-  --primary: #10B981; /* Emerald */
+
+  --primary: #10B981;
+  /* Emerald */
   --primary-hover: #059669;
-  --secondary: #F59E0B; /* Amber */
-  --danger: #EF4444; /* Red */
-  
+  --secondary: #F59E0B;
+  /* Amber */
+  --danger: #EF4444;
+  /* Red */
+
   /* Status Colors */
   --status-draft: #9CA3AF;
   --status-sent: #60A5FA;
@@ -21,7 +24,7 @@
   --border-radius: 12px;
   --border-radius-lg: 16px;
   --border-radius-pill: 9999px;
-  
+
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
@@ -52,7 +55,12 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   line-height: 1.2;
 }
@@ -92,9 +100,13 @@ button {
   color: white;
 }
 
-input, textarea, select {
+/* Ensure inputs never trigger iOS auto-zoom (needs font-size >= 16px) */
+input,
+textarea,
+select {
   font-family: inherit;
   font-size: 1rem;
+  /* Must stay >= 16px to prevent iOS Safari auto-zoom */
   padding: 0.75rem 1rem;
   border-radius: var(--border-radius-sm);
   border: 1px solid #D1D5DB;
@@ -104,13 +116,15 @@ input, textarea, select {
   transition: border-color 0.2s;
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
-[data-theme="dark"] input, [data-theme="dark"] textarea {
+[data-theme="dark"] input,
+[data-theme="dark"] textarea {
   border-color: #374151;
 }
 
@@ -121,13 +135,23 @@ p.empty-state {
   font-style: italic;
 }
 
-/* Auth Screens */
+/* Auth Screens
+   FIX: replaced 100vh with min-height + svh/dvh fallback chain.
+   100vh on iOS Safari with dynamic toolbar = content taller than visible area.
+   svh = "small viewport height" = excludes browser chrome → always safe.
+*/
 .auth-wrapper {
-  height: 100vh;
+  min-height: 100vh;
+  /* Fallback for old browsers */
+  min-height: 100svh;
+  /* Modern: smallest stable viewport (no Safari toolbar issues) */
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  /* Add safe area on sides for notched phones in landscape */
+  padding-left: calc(1.5rem + env(safe-area-inset-left));
+  padding-right: calc(1.5rem + env(safe-area-inset-right));
 }
 
 .auth-card {

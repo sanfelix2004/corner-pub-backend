@@ -50,13 +50,28 @@ public class KitchenOrderService {
      * ITEM_CHANGED — item aggiunto/modificato/rimosso su comanda già inviata
      */
     private void notifyKitchen(KitchenOrder order, String eventType) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            sendPayload(order, eventType);
+                        }
+                    });
+        } else {
+            sendPayload(order, eventType);
+        }
+    }
+
+    private void sendPayload(KitchenOrder order, String eventType) {
         TableSession ts = order.getTableSession();
         KitchenEventPayload payload = new KitchenEventPayload(
                 eventType,
                 order.getId(),
                 ts != null ? ts.getTableNumber() : null,
                 ts != null ? ts.getCopeRti() : null,
-                order.getStatus().name());
+                order.getStatus().name(),
+                order);
         messagingTemplate.convertAndSend("/topic/kitchen/orders", payload);
     }
 
@@ -272,35 +287,48 @@ public class KitchenOrderService {
         order.setStatus(KitchenOrderStatus.ARCHIVED);
         KitchenOrder saved = kitchenOrderRepository.save(order);
 
-        // Chiude il tavolo quando tutte le comande INVIATE (non-DRAFT) sono archiviate.
-        // I DRAFT vuoti pendenti vengono ignorati nel check e poi eliminati.
-        // Senza questo fix la bozza vuota della comanda successiva bloccava la
-        // chiusura.
         TableSession ts = order.getTableSession();
         if (ts != null && ts.getStatus() != com.corner.pub.model.enums.TableStatus.CLOSED) {
             List<KitchenOrder> allOrders = kitchenOrderRepository.findByTableSessionId(ts.getId());
-
-            // Considera solo le comande realmente inviate (non DRAFT)
-            List<KitchenOrder> sentOrders = allOrders.stream()
+            boolean allReady = allOrders.stream()
                     .filter(o -> o.getStatus() != KitchenOrderStatus.DRAFT)
-                    .toList();
+                    .allMatch(o -> o.getStatus() == KitchenOrderStatus.ARCHIVED);
 
-            boolean allArchived = !sentOrders.isEmpty() &&
-                    sentOrders.stream().allMatch(o -> o.getStatus() == KitchenOrderStatus.ARCHIVED);
-
-            if (allArchived) {
-                // Elimina eventuali bozze vuote rimaste aperte prima di chiudere il tavolo
-                allOrders.stream()
-                        .filter(o -> o.getStatus() == KitchenOrderStatus.DRAFT)
-                        .forEach(kitchenOrderRepository::delete);
-
-                ts.setStatus(com.corner.pub.model.enums.TableStatus.CLOSED);
-                ts.setClosedAt(LocalDateTime.now());
-                tableSessionRepository.save(ts);
+            if (allReady) {
+                archiveTableSession(ts.getId());
             }
         }
 
         notifyKitchen(saved, "ARCHIVED");
+    }
+
+    @Transactional
+    public void archiveTableSession(Long tableSessionId) {
+        TableSession ts = tableSessionRepository.findById(tableSessionId)
+                .orElseThrow(() -> new RuntimeException("TableSession not found"));
+
+        if (ts.getStatus() == com.corner.pub.model.enums.TableStatus.CLOSED)
+            return;
+
+        List<KitchenOrder> orders = kitchenOrderRepository.findByTableSessionId(tableSessionId);
+        for (KitchenOrder o : orders) {
+            if (o.getStatus() == KitchenOrderStatus.DRAFT) {
+                kitchenOrderRepository.delete(o);
+            } else if (o.getStatus() != KitchenOrderStatus.ARCHIVED) {
+                o.setStatus(KitchenOrderStatus.ARCHIVED);
+                KitchenOrder saved = kitchenOrderRepository.save(o);
+                notifyKitchen(saved, "ARCHIVED");
+            }
+        }
+
+        ts.setStatus(com.corner.pub.model.enums.TableStatus.CLOSED);
+        ts.setClosedAt(LocalDateTime.now());
+        TableSession savedTs = tableSessionRepository.save(ts);
+
+        // Notifica ai client che il tavolo intero è stato chiuso
+        KitchenEventPayload payload = new KitchenEventPayload(
+                "TABLE_CLOSED", null, savedTs.getTableNumber(), savedTs.getCopeRti(), "CLOSED", null);
+        messagingTemplate.convertAndSend("/topic/kitchen/orders", payload);
     }
 
     /**

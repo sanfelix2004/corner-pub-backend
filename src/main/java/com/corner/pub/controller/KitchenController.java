@@ -53,4 +53,10 @@ public class KitchenController {
         kitchenOrderService.archiveOrder(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/tables/{id}/archive")
+    public ResponseEntity<Void> archiveTable(@PathVariable Long id) {
+        kitchenOrderService.archiveTableSession(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -1,6 +1,7 @@
 import Auth from '../core/auth.js';
 import API from '../core/api.js';
 import WSClient from '../core/ws.js';
+import { DING_B64 } from './audioData.js';
 
 class CucinaApp {
     constructor() {
@@ -9,6 +10,12 @@ class CucinaApp {
         this.currentTab = 'active';
         // Traccia gli ID comande già notificate per evitare duplicati
         this.notifiedOrderIds = new Set();
+
+        // Elemento audio precaricato da Base64 (zero delay di rete)
+        this.audioElement = new Audio(DING_B64);
+        this.audioElement.preload = 'auto';
+        this.audioUnlocked = false;
+        this.lastSoundPlayedAt = 0;
 
         this.init();
     }
@@ -24,16 +31,21 @@ class CucinaApp {
             this.ensureToastContainer();
             // Richiedi permesso per le notifiche native OS subito dopo login
             this.requestNotificationPermission();
+            // Inizializza logic per sbloccare l'audio su iOS Safari
+            this.requireAudioUnlock();
         }
         this.bindEvents();
     }
 
     startPolling() {
-        // Intervallo adattivo: 30s se connesso via WS, 5s come fallback
+        // Fallback polling intelligente: lavora SOLO se il WebSocket muore.
         const tick = async () => {
-            if (Auth.isAuthenticated()) await this.loadDashboard();
-            const nextDelay = (this.wsClient && this.wsClient.isConnected) ? 30000 : 5000;
-            this._pollTimer = setTimeout(tick, nextDelay);
+            if (Auth.isAuthenticated()) {
+                if (!this.wsClient || !this.wsClient.isConnected) {
+                    await this.loadDashboard();
+                }
+            }
+            this._pollTimer = setTimeout(tick, 5000);
         };
         this._pollTimer = setTimeout(tick, 5000);
     }
@@ -49,6 +61,7 @@ class CucinaApp {
                 this.connectWebSocket();
                 this.ensureToastContainer();
                 this.requestNotificationPermission();
+                this.requireAudioUnlock();
             } else {
                 Swal.fire({ icon: 'error', title: 'Errore', text: 'Credenziali non valide' });
             }
@@ -108,6 +121,8 @@ class CucinaApp {
             if (connected) {
                 ind.classList.add('connected');
                 lbl.innerText = 'Live';
+                // Catch-up: Resync stato innescato dalla riconnessione WS
+                this.loadDashboard();
             } else {
                 ind.classList.remove('connected');
                 lbl.innerText = 'Reconnecting...';
@@ -125,16 +140,55 @@ class CucinaApp {
         try {
             payload = JSON.parse(rawMsg);
         } catch (e) {
-            payload = { eventType: 'STATUS_CHANGED' };
+            return;
         }
 
-        const { eventType, orderId, tableNumber, copeRti } = payload || {};
+        const { eventType, orderId, tableNumber, copeRti, order } = payload || {};
 
-        // Debounce del ricaricamento dati per evitare fetch multiple silmutanee
-        clearTimeout(this._wsDebounceTimer);
-        this._wsDebounceTimer = setTimeout(async () => {
-            await this.loadDashboard();
-        }, 50);
+        // Se l'ordinazione ha dati del tavolo ma l'oggetto order.tableSession è monco/assente, ricostruiamolo
+        if (order && !order.tableSession && tableNumber) {
+            order.tableSession = { tableNumber, copeRti };
+        }
+
+        if (eventType === 'TABLE_CLOSED') {
+            if (this.currentTab === 'active') {
+                this.orders = this.orders.filter(o => String(o.tableSession?.tableNumber) !== String(tableNumber));
+            } else {
+                this.loadDashboard(); // reload to get the newly archived items
+            }
+            this.renderBoard();
+            return;
+        }
+
+        if (order) {
+            // Local State Patching (Zero-Fetch Update)
+            if (eventType === 'ARCHIVED') {
+                if (this.currentTab === 'active') {
+                    this.orders = this.orders.filter(o => o.id !== order.id);
+                } else {
+                    const idx = this.orders.findIndex(o => o.id === order.id);
+                    if (idx >= 0) this.orders[idx] = order;
+                    else this.orders.push(order);
+                    this.orders.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+                }
+            } else {
+                if (this.currentTab === 'active') {
+                    const idx = this.orders.findIndex(o => o.id === order.id);
+                    if (idx >= 0) this.orders[idx] = order;
+                    else this.orders.push(order);
+                    this.orders.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                } else {
+                    this.orders = this.orders.filter(o => o.id !== order.id);
+                }
+            }
+            this.renderBoard();
+        } else {
+            // Fallback per vecchi payload senza oggetto order integrato
+            clearTimeout(this._wsDebounceTimer);
+            this._wsDebounceTimer = setTimeout(async () => {
+                await this.loadDashboard();
+            }, 50);
+        }
 
         // Notifica sonora + toast SOLO su nuove comande non ancora notificate
         if (eventType === 'NEW_ORDER' && orderId && !this.notifiedOrderIds.has(orderId)) {
@@ -177,32 +231,60 @@ class CucinaApp {
     }
 
     /**
-     * Suono di notifica sintetico generato via Web Audio API.
-     * No file esterni. Usato INSIEME alla notifica nativa come rinforzo sonoro.
+     * Mostra banner per sbloccare l'audio su iOS Safari.
+     * Necessario per aggirare la restrizione sull'Autoplay.
+     */
+    requireAudioUnlock() {
+        if (this.audioUnlocked) return;
+
+        const banner = document.getElementById('audio-unlock-banner');
+        if (!banner) return;
+
+        banner.classList.add('visible');
+
+        const unlockHandler = () => {
+            // Sblocca l'Elemento Audio con un play() silenzioso gestito dall'utente.
+            // Safari validerà l'elemento audio e non bloccherà i successivi play via WebSocket.
+            this.audioElement.volume = 0;
+            this.audioElement.play().then(() => {
+                this.audioElement.pause();
+                this.audioElement.currentTime = 0;
+                this.audioElement.volume = 1.0;
+                this.audioUnlocked = true;
+                banner.classList.remove('visible');
+
+                document.removeEventListener('click', unlockHandler);
+                document.removeEventListener('touchstart', unlockHandler);
+            }).catch(e => {
+                console.warn('Audio non sbloccato', e);
+            });
+        };
+
+        document.addEventListener('click', unlockHandler, { once: true });
+        document.addEventListener('touchstart', unlockHandler, { once: true });
+    }
+
+    /**
+     * Suono di notifica basato sul file base64.
+     * Dotato di sistema anti-spam (debounce/throttle) per i picchi.
      */
     playNotificationSound() {
+        if (!this.audioUnlocked) return;
+
+        const now = Date.now();
+        // Throttle di 1.5 secondi per evitare "storming" di notifiche fastidiose
+        // quando arrivano 5 piatti e 5 WebSocket in un decimo di secondo.
+        if (now - this.lastSoundPlayedAt < 1500) {
+            return;
+        }
+
+        this.lastSoundPlayedAt = now;
+
         try {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-            const beep = (startTime, freq) => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(freq, startTime);
-                gain.gain.setValueAtTime(0, startTime);
-                gain.gain.linearRampToValueAtTime(0.5, startTime + 0.02);
-                gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
-                osc.start(startTime);
-                osc.stop(startTime + 0.35);
-            };
-
-            // Due beep a distanza 0.2s
-            beep(ctx.currentTime, 880);
-            beep(ctx.currentTime + 0.25, 1100);
+            this.audioElement.currentTime = 0;
+            this.audioElement.play().catch(e => console.warn('Audio play failed:', e));
         } catch (e) {
-            console.warn('Audio non disponibile:', e);
+            console.warn('Audio exception:', e);
         }
     }
 
@@ -326,6 +408,8 @@ class CucinaApp {
                 <div class="ticket-header">
                     <span class="ticket-table">Tav. ${ts?.tableNumber || '?'}</span>
                     ${copeRti ? `<span class="ticket-coperti">👥 ${copeRti} cop.</span>` : ''}
+                    <button class="action-btn" style="width: auto; padding: 2px 8px; font-size: 0.7rem; background: #fee2e2; color: #dc2626; border: 1px solid #fecaca;" 
+                        onclick="window.app.archiveTable(${ts?.id})">Archivia Tavolo ✕</button>
                 </div>
             `;
 
@@ -405,7 +489,7 @@ class CucinaApp {
     async changeOrderStatus(orderId, newStatus) {
         try {
             await API.patch(`/api/cucina/orders/${orderId}/status`, { status: newStatus });
-            this.loadDashboard();
+            // this.loadDashboard(); // Rimossa per evitare il "doppio scatto" visivo (si affida al WebSocket)
         } catch (e) {
             Swal.fire('Errore', 'Impossibile aggiornare stato', 'error');
         }
@@ -414,9 +498,28 @@ class CucinaApp {
     async archiveOrder(orderId) {
         try {
             await API.post(`/api/cucina/orders/${orderId}/archive`, {});
-            this.loadDashboard();
+            // this.loadDashboard(); // Rimossa per evitare il "doppio scatto" visivo
         } catch (e) {
             Swal.fire('Errore', 'Impossibile archiviare', 'error');
+        }
+    }
+
+    async archiveTable(tableId) {
+        const res = await Swal.fire({
+            title: 'Archiviare tutto il tavolo?',
+            text: 'Tutte le comande verranno segnate come archiviate.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sì, Archivia Tutto',
+            cancelButtonText: 'Annulla'
+        });
+        if (res.isConfirmed) {
+            try {
+                await API.post(`/api/cucina/tables/${tableId}/archive`, {});
+                // this.loadDashboard(); // Rimossa per evitare il "doppio scatto" visivo
+            } catch (e) {
+                Swal.fire('Errore', 'Impossibile archiviare il tavolo', 'error');
+            }
         }
     }
 }
