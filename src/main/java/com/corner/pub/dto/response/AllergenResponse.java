@@ -4,7 +4,7 @@ public class AllergenResponse {
     private String code;
     private String label;
     private String status;   // CONTAINS | MAY_CONTAIN
-    private String iconUrl;  // Cloudinary URL
+    private String iconUrl;
 
     public String getCode(){ return code; }
     public void setCode(String code){ this.code = code; }

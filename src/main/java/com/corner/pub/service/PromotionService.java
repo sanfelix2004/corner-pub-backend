@@ -1,6 +1,5 @@
 package com.corner.pub.service;
 
-import com.cloudinary.Cloudinary;
 import com.corner.pub.dto.request.PromotionMenuItemRequest;
 import com.corner.pub.dto.request.PromotionRequest;
 import com.corner.pub.dto.response.MenuItemResponse;
@@ -31,9 +30,6 @@ public class PromotionService {
 
     @Autowired
     private MenuItemRepository menuItemRepository;
-
-    @Autowired
-    private Cloudinary cloudinary;
 
     /*
      * ===========================================================
@@ -182,15 +178,9 @@ public class PromotionService {
     }
 
     private String resolveImageUrl(MenuItem item) {
-        try {
-            if (item.getImageUrl() != null && !item.getImageUrl().isBlank()) {
-                return item.getImageUrl(); // usa l'URL già salvato da Cloudinary
-            }
-            return cloudinary.url()
-                    .secure(true)
-                    .generate("prodotti/" + item.getId());
-        } catch (Exception e) {
-            return "/images/default.png";
+        if (item.getImageUrl() != null && !item.getImageUrl().isBlank()) {
+            return item.getImageUrl();
         }
+        return "/images/about-img.png";
     }
 }

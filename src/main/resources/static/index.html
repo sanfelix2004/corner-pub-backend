@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <!-- Basic -->
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <!-- Mobile Metas -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c0c0c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <!-- Site Metas -->
+  <meta name="keywords" content="" />
+  <meta name="description"
+    content="Corner Giovinazzo: hamburger gourmet, panini artigianali e birre selezionate in Piazza Duomo 58. Vieni a trovarci o scopri il menu.">
+  <meta name="author" content="" />
+  <link rel="shortcut icon" href="images/272101.jpeg" type="">
+
+  <title>Corner Giovinazzo – Hamburgeria & Pub | Panini e Birre Artigianali</title>
+
+  <!-- bootstrap core css -->
+  <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+
+  <!--owl slider stylesheet -->
+  <link rel="stylesheet" type="text/css"
+    href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
+  <!-- nice select  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/css/nice-select.min.css"
+    integrity="sha512-CruCP+TD3yXzlvvijET8wV5WxxEh5H8P4cmz0RFbKK6FlZ2sYl3AEsKlLPHbniXKSrDdFewhbmBK5skbdsASbQ=="
+    crossorigin="anonymous" />
+  <!-- font awesome style -->
+  <link href="css/font-awesome.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <!-- Custom styles for this template -->
+  <link href="css/style-premium.css?v=7" rel="stylesheet" />
+  <!-- responsive style -->
+  <link href="css/responsive.css" rel="stylesheet" />
+  <link href="css/site-ux.css?v=5" rel="stylesheet" />
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Centra i contenuti */
+    .container,
+    .container-fluid {
+      max-width: 100%;
+      padding-left: 15px;
+      padding-right: 15px;
+    }
+
+    /* Centra testi e box nelle sezioni */
+    section {
+      text-align: center;
+    }
+
+    /* Rende le immagini sempre responsive */
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* Fix pulsanti/tab */
+    .btn,
+    .tab-btn {
+      display: inline-block;
+      margin: 0.5rem auto;
+    }
+
+    /* Footer senza spazi strani */
+    footer {
+      padding: 20px 10px;
+      text-align: center;
+    }
+
+    /* Toast Notification */
+    #customToast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      background-color: #28a745;
+      color: white;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1050;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+    }
+
+    #customToast.show {
+      opacity: 1;
+    }
+
+    /* Promotions Cards */
+    .promo-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      height: 100%;
+    }
+
+    .promo-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Menu Badge */
+    .featured-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(45deg, #ffbe33, #ff9e02);
+      color: white;
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+
+<body>
+
+    <div class="hero_area" id="top">
+    <div class="bg-box">
+      <video autoplay muted loop playsinline preload="metadata" poster="images/slide1.jpg" id="heroVideo">
+        <source src="images/hero-video.mp4" type="video/mp4">
+        <!-- Fallback to image if video not available -->
+        <img src="images/slide1.jpg" alt="Corner Pub">
+      </video>
+    </div>
+
+    <!-- header section strats -->
+    <header class="header_section">
+      <div class="container">
+        <nav class="navbar navbar-expand-lg custom_nav-container ">
+          <a class="navbar-brand" href="index.html">
+            <span>
+              Corner Pub
+            </span>
+          </a>
+
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class=""> </span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mx-auto">
+              <li class="nav-item active">
+                <a class="nav-link" href="#top">Home <span class="sr-only">(current)</span></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#promotionsSection">Promozioni</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#menu">Menu</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#noi">Noi</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#book">Prenota</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="#myReservationsSection">Le mie prenotazioni</a>
+              </li>
+            </ul>
+            <div class="user_option">
+              <center>
+                <a href="https://www.justeat.it/restaurants-corner-hamburgeria-giovinazzo/menu" class="order_online">
+                  Ordina
+                  a domicilio
+                </a>
+              </center>
+            </div>
+          </div>
+        </nav>
+      </div>
+    </header>
+    <!-- end header section -->
+    <!-- slider section -->
+    <section class="slider_section">
+      <div id="heroCardBox" class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="hero-card">
+              <div class="hero-card-glow"></div>
+              <div class="hero-card-content">
+                <div class="hero-icon">
+                  <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M32 8L40 24H24L32 8Z" fill="#FFBE33" />
+                    <rect x="20" y="24" width="24" height="32" rx="2" fill="#FFBE33" opacity="0.8" />
+                    <circle cx="32" cy="40" r="6" fill="#fff" />
+                  </svg>
+                </div>
+                <p class="hero-kicker">Piazza Duomo 58 · Giovinazzo</p>
+                <h1 class="hero-title">
+                  <span class="hero-title-line">Corner</span>
+                  <span class="hero-title-line">Hamburgeria</span>
+                </h1>
+                <p class="hero-subtitle">Panini, birre artigianali e tanto altro</p>
+                <div class="hero-actions">
+                  <a href="#menu" class="hero-btn hero-btn-primary">
+                    <span>Menù</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                  <a href="#book" class="hero-btn hero-btn-secondary">
+                    <span>Prenota</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- end slider section -->
+  </div>
+  <svg class="site-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path fill="#FFBE33" fill-opacity="0.45"
+      d="M0,192L30,176C60,160,120,128,180,106.7C240,85,300,75,360,106.7C420,139,480,213,540,240C600,267,660,245,720,202.7C780,160,840,96,900,112C960,128,1020,224,1080,218.7C1140,213,1200,107,1260,58.7C1320,11,1380,21,1410,26.7L1440,32L1440,0L1410,0C1380,0,1320,0,1260,0C1200,0,1140,0,1080,0C1020,0,960,0,900,0C840,0,780,0,720,0C660,0,600,0,540,0C480,0,420,0,360,0C300,0,240,0,180,0C120,0,60,0,30,0L0,0Z">
+    </path>
+  </svg>
+
+  <!-- Sezione Promozioni -->
+  <section id="promotionsSection" class="food_section layout_padding-bottom">
+    <div class="container">
+      <div class="heading_container heading_center">
+        <h2>Le Nostre Promozioni</h2>
+      </div>
+
+      <!-- Lista titoli promozioni -->
+      <ul class="filters_menu" id="promoTitlesList">
+        <!-- Titoli delle promo generati dinamicamente -->
+      </ul>
+
+      <!-- Prodotti della promozione selezionata -->
+      <div class="filters-content">
+        <div class="row grid" id="promoItemsContainer">
+          <!-- Prodotti generati dinamicamente -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <div class="site-wave-wrap" style="line-height: 0; margin-bottom: -2px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+      <path fill="#FFE1A8" fill-opacity="1"
+        d="M0,160L24,138.7C48,117,96,75,144,96C192,117,240,203,288,197.3C336,192,384,96,432,58.7C480,21,528,43,576,80C624,117,672,171,720,202.7C768,235,816,245,864,256C912,267,960,277,1008,272C1056,267,1104,245,1152,202.7C1200,160,1248,96,1296,85.3C1344,75,1392,117,1416,138.7L1440,160L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z">
+      </path>
+    </svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="margin-top: -1px;">
+      <path fill="#FFE1A8" fill-opacity="1"
+        d="M0,256L20,256C40,256,80,256,120,234.7C160,213,200,171,240,176C280,181,320,235,360,234.7C400,235,440,181,480,176C520,171,560,213,600,240C640,267,680,277,720,250.7C760,224,800,160,840,154.7C880,149,920,203,960,192C1000,181,1040,107,1080,112C1120,117,1160,203,1200,229.3C1240,256,1280,224,1320,218.7C1360,213,1400,235,1420,245.3L1440,256L1440,0L1420,0C1400,0,1360,0,1320,0C1280,0,1240,0,1200,0C1160,0,1120,0,1080,0C1040,0,1000,0,960,0C920,0,880,0,840,0C800,0,760,0,720,0C680,0,640,0,600,0C560,0,520,0,480,0C440,0,400,0,360,0C320,0,280,0,240,0C200,0,160,0,120,0C80,0,40,0,20,0L0,0Z">
+      </path>
+    </svg>
+  </div>
+  <!-- food section -->
+  <section id="menu" class="food_section layout_padding-bottom">
+    <div class="container">
+      <div class="heading_container heading_center">
+        <h2>Il nostro Menù</h2>
+      </div>
+
+      <div class="menu-toolbar" id="menuFiltersBar">
+        <div class="menu-search-wrap">
+          <input type="search" id="menuSearch" placeholder="Cerca un piatto, una birra..." autocomplete="off" />
+        </div>
+        <ul class="filters_menu" id="categoryFilters">
+          <!-- categorie generate dinamicamente -->
+        </ul>
+        <p class="menu-count" id="menuCount"></p>
+      </div>
+
+      <div class="filters-content">
+        <div class="row grid" id="menuItemsContainer">
+          <!-- piatti generati dinamicamente -->
+        </div>
+      </div>
+    </div>
+  </section>
+  <!-- end food section -->
+
+  <!-- about section -->
+  <section id="noi" class="about_section layout_padding">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="img-box">
+            <img src="images/about-img.png" alt="">
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="detail-box">
+            <div class="heading_container">
+              <h2>Noi siamo Corner</h2>
+            </div>
+            <p>
+              Nel nostro pub ogni prodotto racconta una storia di cura e passione. Selezioniamo personalmente le
+              migliori carni, lavorate artigianalmente ogni mattina dai nostri mastri macellai, e abbiniamo impasti e
+              ingredienti freschissimi, preparati in casa con ricette originali. Dalla scelta delle materie prime fino
+              al tocco finale, ci impegniamo a offrire sapori autentici che esaltano la qualità e il lavoro del nostro
+              team.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <svg id="wavePromoTop" class="site-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <path fill="#FFBE33" fill-opacity="0.45"
+      d="M0,192L30,176C60,160,120,128,180,106.7C240,85,300,75,360,106.7C420,139,480,213,540,240C600,267,660,245,720,202.7C780,160,840,96,900,112C960,128,1020,224,1080,218.7C1140,213,1200,107,1260,58.7C1320,11,1380,21,1410,26.7L1440,32L1440,0L1410,0C1380,0,1320,0,1260,0C1200,0,1140,0,1080,0C1020,0,960,0,900,0C840,0,780,0,720,0C660,0,600,0,540,0C480,0,420,0,360,0C300,0,240,0,180,0C120,0,60,0,30,0L0,0Z">
+    </path>
+  </svg>
+
+  <section class="social_section layout_padding">
+    <div class="container">
+      <div class="heading_container heading_center">
+        <h2>Seguici sui Social</h2>
+      </div>
+      <div class="row justify-content-center">
+        <!-- TikTok Embed -->
+        <div class="col-md-6 mb-4">
+          <div class="tiktok-box text-center">
+            <!-- TikTok Placeholder (Gestito da JS) -->
+            <div id="tiktok-placeholder" class="social-placeholder">
+              <i class="fa fa-music"></i>
+              <p>Abilita i contenuti "Social" per vedere TikTok.</p>
+              <button class="btn-enable-social" onclick="window.enableSocialConsent()">Visualizza contenuto</button>
+            </div>
+            <div id="tiktok-embed-container"></div>
+          </div>
+        </div>
+
+        <!-- Instagram Embed -->
+        <div class="col-md-6 mb-4 text-center">
+          <!-- Instagram Placeholder (Gestito da JS) -->
+          <div id="instagram-placeholder" class="social-placeholder">
+            <i class="fa fa-instagram"></i>
+            <p>Abilita i contenuti "Social" per vedere Instagram.</p>
+            <button class="btn-enable-social" onclick="window.enableSocialConsent()">Visualizza contenuto</button>
+          </div>
+          <div id="instagram-embed-container"></div>
+          <br>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TikTok Script rimosso (caricato dinamicamente se c'è consenso) -->
+  <!-- end about section -->
+
+  <!-- book section -->
+  <section id="book" class="book_section layout_padding">
+    <div class="container">
+      <div class="heading_container heading_center">
+        <h2>Prenotazioni</h2>
+        <div class="tab-selector mb-4 text-center">
+          <button class="tab-btn active" data-target="tavoloForm">
+            <i class="fa fa-cutlery me-2"></i> Prenotazione Tavolo
+          </button>
+          <button class="tab-btn" data-target="eventoForm">
+            <i class="fa fa-calendar me-2"></i> Registrazione Evento
+          </button>
+        </div>
+
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+
+          <!-- FORM PRENOTAZIONE TAVOLO -->
+          <div id="tavoloForm" class="form_container">
+            <form id="reservationForm">
+              <div class="mb-3">
+                <input id="resName" type="text" class="form-control" value="Nome" required />
+              </div>
+              <div class="mb-3">
+                <input id="resSurname" type="text" class="form-control" value="Cognome" required />
+              </div>
+              <div class="mb-3">
+                <input id="resPhone" type="text" class="form-control" value="Telefono" required />
+              </div>
+              <div class="mb-3">
+                <input id="resPeople" type="text" class="form-control" value="Persone" required />
+              </div>
+              <div class="mb-3">
+                <input id="resDate" type="text" class="form-control" value="Data" required min="">
+              </div>
+              <div class="mb-3">
+                <select id="resTime" class="form-control nice-select wide" required>
+                  <option value="" disabled selected>Ora</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <textarea id="resNote" class="form-control">Note</textarea>
+              </div>
+
+              <!-- Allergeni (Facoltativo) -->
+              <div class="mb-3">
+                <textarea id="resAllergens"
+                  class="form-control">Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.</textarea>
+              </div>
+              <div id="resAllergenConsentContainer" class="mb-3 form-check text-left d-none"
+                style="padding-left: 2.5rem;">
+                <input type="checkbox" class="form-check-input" id="resAllergenConsent"
+                  style="transform: scale(1.2); margin-left: -1.8rem;">
+                <label class="form-check-label" for="resAllergenConsent" style="font-size: 0.85rem; margin-left: 5px;">
+                  Acconsento al trattamento dei dati relativi alla salute (allergeni) esclusivamente per la gestione
+                  della prenotazione in sicurezza.
+                </label>
+              </div>
+              <div class="mb-4 form-check text-left" style="padding-left: 2.5rem;">
+                <input type="checkbox" class="form-check-input" id="privacyCheck"
+                  style="transform: scale(1.5); margin-left: -1.8rem;">
+                <label class="form-check-label" for="privacyCheck" style="font-size: 0.9rem; margin-left: 5px;">
+                  Ho letto e accetto la <a href="privacy.html" target="_blank"
+                    style="text-decoration: underline; color: #D4AF37;">Privacy Policy</a>.
+                </label>
+              </div>
+              <div class="btn_box text-center">
+                <button type="submit" class="btn">Prenota</button>
+              </div>
+              <p id="resMessage" class="mt-3 text-center"></p>
+            </form>
+          </div>
+
+          <!-- FORM REGISTRAZIONE EVENTO -->
+          <div id="eventoForm" class="form_container d-none">
+            <form id="eventForm">
+              <div class="mb-3">
+                <input id="eventName" type="text" class="form-control" value="Nome" required />
+              </div>
+              <div class="mb-3">
+                <input id="eventSurname" type="text" class="form-control" value="Cognome" required />
+              </div>
+              <div class="mb-3">
+                <input id="eventPhone" type="text" class="form-control" value="Telefono" required />
+              </div>
+              <div class="mb-3">
+                <input id="eventPartecipanti" type="text" class="form-control" value="Partecipanti" required />
+              </div>
+              <div class="mb-3">
+                <textarea id="eventNote" class="form-control">Note</textarea>
+              </div>
+
+              <!-- Allergeni (Facoltativo) -->
+              <div class="mb-3">
+                <textarea id="eventAllergens"
+                  class="form-control">Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.</textarea>
+              </div>
+              <div id="eventAllergenConsentContainer" class="mb-3 form-check text-left d-none"
+                style="padding-left: 2.5rem;">
+                <input type="checkbox" class="form-check-input" id="eventAllergenConsent"
+                  style="transform: scale(1.2); margin-left: -1.8rem;">
+                <label class="form-check-label" for="eventAllergenConsent"
+                  style="font-size: 0.85rem; margin-left: 5px;">
+                  Acconsento al trattamento dei dati relativi alla salute (allergeni) esclusivamente per la gestione
+                  dell'evento in sicurezza.
+                </label>
+              </div>
+              <div class="mb-3">
+                <select id="eventSelect" class="form-control" required>
+                  <option value="">Seleziona un evento</option>
+                </select>
+                <div id="noEventsMessage" class="alert alert-info d-none"></div>
+              </div>
+              <div id="postiDisponibili" class="text-muted mb-3"></div>
+              <div class="mb-4 form-check text-left" style="padding-left: 2.5rem;">
+                <input type="checkbox" class="form-check-input" id="eventPrivacyCheck"
+                  style="transform: scale(1.5); margin-left: -1.8rem;">
+                <label class="form-check-label" for="eventPrivacyCheck" style="font-size: 0.9rem; margin-left: 5px;">
+                  Ho letto e accetto la <a href="privacy.html" target="_blank"
+                    style="text-decoration: underline; color: #D4AF37;">Privacy Policy</a>.
+                </label>
+              </div>
+              <div class="btn_box text-center">
+                <button type="submit" class="btn">Iscriviti</button>
+              </div>
+              <p id="eventMessage" class="mt-3 text-center"></p>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="site-wave-wrap" style="line-height: 0; margin-bottom: -2px;">
+    <svg id="wavePromoBottomTop" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+      <path fill="#FFE1A8" fill-opacity="1"
+        d="M0,160L24,138.7C48,117,96,75,144,96C192,117,240,203,288,197.3C336,192,384,96,432,58.7C480,21,528,43,576,80C624,117,672,171,720,202.7C768,235,816,245,864,256C912,267,960,277,1008,272C1056,267,1104,245,1152,202.7C1200,160,1248,96,1296,85.3C1344,75,1392,117,1416,138.7L1440,160L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z">
+      </path>
+    </svg>
+    <svg id="wavePromoBottomBottom" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="margin-top: -1px;">
+      <path fill="#FFE1A8" fill-opacity="1"
+        d="M0,256L20,256C40,256,80,256,120,234.7C160,213,200,171,240,176C280,181,320,235,360,234.7C400,235,440,181,480,176C520,171,560,213,600,240C640,267,680,277,720,250.7C760,224,800,160,840,154.7C880,149,920,203,960,192C1000,181,1040,107,1080,112C1120,117,1160,203,1200,229.3C1240,256,1280,224,1320,218.7C1360,213,1400,235,1420,245.3L1440,256L1440,0L1420,0C1400,0,1360,0,1320,0C1280,0,1240,0,1200,0C1160,0,1120,0,1080,0C1040,0,1000,0,960,0C920,0,880,0,840,0C800,0,760,0,720,0C680,0,640,0,600,0C560,0,520,0,480,0C440,0,400,0,360,0C320,0,280,0,240,0C200,0,160,0,120,0C80,0,40,0,20,0L0,0Z">
+      </path>
+    </svg>
+  </div>
+
+  <!-- my reservations section -->
+  <section id="myReservationsSection" class="book_section layout_padding">
+    <div class="container">
+      <div class="heading_container heading_center">
+        <h2>Le mie Prenotazioni</h2>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+          <div class="form_container mb-4">
+            <form id="lookupForm">
+              <div class="mb-3">
+                <input id="lookupPhone" type="text" class="form-control"
+                  placeholder="Inserisci il tuo numero di telefono" required />
+              </div>
+              <div class="btn_box text-center">
+                <button type="submit" class="btn">Cerca Prenotazioni</button>
+              </div>
+            </form>
+          </div>
+          <ul id="reservationsList" class="list-group">
+            <!-- qui appariranno le prenotazioni -->
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- client section -->
+  <section class="location_section layout_padding-bottom">
+    <div class="container">
+      <div class="heading_container heading_center mb_45">
+        <h2>Dove ci troviamo</h2>
+      </div>
+      <br>
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="location_box text-center p-4">
+            <h5 class="location_name">Corner Hamburgeria</h5>
+            <p class="location_address mb-1">Piazza Duomo 58</p>
+            <p class="location_zip mb-3">70054 Giovinazzo (BA)</p>
+            <div class="map-container">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6004.951500524103!2d16.67113567672038!3d41.189600371325696!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1347fa6060d4d62f%3A0xaf3c711416f94a0c!2sPiazza%20Duomo%2C%2058%2C%2070054%20Giovinazzo%20BA!5e0!3m2!1sit!2sit!4v1754061927629!5m2!1sit!2sit"
+                allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+              </iframe>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- end client section -->
+  <!-- footer section -->
+  <footer class="footer_section">
+    <div class="container">
+      <div class="row">
+        <!-- Contatti -->
+        <div class="col-md-4 footer-col">
+          <div class="footer_contact">
+            <h4>Contatti</h4>
+            <div class="contact_link_box">
+              <a href="#">
+                <i class="fa fa-map-marker" aria-hidden="true"></i>
+                <span>Piazza Duomo 58, 70054 Giovinazzo (BA)</span>
+              </a>
+              <a href="tel:+39 334 592 6223">
+                <i class="fa fa-phone" aria-hidden="true"></i>
+                <span>+39 334 592 6223</span>
+              </a>
+              <a href="mailto:info@cornerhamburgeria.it">
+                <i class="fa fa-envelope" aria-hidden="true"></i>
+                <span>cornersnc@gmail.com</span>
+              </a>
+            </div>
+          </div>
+        </div>
+        <!-- Logo e descrizione -->
+        <div class="col-md-4 footer-col text-center">
+          <a href="index.html" class="footer-logo">Corner Hamburgeria</a>
+          <p>
+            Dove la passione per la carne incontra l’artigianalità italiana: panini e hamburger preparati ogni giorno
+            con ingredienti selezionati.
+          </p>
+          <div class="footer_social">
+            <a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a>
+            <a href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a>
+            <a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+          </div>
+        </div>
+        <!-- Orari -->
+        <div class="col-md-4 footer-col">
+          <h4>Orari di apertura</h4>
+          <p>Da Martedì a Domenica</p>
+          <p>18:00 – 00:00</p>
+        </div>
+      </div>
+      <div class="footer-info text-center mt-4">
+        <p>
+          &copy; <span id="displayYear"></span> Corner Hamburgeria — Tutti i diritti riservati.<br>
+          <a href="privacy.html" style="color: inherit; text-decoration: underline;">Privacy Policy</a> |
+          <a href="privacy.html" style="color: inherit; text-decoration: underline;">Privacy Policy</a> |
+          <a href="cookie.html" style="color: inherit; text-decoration: underline;">Cookie Policy</a> |
+          <a href="#" id="openPrivacySettings" style="color: inherit; text-decoration: underline;">Gestisci Consensi</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+  <!-- footer section -->
+
+  <!-- Toast Notification -->
+  <div id="customToast"></div>
+
+  <!-- GDPR Consent Modal -->
+  <div id="consentModalOverlay" class="consent-modal-overlay">
+    <div class="consent-modal">
+      <h3>Impostazioni Privacy</h3>
+      <p>Questo sito utilizza dati per gestire le prenotazioni e contenuti esterni (social). Scegli cosa autorizzare.
+      </p>
+
+      <div class="consent-options">
+
+        <!-- Obbligatorio per prenotare -->
+        <div class="consent-option">
+          <input type="checkbox" id="consentBooking">
+          <div>
+            <label for="consentBooking">Trattamento Dati Prenotazioni</label>
+            <span class="note">Necessario per prenotare un tavolo.</span>
+          </div>
+        </div>
+
+        <!-- Facoltativo per Social -->
+        <div class="consent-option">
+          <input type="checkbox" id="consentSocial">
+          <div>
+            <label for="consentSocial">Contenuti Social (Instagram/TikTok)</label>
+            <span class="note">Abilita la visualizzazione di foto e video embeddati.</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="consent-buttons">
+        <button id="btnSaveConsent" class="btn-primary-consent">Salva preferenze</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQery -->
+  <script src="js/jquery-3.4.1.min.js"></script>
+  <!-- popper js -->
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+    </script>
+  <!-- bootstrap js -->
+  <script src="js/bootstrap.js"></script>
+  <!-- owl slider -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/owl.carousel.min.js">
+  </script>
+  <!-- isotope js -->
+  <script src="https://unpkg.com/isotope-layout@3.0.4/dist/isotope.pkgd.min.js"></script>
+  <!-- nice select -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-nice-select/1.1.0/js/jquery.nice-select.min.js"></script>
+  <!-- custom js -->
+  <nav class="app-dock" aria-label="Navigazione rapida">
+    <a href="#top" data-dock="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/></svg>
+      Home
+    </a>
+    <a href="#menu" data-dock="menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      Menù
+    </a>
+    <a href="#book" data-dock="book">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+      Prenota
+    </a>
+    <a href="https://www.justeat.it/restaurants-corner-hamburgeria-giovinazzo/menu" data-dock="order">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 7h13l-1.4 8.2a2 2 0 0 1-2 1.6H9.2a2 2 0 0 1-2-1.6L6 7Z"/><path d="M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2Zm8 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM6 7 5 4H3"/></svg>
+      Ordina
+    </a>
+  </nav>
+
+  <script src="js/custom.js?v=9"></script>
+  <!-- Google Map -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
+  </script>
+  <!-- End Google Map -->
+
+</body>
+
+</html>

@@ -1,12 +1,9 @@
 package com.corner.pub.config;
 
-import com.corner.pub.security.JwtAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,8 +16,6 @@ import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
@@ -32,26 +27,17 @@ import java.util.Arrays;
 @Configuration
 public class SecurityConfig {
 
-        @Autowired
-        private JwtAuthenticationFilter jwtAuthenticationFilter;
-
-        @Bean
-        public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-                return authConfig.getAuthenticationManager();
-        }
-
         @Bean
         @Order(1)
         public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
                 http
-                                .securityMatcher("/api/**", "/ws-orders/**")
+                                .securityMatcher("/api/**")
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
-                                                                "/api/auth/**",
                                                                 "/api/menu", "/api/menu/**",
                                                                 "/api/in_evidenza", "/api/in_evidenza/**",
                                                                 "/api/promotions", "/api/promotions/**",
@@ -59,13 +45,10 @@ public class SecurityConfig {
                                                                 "/api/events", "/api/events/**",
                                                                 "/api/users", "/api/users/**")
                                                 .permitAll()
-                                                .requestMatchers("/api/cameriere/**").authenticated()
-                                                .requestMatchers("/api/cucina/**").authenticated()
                                                 .anyRequest().authenticated())
                                 .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(
                                                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                                                new AntPathRequestMatcher("/api/**")))
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                                new AntPathRequestMatcher("/api/**")));
 
                 return http.build();
         }
@@ -79,17 +62,17 @@ public class SecurityConfig {
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(
                                                                 "/",
+                                                                "/health",
                                                                 "/js/**",
                                                                 "/css/**",
                                                                 "/img/**",
                                                                 "/fonts/**",
                                                                 "/images/**",
+                                                                "/uploads/**",
                                                                 "/login.html",
                                                                 "/index.html",
-                                                                "/cameriere",
-                                                                "/cameriere.html",
-                                                                "/cucina",
-                                                                "/cucina.html",
+                                                                "/privacy.html",
+                                                                "/cookie.html",
                                                                 "/menu/**",
                                                                 "/events/**")
                                                 .permitAll()
@@ -112,6 +95,8 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration configuration = new CorsConfiguration();
                 configuration.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:8080",
+                                "http://127.0.0.1:8080",
                                 "http://localhost:5501",
                                 "http://127.0.0.1:5501",
                                 "http://localhost:3000",
@@ -139,7 +124,7 @@ public class SecurityConfig {
         public UserDetailsService users() {
                 UserDetails admin = User.withUsername("corner")
                                 .password(passwordEncoder().encode("corner123"))
-                                .roles("ADMIN", "STAFF")
+                                .roles("ADMIN")
                                 .build();
                 return new InMemoryUserDetailsManager(admin);
         }

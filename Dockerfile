@@ -1,22 +1,18 @@
-# 1. Stage di Build: usa Maven per compilare il JAR
+# 1. Stage di Build
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
-
-# Copia il file pom.xml e scarica le dipendenze
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
-
-# Copia il codice sorgente e compila
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# 2. Stage di Runtime: usa JRE leggera per l'esecuzione
+# 2. Runtime
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-
-# Copia solo il JAR dallo stage di build
 COPY --from=build /app/target/*.jar app.jar
 
-# Espone la porta e comando di avvio
+RUN mkdir -p /app/uploads/prodotti /app/uploads/eventi
+
+ENV JAVA_OPTS="-Xms128m -Xmx768m -XX:+UseG1GC"
 EXPOSE 8080
-ENTRYPOINT ["java", "-Dlogging.level.root=DEBUG", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

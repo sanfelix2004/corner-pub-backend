@@ -1233,7 +1233,7 @@
                         const safeId = Number(item.id);
                         const imgSrc = (item.imageUrl && item.imageUrl.trim() !== '')
                             ? item.imageUrl
-                            : `https://res.cloudinary.com/dytvizqtq/image/upload/prodotti/${safeId}.png`;
+                            : '/images/about-img.png';
 
                         // ——— testo allergeni sotto la descrizione ———
                         const allergensText = ((item.allergens || [])

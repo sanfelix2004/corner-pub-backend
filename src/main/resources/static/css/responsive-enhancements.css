@@ -1,0 +1,219 @@
+/* ========================================
+   RESPONSIVE DESIGN - ALL DEVICES
+   ======================================== */
+
+/* Small Mobile (320px - 480px) */
+@media (max-width: 480px) {
+    .heading_container h2 {
+        font-size: 2.2rem;
+    }
+
+    .heading_container p {
+        font-size: 1rem;
+    }
+
+    .slider_section .detail-box {
+        padding: 30px 20px;
+    }
+
+    .slider_section .detail-box h1 {
+        font-size: 2.5rem;
+    }
+
+    .slider_section .detail-box p {
+        font-size: 1rem;
+    }
+
+    .slider_section .btn-box {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .slider_section .detail-box .btn1 {
+        padding: 10px 30px;
+        font-size: 0.9rem;
+    }
+
+    .food_section .box .detail-box h5 {
+        font-size: 1.3rem;
+    }
+
+    .food_section .box .detail-box p {
+        font-size: 0.9rem;
+    }
+
+    .food_section .box .detail-box h6 {
+        font-size: 1.4rem;
+    }
+
+    .navbar-brand span {
+        font-size: 2rem;
+    }
+}
+
+/* Mobile (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+    .heading_container h2 {
+        font-size: 2.8rem;
+    }
+
+    .heading_container p {
+        font-size: 1.1rem;
+    }
+
+    .slider_section .detail-box {
+        padding: 40px 30px;
+    }
+
+    .slider_section .detail-box h1 {
+        font-size: 3rem;
+    }
+
+    .slider_section .detail-box p {
+        font-size: 1.1rem;
+    }
+
+    .food_section .box .detail-box h5 {
+        font-size: 1.4rem;
+    }
+
+    .food_section .box .detail-box p {
+        font-size: 0.95rem;
+    }
+
+    .food_section .box .detail-box h6 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Tablet (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .heading_container h2 {
+        font-size: 3.2rem;
+    }
+
+    .heading_container p {
+        font-size: 1.2rem;
+    }
+
+    .slider_section .detail-box h1 {
+        font-size: 3.5rem;
+    }
+
+    .slider_section .detail-box p {
+        font-size: 1.2rem;
+    }
+
+    .food_section .box .detail-box h5 {
+        font-size: 1.5rem;
+    }
+
+    .food_section .box .detail-box h6 {
+        font-size: 1.55rem;
+    }
+}
+
+/* Desktop (1025px - 1440px) - Base styles apply */
+
+/* Large Desktop / TV (1441px - 1920px) */
+@media (min-width: 1441px) and (max-width: 1920px) {
+    .heading_container h2 {
+        font-size: 4rem;
+    }
+
+    .heading_container p {
+        font-size: 1.4rem;
+    }
+
+    .slider_section .detail-box h1 {
+        font-size: 4.5rem;
+    }
+
+    .slider_section .detail-box p {
+        font-size: 1.4rem;
+    }
+
+    .food_section .box .detail-box h5 {
+        font-size: 1.8rem;
+    }
+
+    .food_section .box .detail-box p {
+        font-size: 1.15rem;
+    }
+
+    .food_section .box .detail-box h6 {
+        font-size: 1.8rem;
+    }
+
+    .slider_section .container {
+        max-width: 900px;
+    }
+}
+
+/* Ultra Large / 4K TV (1921px+) */
+@media (min-width: 1921px) {
+    .heading_container h2 {
+        font-size: 5rem;
+    }
+
+    .heading_container p {
+        font-size: 1.6rem;
+    }
+
+    .slider_section .detail-box {
+        padding: 70px 60px;
+    }
+
+    .slider_section .detail-box h1 {
+        font-size: 5.5rem;
+    }
+
+    .slider_section .detail-box p {
+        font-size: 1.6rem;
+    }
+
+    .slider_section .detail-box .btn1 {
+        padding: 16px 60px;
+        font-size: 1.2rem;
+    }
+
+    .food_section .box .detail-box h5 {
+        font-size: 2.2rem;
+    }
+
+    .food_section .box .detail-box p {
+        font-size: 1.3rem;
+    }
+
+    .food_section .box .detail-box h6 {
+        font-size: 2.2rem;
+    }
+
+    .slider_section .container {
+        max-width: 1200px;
+    }
+
+    .navbar-brand span {
+        font-size: 3rem;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+    .slider_section {
+        min-height: auto;
+        padding: 60px 0;
+    }
+
+    .slider_section .container {
+        top: 50%;
+    }
+
+    .slider_section .detail-box {
+        padding: 30px 40px;
+    }
+
+    .slider_section .detail-box h1 {
+        font-size: 2.5rem;
+    }
+}

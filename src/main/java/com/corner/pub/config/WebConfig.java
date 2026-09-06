@@ -1,20 +1,23 @@
 package com.corner.pub.config;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 
+import java.nio.file.Path;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
+    @Value("${app.upload.dir:./uploads}")
+    private String uploadDir;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                  //      "http://localhost:5501", // Live Server default
-                 //       "http://127.0.0.1:5501", // Alternative Live Server
+                        "http://localhost:8080",
+                        "http://127.0.0.1:8080",
                         "https://cornerpubgiovinazzo.onrender.com")
                 .allowedMethods("*")
                 .allowedHeaders("*")
@@ -25,14 +28,19 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // Reindirizza /admin → /admin.html
         registry.addViewController("/admin").setViewName("redirect:/admin.html");
-        // Reindirizza /login → /login.html
         registry.addViewController("/login").setViewName("redirect:/login.html");
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String location = Path.of(uploadDir).toAbsolutePath().normalize().toUri().toString();
+        if (!location.endsWith("/")) {
+            location = location + "/";
+        }
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(location);
+
         registry.addResourceHandler(
                 "/css/**", "/js/**", "/images/**", "/img/**", "/fonts/**")
                 .addResourceLocations(
@@ -42,5 +50,4 @@ public class WebConfig implements WebMvcConfigurer {
                         "classpath:/static/img/",
                         "classpath:/static/fonts/");
     }
-
 }

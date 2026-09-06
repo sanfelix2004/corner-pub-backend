@@ -1,7 +1,5 @@
 package com.corner.pub.service;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.corner.pub.dto.request.AllergenSelection;
 import com.corner.pub.dto.request.MenuItemRequest;
 import com.corner.pub.dto.response.AllergenResponse;
@@ -18,7 +16,6 @@ import com.corner.pub.repository.MenuItemAllergenRepository;
 import com.corner.pub.repository.MenuItemRepository;
 import com.corner.pub.model.Category;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +33,9 @@ public class MenuItemService {
     private final MenuItemRepository menuItemRepository;
     private final MenuItemAllergenRepository menuItemAllergenRepository;
     private final AllergenRepository allergenRepository;
-    private final Cloudinary cloudinary;
+    private final StorageService storageService;
 
     private static final Logger log = LoggerFactory.getLogger(MenuItemService.class);
-
-    @Value("${cloudinary.cloud-name}")
-    private String cloudName;
 
     private final CategoryRepository categoryRepository;
 
@@ -50,12 +44,12 @@ public class MenuItemService {
             MenuItemAllergenRepository menuItemAllergenRepository,
             AllergenRepository allergenRepository,
             CategoryRepository categoryRepository,
-            Cloudinary cloudinary) {
+            StorageService storageService) {
         this.menuItemRepository = menuItemRepository;
         this.menuItemAllergenRepository = menuItemAllergenRepository;
         this.allergenRepository = allergenRepository;
         this.categoryRepository = categoryRepository;
-        this.cloudinary = cloudinary;
+        this.storageService = storageService;
     }
 
     /** Restituisce l’intero menu (visibili + nascosti). */
@@ -101,7 +95,7 @@ public class MenuItemService {
                 .collect(Collectors.toList());
     }
 
-    /** Aggiunge un nuovo piatto e carica l’immagine su Cloudinary. */
+    /** Aggiunge un nuovo piatto e carica l’immagine su disco. */
     @Transactional
     public MenuItemResponse addMenuItem(MenuItemRequest request, MultipartFile image) {
         String categoria = request.getCategoryName().trim();
@@ -134,23 +128,14 @@ public class MenuItemService {
         // Allergeni (relazioni)
         applyAllergens(saved, request.getAllergens());
 
-        // upload immagine se presente
         if (image != null && !image.isEmpty()) {
             try {
-                Map<?, ?> uploadResult = cloudinary.uploader().upload(
-                        image.getBytes(),
-                        ObjectUtils.asMap(
-                                "folder", "prodotti/",
-                                "public_id", String.valueOf(saved.getId()),
-                                "overwrite", true,
-                                "invalidate", true,
-                                "resource_type", "image"));
-                String imageUrl = (String) uploadResult.get("secure_url");
-                saved.setImageUrl(imageUrl);
+                String relative = storageService.store("prodotti", String.valueOf(saved.getId()), image);
+                saved.setImageUrl(storageService.publicUrl(relative));
                 menuItemRepository.save(saved);
             } catch (Exception e) {
-                log.warn("Cloudinary upload failed for menuItem id={}: {}", saved.getId(), e.getMessage());
-                // Non interrompere il flow: il piatto rimane salvato anche senza immagine
+                log.error("Upload immagine fallito per menuItem id={}: {}", saved.getId(), e.getMessage());
+                throw new IllegalStateException("Impossibile salvare la foto del piatto", e);
             }
         }
 
@@ -186,21 +171,14 @@ public class MenuItemService {
         // Allergeni (replace completo in base alla richiesta)
         applyAllergens(item, request.getAllergens());
 
-        // upload nuova immagine se presente
         if (image != null && !image.isEmpty()) {
             try {
-                Map<?, ?> uploadResult = cloudinary.uploader().upload(image.getBytes(),
-                        ObjectUtils.asMap(
-                                "folder", "prodotti/",
-                                "public_id", String.valueOf(item.getId()),
-                                "overwrite", true,
-                                "invalidate", true,
-                                "resource_type", "image"));
-                String imageUrl = (String) uploadResult.get("secure_url");
-                item.setImageUrl(imageUrl);
+                String relative = storageService.replace(
+                        "prodotti", String.valueOf(item.getId()), item.getImageUrl(), image);
+                item.setImageUrl(storageService.publicUrl(relative));
             } catch (Exception e) {
-                log.warn("Cloudinary upload failed on update for menuItem id={}: {}", item.getId(), e.getMessage());
-                // Non interrompere l'update: mantieni le altre modifiche
+                log.error("Upload immagine fallito in update per menuItem id={}: {}", item.getId(), e.getMessage());
+                throw new IllegalStateException("Impossibile aggiornare la foto del piatto", e);
             }
         }
 
@@ -216,31 +194,7 @@ public class MenuItemService {
 
         // 1) elimina relazioni allergeni
         menuItemAllergenRepository.deleteByMenuItem_Id(id);
-
-        // 2) elimina asset Cloudinary (tenta sia /prodotti/<id> che <id> legacy)
-        try {
-            String publicIdPreferred = "prodotti/" + id; // forma corretta
-            Map<String, Object> opts = ObjectUtils.asMap(
-                    "resource_type", "image",
-                    "type", "upload",
-                    "invalidate", true);
-
-            // principale
-            cloudinary.uploader().destroy(publicIdPreferred, opts);
-
-            // eventuali derivati (thumbnail, trasformazioni, versioni)
-            cloudinary.api().deleteResourcesByPrefix(publicIdPreferred, ObjectUtils.asMap(
-                    "resource_type", "image",
-                    "type", "upload"));
-
-            // legacy: se in passato hai salvato senza folder o con public_id
-            // "prodotti/<id>" in root
-            cloudinary.uploader().destroy(String.valueOf(id), opts);
-
-        } catch (Exception e) {
-            log.warn("Cloudinary delete failed for menuItem id={}: {}", id, e.getMessage());
-            // non bloccare la cancellazione del record
-        }
+        storageService.deleteOwned(item.getImageUrl(), "prodotti", String.valueOf(id));
 
         // 3) elimina record
         menuItemRepository.deleteById(id);
@@ -295,11 +249,8 @@ public class MenuItemService {
             AllergenStatus st = link.getStatus() == null ? AllergenStatus.CONTAINS : link.getStatus();
             String suffix = (st == AllergenStatus.MAY_CONTAIN) ? "__MAY" : "__CONTAINS";
 
-            String base = (a.getIconBase() == null || a.getIconBase().isBlank())
-                    ? a.getCode().toLowerCase(Locale.ITALY)
-                    : a.getIconBase();
-            String cn = (cloudName == null || cloudName.isBlank()) ? "demo" : cloudName;
-            String iconUrl = "https://res.cloudinary.com/" + cn + "/image/upload/" + base + suffix + ".svg";
+            String code = a.getCode() == null ? "allergen" : a.getCode().toLowerCase(Locale.ITALY);
+            String iconUrl = "/images/allergens/" + code + suffix + ".svg";
 
             AllergenResponse ar = new AllergenResponse();
             ar.setCode(a.getCode());
