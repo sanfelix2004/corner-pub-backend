@@ -18,6 +18,8 @@ public class EventRegistrationResponse {
     private String tableNumber; // 🔹 nuovo campo
     private String allergensNote; // 🔹 nuovo campo
     private String privacyPolicyVersion; // 🔹 nuovo campo
+    private Boolean attending;
+    private java.time.LocalDateTime attendanceRespondedAt;
 
     public EventRegistrationResponse() {
     }
@@ -48,6 +50,8 @@ public class EventRegistrationResponse {
         this.tableNumber = reg.getTableNumber(); // 🔹 assegno il tavolo
         this.allergensNote = reg.getAllergensNote();
         this.privacyPolicyVersion = reg.getPrivacyPolicyVersion();
+        this.attending = reg.getAttending();
+        this.attendanceRespondedAt = reg.getAttendanceRespondedAt();
     }
 
     public EventRegistrationResponse(Long id, LocalDateTime createdAt, EventResponse eventResponse,
@@ -154,5 +158,21 @@ public class EventRegistrationResponse {
 
     public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
         this.privacyPolicyVersion = privacyPolicyVersion;
+    }
+
+    public Boolean getAttending() {
+        return attending;
+    }
+
+    public void setAttending(Boolean attending) {
+        this.attending = attending;
+    }
+
+    public LocalDateTime getAttendanceRespondedAt() {
+        return attendanceRespondedAt;
+    }
+
+    public void setAttendanceRespondedAt(LocalDateTime attendanceRespondedAt) {
+        this.attendanceRespondedAt = attendanceRespondedAt;
     }
 }

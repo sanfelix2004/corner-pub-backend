@@ -1,5 +1,7 @@
 package com.corner.pub.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -12,8 +14,9 @@ public class ReservationResponse {
     private LocalTime time;
     private int people;
     private String note;
-    private Long eventId; // Aggiungi questo campo
-    private Boolean isEventRegistration; // Aggiungi questo campo
+    private Long eventId;
+    @JsonProperty("isEventRegistration")
+    private Boolean isEventRegistration;
     private EventResponse event;
     private String tableNumber; // aggiunto
     private String allergensNote; // aggiunto
@@ -25,14 +28,6 @@ public class ReservationResponse {
 
     public void setTableNumber(String tableNumber) {
         this.tableNumber = tableNumber;
-    }
-
-    public Boolean getEventRegistration() {
-        return isEventRegistration;
-    }
-
-    public void setEventRegistration(Boolean eventRegistration) {
-        isEventRegistration = eventRegistration;
     }
 
     public EventResponse getEvent() {
@@ -115,6 +110,7 @@ public class ReservationResponse {
         this.eventId = eventId;
     }
 
+    @JsonProperty("isEventRegistration")
     public Boolean getIsEventRegistration() {
         return isEventRegistration;
     }

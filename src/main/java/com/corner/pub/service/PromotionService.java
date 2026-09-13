@@ -179,7 +179,7 @@ public class PromotionService {
 
     private String resolveImageUrl(MenuItem item) {
         if (item.getImageUrl() != null && !item.getImageUrl().isBlank()) {
-            return item.getImageUrl();
+            return StorageService.toLocalUrl(item.getImageUrl());
         }
         return "/images/about-img.png";
     }

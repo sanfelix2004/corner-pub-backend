@@ -38,6 +38,15 @@ public class EventRegistration {
     @Column
     private String tableNumber;
 
+    @Column(name = "confirmation_token", unique = true, length = 64)
+    private String confirmationToken;
+
+    @Column(name = "attending")
+    private Boolean attending;
+
+    @Column(name = "attendance_responded_at")
+    private LocalDateTime attendanceRespondedAt;
+
     @Column(name = "privacy_policy_version")
     private String privacyPolicyVersion;
 
@@ -111,6 +120,30 @@ public class EventRegistration {
 
     public void setTableNumber(String tableNumber) {
         this.tableNumber = tableNumber;
+    }
+
+    public String getConfirmationToken() {
+        return confirmationToken;
+    }
+
+    public void setConfirmationToken(String confirmationToken) {
+        this.confirmationToken = confirmationToken;
+    }
+
+    public Boolean getAttending() {
+        return attending;
+    }
+
+    public void setAttending(Boolean attending) {
+        this.attending = attending;
+    }
+
+    public LocalDateTime getAttendanceRespondedAt() {
+        return attendanceRespondedAt;
+    }
+
+    public void setAttendanceRespondedAt(LocalDateTime attendanceRespondedAt) {
+        this.attendanceRespondedAt = attendanceRespondedAt;
     }
 
     public String getPrivacyPolicyVersion() {

@@ -36,6 +36,24 @@ public class ReservationService {
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter TIME_FMT_SECONDS = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final DateTimeFormatter EVENT_DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+    private static final DateTimeFormatter EVENT_DT_FMT_SECONDS = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+    private static LocalDateTime parseEventDateTime(String raw) {
+        if (raw == null || raw.isBlank()) {
+            throw new DateTimeParseException("Event date missing", "", 0);
+        }
+        String value = raw.trim();
+        try {
+            return LocalDateTime.parse(value, EVENT_DT_FMT);
+        } catch (DateTimeParseException ignored) {
+            // continue
+        }
+        try {
+            return LocalDateTime.parse(value, EVENT_DT_FMT_SECONDS);
+        } catch (DateTimeParseException ignored) {
+            return LocalDateTime.parse(value);
+        }
+    }
 
     private final ReservationRepository reservationRepository;
     private final UserService userService;
@@ -577,7 +595,7 @@ public class ReservationService {
                     resp.setName(reg.getName());
                     resp.setPhone(reg.getPhone());
 
-                    LocalDateTime dateTime = LocalDateTime.parse(reg.getEvent().getData(), EVENT_DT_FMT);
+                    LocalDateTime dateTime = parseEventDateTime(reg.getEvent().getData());
                     resp.setDate(dateTime.toLocalDate());
                     resp.setTime(dateTime.toLocalTime());
                     resp.setPeople(reg.getPartecipanti());

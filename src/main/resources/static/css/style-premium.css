@@ -24,8 +24,14 @@ body {
   font-family: "Open Sans", sans-serif;
   color: var(--text);
   background-color: #ffffff;
-  overflow-x: hidden;
+  overflow-x: clip;
+  max-width: 100%;
   line-height: 1.7;
+}
+
+html {
+  overflow-x: clip;
+  max-width: 100%;
 }
 
 .layout_padding {
@@ -855,6 +861,9 @@ a:focus {
   font-size: 1.6rem;
   margin-bottom: 10px;
   color: #ffffff;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .food_section .box .detail-box p {

@@ -92,6 +92,19 @@ public class AdminEventController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping(value = "/{eventId}/poster", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<EventResponse> replacePoster(
+            @PathVariable Long eventId,
+            @RequestPart("poster") MultipartFile poster
+    ) {
+        return ResponseEntity.ok(eventService.replacePoster(eventId, poster));
+    }
+
+    @DeleteMapping("/{eventId}/poster")
+    public ResponseEntity<EventResponse> deletePoster(@PathVariable Long eventId) {
+        return ResponseEntity.ok(eventService.deletePoster(eventId));
+    }
+
     @PostMapping("/{eventId}/register")
     public ResponseEntity<Void> registerToEvent(
             @PathVariable Long eventId,
@@ -109,6 +122,14 @@ public class AdminEventController {
     @GetMapping("/{eventId}/attendees")
     public ResponseEntity<List<EventRegistrationResponse>> getAttendees(@PathVariable Long eventId) {
         return ResponseEntity.ok(registrationService.getRegistrationsByEventId(eventId));
+    }
+
+    @PostMapping("/{eventId}/attendance-reminders")
+    public ResponseEntity<?> sendAttendanceReminders(
+            @PathVariable Long eventId,
+            @RequestParam(required = false) String testPhone
+    ) {
+        return ResponseEntity.ok(registrationService.prepareAttendanceReminders(eventId, testPhone));
     }
 
     @GetMapping("/registrations")

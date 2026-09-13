@@ -1,12 +1,16 @@
 {
-	email {$ACME_EMAIL}
+	email cornersnc@gmail.com
 }
 
-{$DOMAIN} {
+cornerpubgiovinazzo.com, www.cornerpubgiovinazzo.com {
 	encode gzip zstd
-	reverse_proxy app:8080
-}
 
-www.{$DOMAIN} {
-	redir https://{$DOMAIN}{uri} permanent
+	@static path /images/* /uploads/* /css/* /js/* /fonts/* /img/*
+	header @static {
+		Cache-Control "public, max-age=2592000, immutable"
+		-Pragma
+		defer
+	}
+
+	reverse_proxy app:8080
 }

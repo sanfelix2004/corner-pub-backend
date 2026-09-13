@@ -48,6 +48,19 @@ public class AdminMenuController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping(value = "/{id}/image", consumes = {"multipart/form-data"})
+    public ResponseEntity<MenuItemResponse> replaceImage(
+            @PathVariable Long id,
+            @RequestPart("image") MultipartFile image
+    ) {
+        return ResponseEntity.ok(menuItemService.replaceImage(id, image));
+    }
+
+    @DeleteMapping("/{id}/image")
+    public ResponseEntity<MenuItemResponse> deleteImage(@PathVariable Long id) {
+        return ResponseEntity.ok(menuItemService.deleteImage(id));
+    }
+
     // ✅ Elimina un piatto
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMenuItem(@PathVariable Long id) {

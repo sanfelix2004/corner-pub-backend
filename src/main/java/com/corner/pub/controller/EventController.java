@@ -72,9 +72,6 @@ public class EventController {
         } catch (CornerPubException e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Errore imprevisto"));
         }
     }
 
@@ -120,5 +117,27 @@ public class EventController {
         }
     }
 
+    @GetMapping("/attendance")
+    public ResponseEntity<?> getAttendance(@RequestParam String token) {
+        try {
+            return ResponseEntity.ok(registrationService.getAttendanceByToken(token));
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/attendance")
+    public ResponseEntity<?> saveAttendance(@RequestBody Map<String, Object> body) {
+        try {
+            String token = String.valueOf(body.getOrDefault("token", "")).trim();
+            Object attendingValue = body.get("attending");
+            boolean attending = attendingValue instanceof Boolean
+                    ? (Boolean) attendingValue
+                    : Boolean.parseBoolean(String.valueOf(attendingValue));
+            return ResponseEntity.ok(registrationService.saveAttendance(token, attending));
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 
 }

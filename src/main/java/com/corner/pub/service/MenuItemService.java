@@ -172,18 +172,44 @@ public class MenuItemService {
         applyAllergens(item, request.getAllergens());
 
         if (image != null && !image.isEmpty()) {
-            try {
-                String relative = storageService.replace(
-                        "prodotti", String.valueOf(item.getId()), item.getImageUrl(), image);
-                item.setImageUrl(storageService.publicUrl(relative));
-            } catch (Exception e) {
-                log.error("Upload immagine fallito in update per menuItem id={}: {}", item.getId(), e.getMessage());
-                throw new IllegalStateException("Impossibile aggiornare la foto del piatto", e);
-            }
+            replaceStoredImage(item, image);
         }
 
         MenuItem updated = menuItemRepository.save(item);
         return mapToResponse(updated);
+    }
+
+    /** Sostituisce solo la foto e cancella dal disco quella precedente. */
+    @Transactional
+    public MenuItemResponse replaceImage(Long id, MultipartFile image) {
+        if (image == null || image.isEmpty()) {
+            throw new IllegalArgumentException("Seleziona una foto da caricare");
+        }
+        MenuItem item = menuItemRepository.findById(id)
+                .orElseThrow(() -> new MenuItemNotFoundException(id));
+        replaceStoredImage(item, image);
+        return mapToResponse(menuItemRepository.save(item));
+    }
+
+    /** Cancella la foto dal disco Aruba e lascia il piatto senza immagine. */
+    @Transactional
+    public MenuItemResponse deleteImage(Long id) {
+        MenuItem item = menuItemRepository.findById(id)
+                .orElseThrow(() -> new MenuItemNotFoundException(id));
+        storageService.deleteOwned(item.getImageUrl(), "prodotti", String.valueOf(id));
+        item.setImageUrl(null);
+        return mapToResponse(menuItemRepository.save(item));
+    }
+
+    private void replaceStoredImage(MenuItem item, MultipartFile image) {
+        try {
+            String relative = storageService.replace(
+                    "prodotti", String.valueOf(item.getId()), item.getImageUrl(), image);
+            item.setImageUrl(storageService.publicUrl(relative));
+        } catch (Exception e) {
+            log.error("Upload immagine fallito per menuItem id={}: {}", item.getId(), e.getMessage());
+            throw new IllegalStateException("Impossibile aggiornare la foto del piatto", e);
+        }
     }
 
     /** Elimina un piatto per ID. */
@@ -230,7 +256,7 @@ public class MenuItemService {
         response.setDescrizione(item.getDescrizione());
         response.setPrezzo(item.getPrezzo());
         response.setVisibile(item.isVisibile());
-        response.setImageUrl(item.getImageUrl());
+        response.setImageUrl(storageService.publicUrl(item.getImageUrl()));
 
         // Carica i link da repository (no lazy su item) e costruisci DTO in modo
         // null-safe

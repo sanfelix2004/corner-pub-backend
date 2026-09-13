@@ -2,9 +2,11 @@ package com.corner.pub.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.*;
 
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -18,6 +20,10 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:8080",
                         "http://127.0.0.1:8080",
+                        "http://cornerpubgiovinazzo.com",
+                        "https://cornerpubgiovinazzo.com",
+                        "http://www.cornerpubgiovinazzo.com",
+                        "https://www.cornerpubgiovinazzo.com",
                         "https://cornerpubgiovinazzo.onrender.com")
                 .allowedMethods("*")
                 .allowedHeaders("*")
@@ -38,8 +44,10 @@ public class WebConfig implements WebMvcConfigurer {
         if (!location.endsWith("/")) {
             location = location + "/";
         }
+        CacheControl longCache = CacheControl.maxAge(30, TimeUnit.DAYS).cachePublic();
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(location);
+                .addResourceLocations(location)
+                .setCacheControl(longCache);
 
         registry.addResourceHandler(
                 "/css/**", "/js/**", "/images/**", "/img/**", "/fonts/**")
@@ -48,6 +56,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "classpath:/static/js/",
                         "classpath:/static/images/",
                         "classpath:/static/img/",
-                        "classpath:/static/fonts/");
+                        "classpath:/static/fonts/")
+                .setCacheControl(longCache);
     }
 }

@@ -35,16 +35,19 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <!-- Custom styles for this template -->
-  <link href="css/style-premium.css?v=7" rel="stylesheet" />
+  <link rel="preload" as="image" href="images/slide1.jpg">
+  <link rel="preload" as="video" href="images/hero-video.mp4" type="video/mp4">
+  <link href="css/style-premium.css?v=8" rel="stylesheet" />
   <!-- responsive style -->
   <link href="css/responsive.css" rel="stylesheet" />
-  <link href="css/site-ux.css?v=5" rel="stylesheet" />
+  <link href="css/site-ux.css?v=24" rel="stylesheet" />
 
   <style>
     html,
     body {
       width: 100%;
-      overflow-x: hidden;
+      max-width: 100%;
+      overflow-x: clip;
     }
 
     /* Centra i contenuti */
@@ -132,7 +135,7 @@
 
     <div class="hero_area" id="top">
     <div class="bg-box">
-      <video autoplay muted loop playsinline preload="metadata" poster="images/slide1.jpg" id="heroVideo">
+      <video autoplay muted loop playsinline preload="auto" poster="images/slide1.jpg" id="heroVideo" fetchpriority="high">
         <source src="images/hero-video.mp4" type="video/mp4">
         <!-- Fallback to image if video not available -->
         <img src="images/slide1.jpg" alt="Corner Pub">
@@ -150,8 +153,8 @@
           </a>
 
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class=""> </span>
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Apri o chiudi menu">
+            <span class=""></span>
           </button>
 
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -183,6 +186,9 @@
                 </a>
               </center>
             </div>
+            <button type="button" class="nav-close-btn" data-toggle="collapse" data-target="#navbarSupportedContent" aria-label="Chiudi menu">
+              Chiudi
+            </button>
           </div>
         </nav>
       </div>
@@ -383,11 +389,7 @@
 
       </div>
 
-      <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-
-          <!-- FORM PRENOTAZIONE TAVOLO -->
-          <div id="tavoloForm" class="form_container">
+      <div id="tavoloForm" class="form_container book-form-narrow">
             <form id="reservationForm">
               <div class="mb-3">
                 <input id="resName" type="text" class="form-control" value="Nome" required />
@@ -440,65 +442,11 @@
               </div>
               <p id="resMessage" class="mt-3 text-center"></p>
             </form>
-          </div>
+      </div>
 
-          <!-- FORM REGISTRAZIONE EVENTO -->
-          <div id="eventoForm" class="form_container d-none">
-            <form id="eventForm">
-              <div class="mb-3">
-                <input id="eventName" type="text" class="form-control" value="Nome" required />
-              </div>
-              <div class="mb-3">
-                <input id="eventSurname" type="text" class="form-control" value="Cognome" required />
-              </div>
-              <div class="mb-3">
-                <input id="eventPhone" type="text" class="form-control" value="Telefono" required />
-              </div>
-              <div class="mb-3">
-                <input id="eventPartecipanti" type="text" class="form-control" value="Partecipanti" required />
-              </div>
-              <div class="mb-3">
-                <textarea id="eventNote" class="form-control">Note</textarea>
-              </div>
-
-              <!-- Allergeni (Facoltativo) -->
-              <div class="mb-3">
-                <textarea id="eventAllergens"
-                  class="form-control">Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.</textarea>
-              </div>
-              <div id="eventAllergenConsentContainer" class="mb-3 form-check text-left d-none"
-                style="padding-left: 2.5rem;">
-                <input type="checkbox" class="form-check-input" id="eventAllergenConsent"
-                  style="transform: scale(1.2); margin-left: -1.8rem;">
-                <label class="form-check-label" for="eventAllergenConsent"
-                  style="font-size: 0.85rem; margin-left: 5px;">
-                  Acconsento al trattamento dei dati relativi alla salute (allergeni) esclusivamente per la gestione
-                  dell'evento in sicurezza.
-                </label>
-              </div>
-              <div class="mb-3">
-                <select id="eventSelect" class="form-control" required>
-                  <option value="">Seleziona un evento</option>
-                </select>
-                <div id="noEventsMessage" class="alert alert-info d-none"></div>
-              </div>
-              <div id="postiDisponibili" class="text-muted mb-3"></div>
-              <div class="mb-4 form-check text-left" style="padding-left: 2.5rem;">
-                <input type="checkbox" class="form-check-input" id="eventPrivacyCheck"
-                  style="transform: scale(1.5); margin-left: -1.8rem;">
-                <label class="form-check-label" for="eventPrivacyCheck" style="font-size: 0.9rem; margin-left: 5px;">
-                  Ho letto e accetto la <a href="privacy.html" target="_blank"
-                    style="text-decoration: underline; color: #D4AF37;">Privacy Policy</a>.
-                </label>
-              </div>
-              <div class="btn_box text-center">
-                <button type="submit" class="btn">Iscriviti</button>
-              </div>
-              <p id="eventMessage" class="mt-3 text-center"></p>
-            </form>
-          </div>
-
-        </div>
+      <div id="eventoForm" class="d-none">
+        <div id="eventCardsGrid" class="event-cards-grid"></div>
+        <p id="noEventsMessage" class="event-empty d-none"></p>
       </div>
     </div>
   </section>
@@ -579,15 +527,15 @@
           <div class="footer_contact">
             <h4>Contatti</h4>
             <div class="contact_link_box">
-              <a href="#">
+              <a href="https://maps.google.com/?q=Piazza+Duomo+58,+70054+Giovinazzo" target="_blank" rel="noopener">
                 <i class="fa fa-map-marker" aria-hidden="true"></i>
                 <span>Piazza Duomo 58, 70054 Giovinazzo (BA)</span>
               </a>
-              <a href="tel:+39 334 592 6223">
+              <a href="tel:+393345926223">
                 <i class="fa fa-phone" aria-hidden="true"></i>
                 <span>+39 334 592 6223</span>
               </a>
-              <a href="mailto:info@cornerhamburgeria.it">
+              <a href="mailto:cornersnc@gmail.com">
                 <i class="fa fa-envelope" aria-hidden="true"></i>
                 <span>cornersnc@gmail.com</span>
               </a>
@@ -602,9 +550,8 @@
             con ingredienti selezionati.
           </p>
           <div class="footer_social">
-            <a href="#"><i class="fa fa-facebook" aria-hidden="true"></i></a>
-            <a href="#"><i class="fa fa-instagram" aria-hidden="true"></i></a>
-            <a href="#"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+            <a href="https://www.instagram.com/corner_giovinazzo/" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa fa-instagram" aria-hidden="true"></i></a>
+            <a href="https://www.tiktok.com/@cornergiovinazzo" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa fa-play" aria-hidden="true"></i></a>
           </div>
         </div>
         <!-- Orari -->
@@ -618,7 +565,6 @@
         <p>
           &copy; <span id="displayYear"></span> Corner Hamburgeria — Tutti i diritti riservati.<br>
           <a href="privacy.html" style="color: inherit; text-decoration: underline;">Privacy Policy</a> |
-          <a href="privacy.html" style="color: inherit; text-decoration: underline;">Privacy Policy</a> |
           <a href="cookie.html" style="color: inherit; text-decoration: underline;">Cookie Policy</a> |
           <a href="#" id="openPrivacySettings" style="color: inherit; text-decoration: underline;">Gestisci Consensi</a>
         </p>
@@ -630,37 +576,103 @@
   <!-- Toast Notification -->
   <div id="customToast"></div>
 
+  <div id="eventBookOverlay" class="corner-modal-overlay" hidden>
+    <div class="corner-modal event-book-sheet sheet-light" role="dialog" aria-modal="true" aria-labelledby="eventBookTitle">
+      <button type="button" class="corner-modal-close" id="closeEventBookBtn" aria-label="Chiudi">&times;</button>
+      <div class="event-book-hero">
+        <img id="eventBookPoster" alt="" src="images/about-img.png" onerror="this.onerror=null;this.src='images/about-img.png'">
+        <div class="event-book-hero-copy">
+          <p class="event-book-kicker">Prenota evento</p>
+          <h3 id="eventBookTitle"></h3>
+          <p id="eventBookMeta"></p>
+        </div>
+      </div>
+      <form id="eventForm" class="event-book-form">
+        <input type="hidden" id="eventSelect" value="" />
+        <div class="mb-3">
+          <input id="eventName" type="text" class="form-control" value="Nome" required />
+        </div>
+        <div class="mb-3">
+          <input id="eventSurname" type="text" class="form-control" value="Cognome" required />
+        </div>
+        <div class="mb-3">
+          <input id="eventPhone" type="text" class="form-control" value="Telefono" required />
+        </div>
+        <div class="mb-3">
+          <input id="eventPartecipanti" type="text" class="form-control" value="Partecipanti" required />
+        </div>
+        <div class="mb-3">
+          <textarea id="eventNote" class="form-control" rows="2">Note</textarea>
+        </div>
+        <div class="mb-3">
+          <textarea id="eventAllergens" class="form-control" rows="2">Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.</textarea>
+        </div>
+        <div id="eventAllergenConsentContainer" class="mb-3 form-check text-left d-none" style="padding-left: 2.5rem;">
+          <input type="checkbox" class="form-check-input" id="eventAllergenConsent" style="transform: scale(1.2); margin-left: -1.8rem;">
+          <label class="form-check-label" for="eventAllergenConsent" style="font-size: 0.85rem; margin-left: 5px;">
+            Acconsento al trattamento dei dati relativi alla salute (allergeni) esclusivamente per la gestione dell'evento in sicurezza.
+          </label>
+        </div>
+        <div id="postiDisponibili" class="event-book-seats"></div>
+        <div class="mb-4 form-check text-left" style="padding-left: 2.5rem;">
+          <input type="checkbox" class="form-check-input" id="eventPrivacyCheck" style="transform: scale(1.5); margin-left: -1.8rem;">
+          <label class="form-check-label" for="eventPrivacyCheck" style="font-size: 0.9rem; margin-left: 5px;">
+            Ho letto e accetto la <a href="privacy.html" target="_blank" style="text-decoration: underline; color: #D4AF37;">Privacy Policy</a>.
+          </label>
+        </div>
+        <div class="btn_box text-center">
+          <button type="submit" class="btn">Iscriviti</button>
+        </div>
+        <p id="eventMessage" class="mt-3 text-center"></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="dishOverlay" class="corner-modal-overlay" hidden>
+    <div class="corner-modal dish-sheet sheet-light" role="dialog" aria-modal="true" aria-labelledby="dishSheetTitle">
+      <button type="button" class="corner-modal-close" id="closeDishBtn" aria-label="Chiudi">&times;</button>
+      <div class="dish-sheet-hero">
+        <img id="dishSheetImg" alt="" src="images/about-img.png" onerror="this.onerror=null;this.src='images/about-img.png'">
+      </div>
+      <div class="dish-sheet-body">
+        <p class="dish-sheet-cat" id="dishSheetCat"></p>
+        <h3 id="dishSheetTitle"></h3>
+        <p class="dish-sheet-price" id="dishSheetPrice"></p>
+        <p class="dish-sheet-desc" id="dishSheetDesc"></p>
+        <div id="dishSheetAllergens"></div>
+        <button type="button" class="sheet-action-btn" id="dishSheetDone">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
   <!-- GDPR Consent Modal -->
   <div id="consentModalOverlay" class="consent-modal-overlay">
-    <div class="consent-modal">
-      <h3>Impostazioni Privacy</h3>
-      <p>Questo sito utilizza dati per gestire le prenotazioni e contenuti esterni (social). Scegli cosa autorizzare.
-      </p>
+    <div class="consent-modal sheet-light">
+      <span class="consent-handle" aria-hidden="true"></span>
+      <p class="consent-kicker">Corner Pub</p>
+      <h3>Cookie e privacy</h3>
+      <p>Usiamo i dati solo per le prenotazioni e, se vuoi, per mostrarti i social in pagina.</p>
 
       <div class="consent-options">
-
-        <!-- Obbligatorio per prenotare -->
-        <div class="consent-option">
+        <label class="consent-option" for="consentBooking">
           <input type="checkbox" id="consentBooking">
           <div>
-            <label for="consentBooking">Trattamento Dati Prenotazioni</label>
-            <span class="note">Necessario per prenotare un tavolo.</span>
+            <span class="consent-option-title">Prenotazioni</span>
+            <span class="note">Necessario per tavoli ed eventi.</span>
           </div>
-        </div>
-
-        <!-- Facoltativo per Social -->
-        <div class="consent-option">
+        </label>
+        <label class="consent-option" for="consentSocial">
           <input type="checkbox" id="consentSocial">
           <div>
-            <label for="consentSocial">Contenuti Social (Instagram/TikTok)</label>
-            <span class="note">Abilita la visualizzazione di foto e video embeddati.</span>
+            <span class="consent-option-title">Contenuti social</span>
+            <span class="note">Instagram e TikTok incorporati.</span>
           </div>
-        </div>
-
+        </label>
       </div>
 
       <div class="consent-buttons">
-        <button id="btnSaveConsent" class="btn-primary-consent">Salva preferenze</button>
+        <button type="button" id="btnAcceptAll" class="btn-primary-consent">Accetta tutti</button>
+        <button type="button" id="btnSaveConsent" class="btn-secondary-consent">Salva scelta</button>
       </div>
     </div>
   </div>
@@ -700,7 +712,7 @@
     </a>
   </nav>
 
-  <script src="js/custom.js?v=9"></script>
+  <script src="js/custom.js?v=19"></script>
   <!-- Google Map -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
   </script>

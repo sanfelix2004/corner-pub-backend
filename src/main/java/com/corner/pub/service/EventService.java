@@ -57,20 +57,50 @@ public class EventService {
         event.setPostiTotali(request.getPostiTotali());
 
         if (poster != null && !poster.isEmpty()) {
-            try {
-                String relative = storageService.replace(
-                        "eventi", String.valueOf(event.getId()), event.getPosterUrl(), poster);
-                event.setPosterUrl(storageService.publicUrl(relative));
-                event.setPosterPublicId(relative);
-            } catch (Exception e) {
-                log.error("Errore upload nuova locandina: {}", e.getMessage());
-                throw new CornerPubException("Impossibile aggiornare la locandina dell'evento");
-            }
+            replaceStoredPoster(event, poster);
         }
 
         Event updated = eventRepository.save(event);
         long totalePartecipanti = registrationRepository.countByEventId(eventId);
         return new EventResponse(updated, totalePartecipanti);
+    }
+
+    @Transactional
+    public EventResponse replacePoster(Long eventId, MultipartFile poster) {
+        if (poster == null || poster.isEmpty()) {
+            throw new CornerPubException("Seleziona una locandina da caricare");
+        }
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new CornerPubException("Evento non trovato"));
+        replaceStoredPoster(event, poster);
+        Event updated = eventRepository.save(event);
+        long totalePartecipanti = registrationRepository.countByEventId(eventId);
+        return new EventResponse(updated, totalePartecipanti);
+    }
+
+    @Transactional
+    public EventResponse deletePoster(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new CornerPubException("Evento non trovato"));
+        storageService.deleteOwned(event.getPosterUrl(), "eventi", String.valueOf(eventId));
+        storageService.delete(event.getPosterPublicId());
+        event.setPosterUrl(null);
+        event.setPosterPublicId(null);
+        Event updated = eventRepository.save(event);
+        long totalePartecipanti = registrationRepository.countByEventId(eventId);
+        return new EventResponse(updated, totalePartecipanti);
+    }
+
+    private void replaceStoredPoster(Event event, MultipartFile poster) {
+        try {
+            String relative = storageService.replace(
+                    "eventi", String.valueOf(event.getId()), event.getPosterUrl(), poster);
+            event.setPosterUrl(storageService.publicUrl(relative));
+            event.setPosterPublicId(relative);
+        } catch (Exception e) {
+            log.error("Errore upload nuova locandina: {}", e.getMessage());
+            throw new CornerPubException("Impossibile aggiornare la locandina dell'evento");
+        }
     }
 
     @Transactional

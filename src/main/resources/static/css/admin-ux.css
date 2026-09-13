@@ -1,0 +1,465 @@
+/* Corner back office — light, fast, phone-first */
+:root {
+  --bo-gold: #e8c547;
+  --bo-ink: #1a1a1a;
+  --bo-panel: #ffffff;
+  --bo-line: rgba(0, 0, 0, 0.08);
+  --bo-sidebar: 232px;
+  --bo-top: 64px;
+  --bo-dock: 64px;
+  --bo-bg: #f6f4ef;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.bo-app {
+  margin: 0;
+  padding: 0 !important;
+  background: var(--bo-bg);
+  color: var(--bo-ink);
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+body.bo-app .container.bo-container {
+  margin: 0;
+  max-width: none;
+  padding: 16px 16px 88px;
+}
+
+.bo-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--bo-sidebar);
+  background: #fff;
+  border-right: 1px solid var(--bo-line);
+  padding: 18px 12px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bo-brand {
+  padding: 8px 10px 18px;
+}
+
+.bo-brand strong {
+  display: block;
+  color: #8a6d1d;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.bo-brand span {
+  color: #111;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.bo-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: auto;
+}
+
+.bo-nav-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #3a3a3a;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.bo-nav-btn i {
+  width: 18px;
+  text-align: center;
+  color: #b08918;
+}
+
+.bo-nav-btn.is-active,
+.bo-nav-btn:hover {
+  background: rgba(232, 197, 71, 0.22);
+  color: #111;
+}
+
+.bo-wrap {
+  margin-left: var(--bo-sidebar);
+  min-height: 100vh;
+}
+
+.bo-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--bo-top);
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--bo-line);
+}
+
+.bo-kicker {
+  margin: 0;
+  color: #8a6d1d;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.bo-topbar h1 {
+  margin: 0;
+  color: #111;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.bo-search {
+  margin-left: auto;
+  width: min(340px, 42vw);
+  border: 1px solid var(--bo-line);
+  background: #fff;
+  color: #111;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 16px;
+}
+
+.bo-search:focus {
+  outline: 0;
+  border-color: rgba(232, 197, 71, 0.8);
+}
+
+.bo-icon-btn {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--bo-gold);
+  color: #111;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  box-shadow: 0 6px 16px rgba(232, 197, 71, 0.35);
+}
+
+.bo-nav-scrim {
+  display: none;
+}
+
+.bo-dock {
+  display: none;
+}
+
+body.bo-app .page-header,
+body.bo-app .section-switcher {
+  display: none !important;
+}
+
+body.bo-app .card-section {
+  background: var(--bo-panel);
+  color: var(--bo-ink);
+  border: 1px solid var(--bo-line);
+  border-radius: 20px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+body.bo-app .card-section h4,
+body.bo-app .card-section h5,
+body.bo-app .form-card h5 {
+  color: #111;
+  border-color: var(--bo-line);
+}
+
+body.bo-app .form-card,
+body.bo-app .promo-card,
+body.bo-app .event-registration-header {
+  background: #fff;
+  border-color: var(--bo-line);
+  color: #333;
+}
+
+body.bo-app .form-control,
+body.bo-app select,
+body.bo-app textarea {
+  background: #fff !important;
+  color: #111 !important;
+  border-color: #e4dcc8 !important;
+}
+
+body.bo-app .table,
+body.bo-app .custom-table,
+body.bo-app .custom-table th,
+body.bo-app .custom-table td {
+  color: #222;
+  background: #fff;
+  border-color: #eee;
+}
+
+body.bo-app .custom-table th,
+body.bo-app .thead-light th {
+  background: #fff8ea;
+  color: #8a6d1d;
+  border-color: #eee;
+}
+
+body.bo-app .alert-info {
+  background: #fff8ea;
+  border-color: #ead9b0;
+  color: #5a4a1d;
+}
+
+body.bo-app .nav-tabs {
+  border-color: #eee;
+}
+
+body.bo-app .nav-tabs .nav-link {
+  color: #555;
+  border: 0;
+  border-radius: 999px;
+  margin-right: 6px;
+}
+
+body.bo-app .nav-tabs .nav-link.active {
+  background: var(--bo-gold);
+  color: #111;
+}
+
+body.bo-app .modal-content {
+  background: #fff;
+  color: #111;
+}
+
+body.bo-app .close {
+  color: #111;
+  opacity: 0.8;
+}
+
+.bo-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.bo-stat {
+  background: #fff;
+  border: 1px solid var(--bo-line);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.bo-stat b {
+  display: block;
+  font-size: 1.7rem;
+  color: #8a6d1d;
+  line-height: 1.1;
+}
+
+.bo-stat span {
+  color: #777;
+  font-size: 0.85rem;
+}
+
+.bo-home-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 14px;
+}
+
+.bo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bo-list button,
+.bo-list a {
+  appearance: none;
+  border: 1px solid var(--bo-line);
+  background: #fff;
+  color: #111;
+  text-align: left;
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.bo-list small {
+  display: block;
+  color: #777;
+}
+
+.bo-create > summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: #111;
+  list-style: none;
+  padding: 4px 0 10px;
+}
+
+.bo-create > summary::-webkit-details-marker {
+  display: none;
+}
+
+.bo-busy .card-section::after {
+  content: "";
+  display: block;
+  height: 3px;
+  margin: -8px -18px 12px;
+  background: linear-gradient(90deg, transparent, var(--bo-gold), transparent);
+  animation: boSweep 0.9s linear infinite;
+}
+
+@keyframes boSweep {
+  from { transform: translateX(-40%); }
+  to { transform: translateX(40%); }
+}
+
+body.bo-app .btn-primary,
+body.bo-app .btn-success {
+  background: var(--bo-gold);
+  border-color: var(--bo-gold);
+  color: #111;
+  font-weight: 800;
+  border-radius: 999px;
+}
+
+body.bo-app .btn-warning {
+  color: #111;
+}
+
+@media (max-width: 991px) {
+  .bo-sidebar {
+    width: min(84vw, 320px);
+    transform: translateX(-110%);
+    transition: transform 0.28s ease;
+    box-shadow: 16px 0 40px rgba(0, 0, 0, 0.12);
+  }
+
+  body.bo-nav-open .bo-sidebar {
+    transform: none;
+  }
+
+  .bo-nav-scrim {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 70;
+  }
+
+  body.bo-nav-open .bo-nav-scrim {
+    display: block;
+  }
+
+  .bo-wrap {
+    margin-left: 0;
+  }
+
+  .bo-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bo-search {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .bo-topbar {
+    flex-wrap: wrap;
+    padding-top: calc(8px + env(safe-area-inset-top));
+  }
+
+  .bo-stats,
+  .bo-home-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .bo-dock {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    height: calc(var(--bo-dock) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    background: #fff;
+    border-top: 1px solid var(--bo-line);
+  }
+
+  .bo-dock button {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #777;
+    font-size: 0.62rem;
+    font-weight: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .bo-dock button.is-active {
+    color: #8a6d1d;
+  }
+
+  .bo-dock i {
+    font-size: 1rem;
+  }
+
+  body.bo-app .container.bo-container {
+    padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+
+  body.bo-app .table-responsive {
+    margin: 0 -8px;
+  }
+}
+
+.bo-photo-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.bo-photo-cell .thumb,
+.bo-photo-cell .event-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--bo-line);
+}
+
+@media (max-width: 600px) {
+  .bo-stats,
+  .bo-home-grid {
+    grid-template-columns: 1fr;
+  }
+}

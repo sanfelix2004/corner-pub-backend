@@ -19,7 +19,13 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.beans.factory.annotation.Value; // aggiunto
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,17 +36,22 @@ public class EventRegistrationService {
     private final EventRegistrationRepository registrationRepository;
     private final MailService mailService;
     private final String privacyPolicyVersion;
+    private final String publicBaseUrl;
 
     public EventRegistrationService(UserRepository userRepository,
             EventRepository eventRepository,
             EventRegistrationRepository registrationRepository,
             MailService mailService,
-            @Value("${privacy.policy.version}") String privacyPolicyVersion) {
+            @Value("${privacy.policy.version}") String privacyPolicyVersion,
+            @Value("${app.public-base-url:https://cornerpubgiovinazzo.com}") String publicBaseUrl) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.mailService = mailService;
         this.privacyPolicyVersion = privacyPolicyVersion;
+        this.publicBaseUrl = publicBaseUrl.endsWith("/")
+                ? publicBaseUrl.substring(0, publicBaseUrl.length() - 1)
+                : publicBaseUrl;
     }
 
     // -----------------------------
@@ -259,6 +270,8 @@ public class EventRegistrationService {
         resp.setTableNumber(reg.getTableNumber());
         resp.setAllergensNote(reg.getAllergensNote()); // 🔹 Mappa allergeni
         resp.setPrivacyPolicyVersion(reg.getPrivacyPolicyVersion()); // 🔹 Mappa privacy
+        resp.setAttending(reg.getAttending());
+        resp.setAttendanceRespondedAt(reg.getAttendanceRespondedAt());
 
         if (userResponse != null) {
             resp.setName(userResponse.getName());
@@ -267,5 +280,114 @@ public class EventRegistrationService {
         }
 
         return resp;
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getAttendanceByToken(String token) {
+        EventRegistration reg = registrationRepository.findByConfirmationToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Link di conferma non valido"));
+        return attendancePayload(reg);
+    }
+
+    @Transactional
+    public Map<String, Object> saveAttendance(String token, boolean attending) {
+        EventRegistration reg = registrationRepository.findByConfirmationToken(token)
+                .orElseThrow(() -> new ResourceNotFoundException("Link di conferma non valido"));
+        reg.setAttending(attending);
+        reg.setAttendanceRespondedAt(LocalDateTime.now());
+        registrationRepository.save(reg);
+        return attendancePayload(reg);
+    }
+
+    @Transactional
+    public Map<String, Object> prepareAttendanceReminders(Long eventId, String testPhone) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento non trovato"));
+        List<EventRegistration> regs = registrationRepository.findByEventId(eventId);
+        String wanted = normalizePhone(testPhone);
+        if (wanted != null) {
+            regs = regs.stream()
+                    .filter(reg -> wanted.equals(normalizePhone(reg.getUser() != null ? reg.getUser().getPhone() : null)))
+                    .collect(Collectors.toList());
+        }
+        List<Map<String, Object>> messages = new ArrayList<>();
+        for (EventRegistration reg : regs) {
+            if (reg.getConfirmationToken() == null || reg.getConfirmationToken().isBlank()) {
+                reg.setConfirmationToken(UUID.randomUUID().toString().replace("-", ""));
+                registrationRepository.save(reg);
+            }
+            String phone = reg.getUser() != null ? reg.getUser().getPhone() : "";
+            String name = reg.getUser() != null ? safe(reg.getUser().getName()) : "ciao";
+            String confirmUrl = publicBaseUrl + "/conferma-evento.html?t=" + reg.getConfirmationToken();
+            String text = buildWhatsAppText(name, event, confirmUrl);
+            messages.add(Map.of(
+                    "registrationId", reg.getId(),
+                    "name", name,
+                    "phone", phone,
+                    "waLink", whatsAppLink(phone, text),
+                    "confirmUrl", confirmUrl
+            ));
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("eventId", event.getId());
+        result.put("eventTitle", event.getTitolo());
+        result.put("targeted", messages.size());
+        result.put("testOnly", wanted != null);
+        result.put("messages", messages);
+        return result;
+    }
+
+    private Map<String, Object> attendancePayload(EventRegistration reg) {
+        Event event = reg.getEvent();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("name", reg.getUser() != null ? safe(reg.getUser().getName()) : "");
+        payload.put("eventTitle", event != null ? event.getTitolo() : "Evento");
+        payload.put("eventDate", event != null && event.getData() != null
+                ? event.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : "");
+        payload.put("attending", reg.getAttending());
+        return payload;
+    }
+
+    private String buildWhatsAppText(String name, Event event, String confirmUrl) {
+        String when = event.getData() != null
+                ? event.getData().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                : "11/09";
+        return "Ciao " + name + ", siamo il Corner Pub.\n\n"
+                + "Confermi la partecipazione all'evento \"" + event.getTitolo() + "\" del " + when + "?\n\n"
+                + "Apri questo link e scegli Sì o No:\n"
+                + confirmUrl + "\n\n"
+                + "Grazie!";
+    }
+
+    private String whatsAppLink(String phone, String text) {
+        String digits = digitsOnly(phone);
+        if (digits.isEmpty()) {
+            return "#";
+        }
+        if (!digits.startsWith("39")) {
+            digits = "39" + digits;
+        }
+        return "https://wa.me/" + digits + "?text="
+                + java.net.URLEncoder.encode(text, java.nio.charset.StandardCharsets.UTF_8);
+    }
+
+    private String normalizePhone(String phone) {
+        String digits = digitsOnly(phone);
+        if (digits.isEmpty()) {
+            return null;
+        }
+        if (digits.startsWith("39") && digits.length() > 10) {
+            digits = digits.substring(2);
+        }
+        return digits;
+    }
+
+    private String digitsOnly(String phone) {
+        return phone == null ? "" : phone.replaceAll("[^0-9]", "");
+    }
+
+    private String safe(String value) {
+        return value == null || value.isBlank() ? "" : value.trim();
     }
 }

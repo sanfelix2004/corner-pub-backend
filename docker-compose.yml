@@ -40,9 +40,6 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      DOMAIN: ${DOMAIN:?imposta DOMAIN in .env}
-      ACME_EMAIL: ${ACME_EMAIL:?imposta ACME_EMAIL in .env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

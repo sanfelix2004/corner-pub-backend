@@ -39,4 +39,6 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     List<EventRegistration> findByUser_Phone(String phone);
 
+    Optional<EventRegistration> findByConfirmationToken(String confirmationToken);
+
 }

@@ -32,6 +32,7 @@ public class SecurityConfig {
         public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
                 http
                                 .securityMatcher("/api/**")
+                                .headers(headers -> headers.cacheControl(cache -> cache.disable()))
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .sessionManagement(session -> session
@@ -57,6 +58,7 @@ public class SecurityConfig {
         @Order(2)
         public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
                 http
+                                .headers(headers -> headers.cacheControl(cache -> cache.disable()))
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                                 .csrf(AbstractHttpConfigurer::disable)
                                 .authorizeHttpRequests(auth -> auth
@@ -73,6 +75,7 @@ public class SecurityConfig {
                                                                 "/index.html",
                                                                 "/privacy.html",
                                                                 "/cookie.html",
+                                                                "/conferma-evento.html",
                                                                 "/menu/**",
                                                                 "/events/**")
                                                 .permitAll()
@@ -101,6 +104,10 @@ public class SecurityConfig {
                                 "http://127.0.0.1:5501",
                                 "http://localhost:3000",
                                 "http://127.0.0.1:3000",
+                                "http://cornerpubgiovinazzo.com",
+                                "https://cornerpubgiovinazzo.com",
+                                "http://www.cornerpubgiovinazzo.com",
+                                "https://www.cornerpubgiovinazzo.com",
                                 "https://cornerpubgiovinazzo.onrender.com",
                                 "https://corner-pub-backend.onrender.com"));
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

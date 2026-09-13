@@ -2,6 +2,7 @@ package com.corner.pub.dto.response;
 
 import com.corner.pub.model.Event;
 import com.corner.pub.model.EventRegistration;
+import com.corner.pub.service.StorageService;
 import java.util.List;
 
 public class EventResponse {
@@ -19,7 +20,7 @@ public class EventResponse {
     public EventResponse(Event event, long totalePartecipanti) {
         this.id = event.getId();
         this.titolo = event.getTitolo();
-        this.posterUrl = event.getPosterUrl();
+        this.posterUrl = StorageService.toLocalUrl(event.getPosterUrl());
         this.descrizione = event.getDescrizione();
         this.data = event.getData().toString();
         this.postiTotali = event.getPostiTotali();

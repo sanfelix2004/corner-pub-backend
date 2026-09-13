@@ -7,12 +7,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Iterator;
 import java.util.Locale;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 @Service
 public class StorageService {
@@ -49,16 +59,17 @@ public class StorageService {
         deleteByBasename(folder, basename);
 
         String ext = extension(file);
-        String relative = folder + "/" + basename + "." + ext;
+        String relative = folder + "/" + basename + "-" + System.currentTimeMillis() + "." + ext;
         Path dest = safeResolve(relative);
         Files.copy(file.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
-        log.info("Salvata foto {} ({} bytes)", relative, file.getSize());
+        optimizeImage(dest);
+        log.info("Salvata foto {} ({} bytes)", relative, Files.size(dest));
         return relative;
     }
 
-    /** Sostituisce una foto: cancella quella vecchia e scrive il nuovo file. */
+    /** Sostituisce una foto: cancella quella vecchia dal disco e scrive il nuovo file. */
     public String replace(String folder, String basename, String oldPublicUrl, MultipartFile file) throws IOException {
-        delete(oldPublicUrl);
+        deleteOwned(oldPublicUrl, folder, basename);
         return store(folder, basename, file);
     }
 
@@ -74,9 +85,9 @@ public class StorageService {
         if (relativePath == null || relativePath.isBlank()) {
             return;
         }
-        int q = relativePath.indexOf('?');
-        if (q >= 0) {
-            relativePath = relativePath.substring(0, q);
+        relativePath = toLocalUrl(relativePath);
+        if (relativePath == null || relativePath.isBlank()) {
+            return;
         }
         if (relativePath.startsWith("http://") || relativePath.startsWith("https://")) {
             return;
@@ -102,25 +113,112 @@ public class StorageService {
         if (!dir.startsWith(root) || !Files.isDirectory(dir)) {
             return;
         }
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, basename + ".*")) {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path p : stream) {
-                Files.deleteIfExists(p);
+                if (ownedFile(p.getFileName().toString(), basename) && Files.deleteIfExists(p)) {
+                    log.info("Eliminata foto {}/{}", folder, p.getFileName());
+                }
             }
         } catch (IOException e) {
             log.warn("Cleanup {}/{}: {}", folder, basename, e.getMessage());
         }
     }
 
+    /** Accetta sia 18.png sia 18-1712345678.jpg, senza toccare 180.png. */
+    private static boolean ownedFile(String filename, String basename) {
+        if (filename.equals(basename)) {
+            return true;
+        }
+        String exact = basename + ".";
+        if (filename.startsWith(exact)) {
+            return true;
+        }
+        String versioned = basename + "-";
+        if (!filename.startsWith(versioned)) {
+            return false;
+        }
+        String rest = filename.substring(versioned.length());
+        int dot = rest.lastIndexOf('.');
+        String stamp = dot >= 0 ? rest.substring(0, dot) : rest;
+        return !stamp.isEmpty() && stamp.chars().allMatch(Character::isDigit);
+    }
+
     public String publicUrl(String relativePath) {
         if (relativePath == null || relativePath.isBlank()) {
             return null;
         }
-        if (relativePath.startsWith("http://") || relativePath.startsWith("https://")
-                || relativePath.startsWith("/")) {
-            return relativePath;
+        String localized = toLocalUrl(relativePath);
+        if (localized.startsWith("http://") || localized.startsWith("https://")
+                || localized.startsWith("/")) {
+            return localized;
         }
         String prefix = publicPath.endsWith("/") ? publicPath : publicPath + "/";
-        return prefix + relativePath;
+        return prefix + localized;
+    }
+
+    /**
+     * Converte un URL Cloudinary (o un path relativo) nell'URL pubblico Aruba:
+     * {@code /uploads/prodotti/18.png}.
+     */
+    public static String toLocalUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return url;
+        }
+        String value = url.trim();
+        int q = value.indexOf('?');
+        if (q >= 0) {
+            value = value.substring(0, q);
+        }
+        int hash = value.indexOf('#');
+        if (hash >= 0) {
+            value = value.substring(0, hash);
+        }
+
+        String lower = value.toLowerCase(Locale.ROOT);
+        int cloudIdx = lower.indexOf("res.cloudinary.com/");
+        if (cloudIdx >= 0) {
+            int uploadIdx = lower.indexOf("/image/upload/");
+            String path;
+            if (uploadIdx >= 0) {
+                path = value.substring(uploadIdx + "/image/upload/".length());
+            } else {
+                int slash = value.indexOf('/', cloudIdx + "res.cloudinary.com/".length());
+                path = slash >= 0 ? value.substring(slash + 1) : "";
+            }
+            path = stripCloudinaryTransforms(path);
+            if (path.startsWith("event/")) {
+                path = "eventi/" + path.substring("event/".length());
+            }
+            return "/uploads/" + path;
+        }
+        return value;
+    }
+
+    private static String stripCloudinaryTransforms(String path) {
+        String[] parts = path.split("/");
+        int i = 0;
+        while (i < parts.length) {
+            String p = parts[i];
+            if (p.isEmpty() || p.matches("v\\d+") || p.indexOf(',') >= 0
+                    || p.startsWith("w_") || p.startsWith("h_") || p.startsWith("c_")
+                    || p.startsWith("q_") || p.startsWith("f_") || p.startsWith("dpr_")
+                    || p.startsWith("e_")) {
+                i++;
+                continue;
+            }
+            break;
+        }
+        if (i >= parts.length) {
+            return path;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int j = i; j < parts.length; j++) {
+            if (sb.length() > 0) {
+                sb.append('/');
+            }
+            sb.append(parts[j]);
+        }
+        return sb.toString();
     }
 
     private Path safeResolve(String relative) throws IOException {
@@ -151,5 +249,60 @@ public class StorageService {
             case "image/svg+xml" -> "svg";
             default -> "bin";
         };
+    }
+
+    private void optimizeImage(Path dest) {
+        String name = dest.getFileName().toString().toLowerCase(Locale.ROOT);
+        if (!(name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png") || name.endsWith(".webp"))) {
+            return;
+        }
+        try {
+            BufferedImage src = ImageIO.read(dest.toFile());
+            if (src == null) {
+                return;
+            }
+            int max = 900;
+            int w = src.getWidth();
+            int h = src.getHeight();
+            long size = Files.size(dest);
+            if (w <= max && h <= max && size < 180_000) {
+                return;
+            }
+            double scale = Math.min(1d, Math.min(max / (double) w, max / (double) h));
+            int nw = Math.max(1, (int) Math.round(w * scale));
+            int nh = Math.max(1, (int) Math.round(h * scale));
+            boolean jpeg = name.endsWith(".jpg") || name.endsWith(".jpeg");
+            BufferedImage out = new BufferedImage(nw, nh, jpeg ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = out.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            if (jpeg) {
+                g.setColor(Color.WHITE);
+                g.fillRect(0, 0, nw, nh);
+            }
+            g.drawImage(src, 0, 0, nw, nh, null);
+            g.dispose();
+            if (jpeg) {
+                Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
+                if (!writers.hasNext()) {
+                    ImageIO.write(out, "jpg", dest.toFile());
+                    return;
+                }
+                ImageWriter writer = writers.next();
+                ImageWriteParam param = writer.getDefaultWriteParam();
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionQuality(0.78f);
+                try (ImageOutputStream ios = ImageIO.createImageOutputStream(dest.toFile())) {
+                    writer.setOutput(ios);
+                    writer.write(null, new IIOImage(out, null, null), param);
+                } finally {
+                    writer.dispose();
+                }
+            } else {
+                ImageIO.write(out, name.endsWith(".webp") ? "webp" : "png", dest.toFile());
+            }
+            log.info("Foto ottimizzata {} -> {} bytes", dest.getFileName(), Files.size(dest));
+        } catch (Exception e) {
+            log.warn("Optimize skip {}: {}", dest.getFileName(), e.getMessage());
+        }
     }
 }

@@ -49,6 +49,44 @@ function escapeHtml(value) {
   }[char]));
 }
 
+const ALLERGEN_PLACEHOLDER = 'Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.';
+
+function isRealAllergenText(value) {
+  const text = String(value || '').trim();
+  return text.length > 0 && text !== ALLERGEN_PLACEHOLDER;
+}
+
+function apiErrorText(err, fallback = 'Errore') {
+  if (!err) return fallback;
+  if (typeof err === 'string') {
+    try {
+      const parsed = JSON.parse(err);
+      return parsed.error || parsed.message || fallback;
+    } catch {
+      return err || fallback;
+    }
+  }
+  return err.error || err.message || fallback;
+}
+
+const DEFAULT_PHOTO = 'images/about-img.png';
+
+function photoUrl(url) {
+  const value = String(url || '').trim();
+  if (!value || value === 'null' || value === 'undefined') return DEFAULT_PHOTO;
+  return value;
+}
+
+function warmupPhotos(items) {
+  (items || []).slice(0, 16).forEach(item => {
+    const url = photoUrl(item.imageUrl);
+    if (!url || url === DEFAULT_PHOTO) return;
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = url;
+  });
+}
+
 function closeMobileNav() {
   const collapse = document.getElementById('navbarSupportedContent');
   if (!collapse || !collapse.classList.contains('show')) return;
@@ -132,7 +170,7 @@ function renderPromoItems(promo) {
     const prezzoFinale = (item.prezzoScontato != null)
       ? Number(item.prezzoScontato)
       : prezzoOriginale * (1 - sconto / 100);
-    const imageUrl = item.imageUrl || 'img/default-food.jpg';
+    const imageUrl = photoUrl(item.imageUrl);
     const cat = item.categoryName || '';
 
     totaleOriginale += prezzoOriginale;
@@ -141,7 +179,7 @@ function renderPromoItems(promo) {
     return `
       <li class="promo-item">
         <div class="promo-thumb">
-          <img src="${imageUrl}" alt="${item.nome}" loading="lazy">
+          <img src="${imageUrl}" alt="${item.nome}" loading="lazy" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
         </div>
         <div class="promo-info">
           <h5>${item.nome}</h5>
@@ -199,7 +237,7 @@ function renderPromoItems(promo) {
 
 function createPromoCard(promo, item) {
   const categoriaSlug = (item.categoryName || 'generico').replace(/\s+/g, '-');
-  const imageUrl = item.imageUrl || 'img/default-food.jpg';
+  const imageUrl = photoUrl(item.imageUrl);
   const prezzoOriginale = Number(item.prezzoOriginale ?? 0);
   const sconto = Number(item.scontoPercentuale ?? 0);
   const prezzoFinale = Number(item.prezzoScontato ?? (prezzoOriginale * (1 - sconto / 100)));
@@ -208,7 +246,7 @@ function createPromoCard(promo, item) {
     <div class="col-sm-6 col-lg-4 all ${categoriaSlug}">
       <div class="box promo-card">
         <div class="img-box">
-          <img src="${imageUrl}" alt="${item.nome}" />
+          <img src="${imageUrl}" alt="${item.nome}" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'" />
         </div>
         <div class="detail-box">
           <h5>${item.nome}</h5>
@@ -259,244 +297,204 @@ function initMap() {
 // Chiama initMap dopo che la Google Maps API è caricata
 
 // === POPUP EVENTI AL PRIMO ACCESSO ===
+let cachedEvents = [];
+
+function formatEventDate(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('it-IT', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function eventPosterUrl(event) {
+  return photoUrl(event?.posterUrl || event?.poster_url);
+}
+
+function eventTileHTML(event) {
+  const posti = event.postiDisponibili != null ? `${event.postiDisponibili} posti` : '';
+  return `
+    <button type="button" class="event-tile" data-event-id="${event.id}">
+      <span class="event-tile-photo">
+        <img src="${escapeHtml(eventPosterUrl(event))}" alt="${escapeHtml(event.titolo || 'Evento')}" loading="lazy" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
+      </span>
+      <span class="event-tile-body">
+        <span class="event-tile-date">${escapeHtml(formatEventDate(event.data))}</span>
+        <span class="event-tile-title">${escapeHtml(event.titolo || 'Evento')}</span>
+        ${posti ? `<span class="event-tile-seats">${escapeHtml(posti)}</span>` : ''}
+        <span class="event-tile-cta">Prenota</span>
+      </span>
+    </button>`;
+}
+
+function bindEventTiles(root, afterClick) {
+  root.querySelectorAll('.event-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const event = cachedEvents.find(item => String(item.id) === String(tile.dataset.eventId));
+      if (!event) return;
+      if (typeof afterClick === 'function') afterClick();
+      openEventBookModal(event);
+    });
+  });
+}
+
+function renderEventCards(events) {
+  cachedEvents = Array.isArray(events) ? events : [];
+  const grid = document.getElementById('eventCardsGrid');
+  const empty = document.getElementById('noEventsMessage');
+  if (!grid) return;
+  if (!cachedEvents.length) {
+    grid.innerHTML = '';
+    if (empty) {
+      empty.classList.remove('d-none');
+      empty.textContent = 'Non ci sono eventi in programma al momento.';
+    }
+    return;
+  }
+  if (empty) empty.classList.add('d-none');
+  grid.innerHTML = cachedEvents.map(eventTileHTML).join('');
+  bindEventTiles(grid);
+}
+
+function openEventBookModal(event) {
+  const overlay = document.getElementById('eventBookOverlay');
+  if (!overlay || !event) return;
+  const select = document.getElementById('eventSelect');
+  if (select) select.value = String(event.id);
+  const title = document.getElementById('eventBookTitle');
+  const meta = document.getElementById('eventBookMeta');
+  const poster = document.getElementById('eventBookPoster');
+  const seats = document.getElementById('postiDisponibili');
+  if (title) title.textContent = event.titolo || 'Evento';
+  if (meta) meta.textContent = [formatEventDate(event.data), event.descrizione].filter(Boolean).join(' · ');
+  if (poster) {
+    poster.onerror = function () {
+      this.onerror = null;
+      this.src = DEFAULT_PHOTO;
+    };
+    poster.src = eventPosterUrl(event);
+    poster.alt = event.titolo || 'Evento';
+  }
+  if (seats) {
+    seats.textContent = event.postiDisponibili != null
+      ? `${event.postiDisponibili} posti disponibili`
+      : '';
+  }
+  overlay.hidden = false;
+  requestAnimationFrame(() => overlay.classList.add('is-open'));
+  document.body.classList.add('no-scroll');
+}
+
+function closeEventBookModal() {
+  const overlay = document.getElementById('eventBookOverlay');
+  const select = document.getElementById('eventSelect');
+  if (select) select.value = '';
+  if (!overlay) return;
+  overlay.classList.remove('is-open');
+  document.body.classList.remove('no-scroll');
+  setTimeout(() => { overlay.hidden = true; }, 280);
+}
+
+function openDishSheet(item) {
+  const overlay = document.getElementById('dishOverlay');
+  if (!overlay || !item) return;
+  const img = document.getElementById('dishSheetImg');
+  const hero = overlay.querySelector('.dish-sheet-hero');
+  const title = document.getElementById('dishSheetTitle');
+  const cat = document.getElementById('dishSheetCat');
+  const price = document.getElementById('dishSheetPrice');
+  const desc = document.getElementById('dishSheetDesc');
+  const allergens = document.getElementById('dishSheetAllergens');
+  if (title) title.textContent = item.titolo || 'Piatto';
+  if (cat) cat.textContent = item.categoryName || '';
+  if (price) price.textContent = `€${Number(item.prezzo || 0).toFixed(2)}`;
+  if (desc) {
+    desc.textContent = item.descrizione || '';
+    desc.style.display = item.descrizione ? '' : 'none';
+  }
+  if (allergens) allergens.innerHTML = renderAllergens(item.allergens);
+  if (img) {
+    img.hidden = false;
+    img.src = photoUrl(item.imageUrl);
+    img.alt = item.titolo || '';
+    img.onerror = function () {
+      this.onerror = null;
+      this.src = DEFAULT_PHOTO;
+    };
+  }
+  if (hero) hero.classList.remove('no-img');
+  overlay.hidden = false;
+  requestAnimationFrame(() => overlay.classList.add('is-open'));
+  document.body.classList.add('no-scroll');
+}
+
+function closeDishSheet() {
+  const overlay = document.getElementById('dishOverlay');
+  if (!overlay) return;
+  overlay.classList.remove('is-open');
+  document.body.classList.remove('no-scroll');
+  setTimeout(() => { overlay.hidden = true; }, 280);
+}
+
 function showEventsPopup(events) {
   if (!events || events.length === 0) return;
-
-  // Inject styles for event popup images (only once)
-  if (!document.getElementById('eventsPopupStyles')) {
-    const styleTag = document.createElement('style');
-    styleTag.id = 'eventsPopupStyles';
-    styleTag.textContent = `
-      /* Popup eventi: layout con riquadro info sopra e locandina grande sotto */
-      body.no-scroll{ overflow:hidden; }
-      .popup-container{ max-height:94vh; height:auto; }
-      .popup-content{ max-height: calc(94vh - 48px); height:auto; overflow:auto; -webkit-overflow-scrolling: touch; }
-      .events-list{ overflow:auto; max-height: calc(94vh - 140px); -webkit-overflow-scrolling: touch; }
-      .events-list .event-item{ overflow: visible; }
-
-      .popup-container, .popup-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-      }
-      .events-list .event-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        width: 100%;
-      }
-
-      .events-list .event-item{
-        padding: 12px;
-        border: 1px solid rgba(0,0,0,.06);
-        border-radius: 12px;
-        background: #fff;
-        box-shadow: 0 2px 10px rgba(0,0,0,.03);
-        margin-bottom: 16px;
-      }
-      .events-list .event-info{
-        padding: 10px 12px;
-        border: 1px solid rgba(0,0,0,.08);
-        border-radius: 10px;
-        background: #f9fafb;
-        margin-bottom: 12px;
-      }
-      .events-list .event-info h3{
-        margin: 0 0 6px 0;
-        font-size: 1.15rem;
-        line-height: 1.25;
-      }
-      .events-list .event-info p{
-        margin: 0 0 6px 0;
-        color: #555;
-      }
-      .events-list .event-info time{
-        color: #6c757d;
-        font-size: .92rem;
-      }
-      /* Bottone Registrati: stesso colore giallo del sito */
-.events-list .btn-register-event {
-  display: inline-block;
-  margin-top: 8px;
-  background-color: #ffb400; /* giallo Corner Pub */
-  border-color: #ffb400;
-  color: #fff;
-  font-weight: 600;
-  border-radius: 8px;
-  padding: 6px 14px;
-  transition: all 0.2s ease-in-out;
-}
-.events-list .btn-register-event:hover,
-.events-list .btn-register-event:focus {
-  background-color: #e3a100;
-  border-color: #e3a100;
-  color: #fff;
-  transform: scale(1.03);
-}
-      /* Locandina grande sotto il riquadro, contenuta senza distorsioni. Nessuna scrollbar interna. */
-      .events-list .event-poster{
-        width: 100%;
-        /* altezza impostata via JS per evitare barre di scorrimento */
-        border-radius: 10px;
-        background: #f1f3f5;
-        overflow: hidden; /* mai scroll */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        max-height: 100%;
-        aspect-ratio: auto;
-        max-width: 100%;
-        height: auto;
-      }
-      .events-list .event-poster img{
-        width: 100%;
-        height: auto;
-        object-fit: cover;
-        border-radius: 10px;
-        max-width: 100%;
-        display: block;
-      }
-    `;
-    document.head.appendChild(styleTag);
-  }
+  cachedEvents = events;
 
   const modalHTML = `
-  <div id="eventsPopupOverlay" class="popup-overlay">
-    <div class="popup-container">
-      <button id="closeEventsPopupBtn" class="close-btn" aria-label="Chiudi popup">&times;</button>
-      <div class="popup-content">
-        <h2>Eventi in programma</h2>
-        <div class="events-list">
-          ${events.map(event => {
-    const poster = event.posterUrl || event.poster_url || 'images/default-event.jpg';
-    const dateLabel = new Date(event.data).toLocaleString('it-IT', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    return `
-              <div class="event-item">
-                <div class="event-info">
-                  <h3>${event.titolo}</h3>
-                  <p>${event.descrizione ?? ''}</p>
-                  <time datetime="${event.data}">${dateLabel}</time>
-                  <button class="btn btn-primary btn-register-event"
-                          data-event-id="${event.id}"
-                          data-event-date="${new Date(event.data).toISOString().split('T')[0]}">
-                    Registrati
-                  </button>
-                </div>
-                <div class="event-poster">
-                  <img src="${poster}" alt="Locandina di ${event.titolo}">
-                </div>
-              </div>
-            `;
-  }).join('')}
-        </div>
+  <div id="eventsPopupOverlay" class="popup-overlay corner-events-overlay" role="dialog" aria-modal="true" aria-labelledby="eventsWelcomeTitle">
+    <div class="popup-container event-welcome sheet-light">
+      <button id="closeEventsPopupBtn" class="corner-modal-close" aria-label="Chiudi">&times;</button>
+      <p class="event-welcome-kicker">Corner Pub</p>
+      <h2 id="eventsWelcomeTitle">Prossimi eventi</h2>
+      <p class="event-welcome-lead">Tocca una locandina per prenotare il tuo posto.</p>
+      <div class="event-cards-grid events-list">
+        ${events.map(eventTileHTML).join('')}
       </div>
     </div>
-  </div>
-  `;
+  </div>`;
 
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   document.body.classList.add('no-scroll');
 
-  document.getElementById('closeEventsPopupBtn').addEventListener('click', closeEventsPopup);
-
-  // Gestione click "Registrati"
-  document.querySelectorAll('#eventsPopupOverlay .btn-register-event').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const id = e.currentTarget.getAttribute('data-event-id');
-      const dateISO = e.currentTarget.getAttribute('data-event-date');
-      // Chiudi popup e porta l'utente alla registrazione evento
-      closeEventsPopup();
-      await navigateToEventRegistration(id, dateISO);
-    });
-  });
-
-  // Calibra dinamicamente l'altezza della locandina per evitare barre di scorrimento
-  function adjustEventPosters() {
-    document.querySelectorAll('#eventsPopupOverlay .event-item').forEach(item => {
-      const poster = item.querySelector('.event-poster img');
-      const container = item.querySelector('.event-poster');
-      if (poster && container) {
-        poster.style.height = 'auto';
-        poster.style.width = '100%';
-        container.style.height = 'auto';
-      }
-    });
-  }
-
-  function closeEventsPopup() {
-    const popup = document.getElementById('eventsPopupOverlay');
-    if (popup) {
-      popup.classList.add('hide');
-      setTimeout(() => {
-        popup.remove();
-      }, 300);
+  const overlay = document.getElementById('eventsPopupOverlay');
+  const closeEventsPopup = () => {
+    if (!overlay) return;
+    overlay.classList.add('hide');
+    overlay.classList.remove('visible');
+    setTimeout(() => overlay.remove(), 280);
+    if (!document.getElementById('eventBookOverlay')?.classList.contains('is-open')) {
       document.body.classList.remove('no-scroll');
-      sessionStorage.setItem('eventsPopupShown', 'true');
     }
-  }
+    sessionStorage.setItem('eventsPopupShown', 'true');
+  };
 
-  requestAnimationFrame(() => {
-    const popup = document.getElementById('eventsPopupOverlay');
-    if (popup) popup.classList.add('visible');
+  document.getElementById('closeEventsPopupBtn')?.addEventListener('click', closeEventsPopup);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeEventsPopup();
   });
+  bindEventTiles(overlay, closeEventsPopup);
 
-  // setta subito l'altezza ottimale e aggiornala su resize/orientamento
-  adjustEventPosters();
-  window.addEventListener('resize', adjustEventPosters);
-  window.addEventListener('orientationchange', adjustEventPosters);
+  requestAnimationFrame(() => overlay.classList.add('visible'));
 }
 
 
-/** Naviga alla scheda "Evento", imposta la data evento e pre-seleziona l'evento */
-async function navigateToEventRegistration(eventId, dateISO) {
+async function navigateToEventRegistration(eventId) {
   try {
-    // 1) Imposta la data nel datepicker (se disponibile) e scatena il change
-    const dateInputEl = document.getElementById('resDate');
-    if (dateInputEl && dateISO) {
-      dateInputEl.value = dateISO;
-      const ev = new Event('change');
-      dateInputEl.dispatchEvent(ev);
+    if (!cachedEvents.length) {
+      await loadEventsForRegistration();
     }
-
-    // 2) Apri la scheda "Evento"
+    const event = cachedEvents.find(item => String(item.id) === String(eventId));
+    if (event) {
+      openEventBookModal(event);
+      return;
+    }
     const tabBtn = document.querySelector('.tab-btn[data-target="eventoForm"]');
     if (tabBtn) tabBtn.click();
-
-    // 3) Forza il caricamento degli eventi per quella data
-    await loadEventsForRegistration(dateISO);
-
-    // 4) Seleziona l'evento nel select (attendi che compaia se necessario)
-    const eventSelect = document.getElementById('eventSelect');
-    if (eventSelect) {
-      const trySelect = (retries = 10) => new Promise(resolve => {
-        const opt = Array.from(eventSelect.options).find(o => String(o.value) === String(eventId));
-        if (opt) {
-          eventSelect.value = String(eventId);
-          // eventuale UI plugin
-          if (window.$ && $.fn.niceSelect) $('select').niceSelect('update');
-          resolve(true);
-        } else if (retries > 0) {
-          setTimeout(() => resolve(trySelect(retries - 1)), 150);
-        } else {
-          resolve(false);
-        }
-      });
-      await trySelect();
-    }
-
-    // 5) Scroll dolce alla sezione prenotazione
-    const book = document.getElementById('book') || document.querySelector('#book');
-    if (book) {
-      book.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    document.getElementById('book')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
     console.error('navigateToEventRegistration error:', e);
   }
@@ -529,62 +527,53 @@ async function checkAndShowEvents() {
 }
 
 // === REGISTRAZIONE EVENTI NELLA PRENOTAZIONE ===
-async function loadEventsForRegistration(selectedDate = null) {
+async function loadEventsForRegistration() {
   try {
-    let url = EVENTS_API;
-    if (selectedDate) {
-      url = `${EVENTS_API}?date=${selectedDate}`;
-    }
-
-
-    const res = await fetch(url);
+    const res = await fetch(EVENTS_API);
     if (!res.ok) throw new Error(res.statusText);
     const events = await res.json();
-
-    const select = document.getElementById('eventSelect');
-    const noEventsMessage = document.getElementById('noEventsMessage');
-
-    if (!select) return;
-
-    // Svuota il select e nascondi il messaggio
-    select.innerHTML = '<option value="">Seleziona un evento</option>';
-    if (noEventsMessage) noEventsMessage.classList.add('d-none');
-
-    if (events && events.length > 0) {
-      events.forEach(event => {
-        const option = document.createElement('option');
-        option.value = event.id;
-        option.textContent = `${event.titolo} - ${new Date(event.data).toLocaleDateString('it-IT')}`;
-        select.appendChild(option);
-      });
-
-      // Mostra la sezione eventi
-      const eventSection = document.getElementById('eventRegistrationSection');
-      if (eventSection) {
-        eventSection.classList.remove('d-none');
-      }
-    } else {
-      // Mostra messaggio se non ci sono eventi
-      if (noEventsMessage) {
-        noEventsMessage.classList.remove('d-none');
-        noEventsMessage.textContent = selectedDate
-          ? `Non ci sono eventi programmati per il ${new Date(selectedDate).toLocaleDateString('it-IT')}`
-          : 'Non ci sono eventi programmati al momento';
-      }
-
-      // Nascondi la sezione eventi
-      const eventSection = document.getElementById('eventRegistrationSection');
-      if (eventSection) {
-        eventSection.classList.add('d-none');
-      }
-    }
+    renderEventCards(events);
   } catch (err) {
     console.error('Errore nel caricamento eventi:', err);
-    // showToast('Errore nel caricamento degli eventi', true); // Suppressed as per user request
+    renderEventCards([]);
   }
 }
 
 // === INIZIO BLOCCO PER IL MENU DINAMICO ===
+const MENU_CATEGORY_ORDER = [
+  'panini',
+  'bevande',
+  'wrap',
+  'sfizi',
+  'dolci',
+  'birre',
+  'fritti',
+  'starter',
+  'insalat',
+  'combo',
+  'bombette',
+  'polpette',
+  'carne',
+  'pinse',
+  'vino',
+  'toast'
+];
+
+function categoryRank(name) {
+  const value = String(name || '').toLowerCase();
+  const index = MENU_CATEGORY_ORDER.findIndex(key => value.includes(key));
+  return index === -1 ? 999 : index;
+}
+
+function sortMenuCategories(categories) {
+  return [...new Set(categories.filter(Boolean))].sort((a, b) => {
+    const rankA = categoryRank(a);
+    const rankB = categoryRank(b);
+    if (rankA !== rankB) return rankA - rankB;
+    return String(a).localeCompare(String(b), 'it');
+  });
+}
+
 function renderFilters(categories) {
   if (!filters) return;
 
@@ -660,17 +649,16 @@ function renderMenuItems() {
   toShow.forEach((item, index) => {
     const title = escapeHtml(item.titolo);
     const description = escapeHtml(item.descrizione || '');
-    const imageUrl = escapeHtml(item.imageUrl || '');
+    const imageUrl = escapeHtml(photoUrl(item.imageUrl));
     const price = Number(item.prezzo || 0).toFixed(2);
     const category = escapeHtml(item.categoryName || '');
     const hasDetails = Boolean(item.descrizione) || (Array.isArray(item.allergens) && item.allergens.length > 0);
-    const imgClass = imageUrl ? 'img-box position-relative' : 'img-box position-relative no-img';
 
     const card = `
   <div class="col-sm-6 col-lg-4 all menu-item-col">
-    <article class="box menu-dish"${hasDetails ? ' tabindex="0"' : ''} style="animation-delay:${Math.min(index, 8) * 40}ms">
-      <div class="${imgClass}">
-        ${imageUrl ? `<img src="${imageUrl}" alt="${title}" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('src');this.parentElement.classList.add('no-img');" />` : ''}
+    <article class="box menu-dish" data-item-id="${item.id}" tabindex="0" style="animation-delay:${Math.min(index, 8) * 40}ms">
+      <div class="img-box position-relative">
+        <img src="${imageUrl}" alt="${title}" loading="${index < 8 ? 'eager' : 'lazy'}" fetchpriority="${index < 8 ? 'high' : 'low'}" decoding="async" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'" />
         ${featuredIds.includes(item.id)
         ? '<span class="badge badge-warning position-absolute" style="top:8px;right:8px;">★</span>'
         : ''}
@@ -683,7 +671,7 @@ function renderMenuItems() {
         ${query && category ? `<span class="dish-cat">${category}</span>` : ''}
         ${description ? `<p class="dish-desc">${description}</p>` : ''}
         ${renderAllergens(item.allergens)}
-        ${hasDetails ? '<span class="dish-more">Dettagli</span>' : ''}
+        ${hasDetails ? '<span class="dish-more">Apri</span>' : ''}
       </div>
     </article>
   </div>`;
@@ -691,13 +679,15 @@ function renderMenuItems() {
   });
 
   container.querySelectorAll('.menu-dish').forEach(card => {
-    if (!card.hasAttribute('tabindex')) return;
-    const toggle = () => card.classList.toggle('is-open');
-    card.addEventListener('click', toggle);
+    const open = () => {
+      const item = allItems.find(entry => String(entry.id) === String(card.dataset.itemId));
+      if (item) openDishSheet(item);
+    };
+    card.addEventListener('click', open);
     card.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        toggle();
+        open();
       }
     });
   });
@@ -722,8 +712,10 @@ async function loadMenu() {
 
     allItems = menuData;
     featuredIds = highlights.map(h => h.itemId);
+    warmupPhotos(allItems.filter(i => featuredIds.includes(i.id)));
+    warmupPhotos(allItems);
 
-    const cats = [...new Set(menuData.map(i => i.categoryName))];
+    const cats = sortMenuCategories(menuData.map(i => i.categoryName));
     renderFilters(cats);
 
     const defaultBtn = filters && filters.querySelector('[data-filter="In Evidenza"]');
@@ -811,15 +803,11 @@ if (dateInput) {
     try {
       const formattedDate = dateInput.value; // già corretto (yyyy-MM-dd)
 
-      const [slotsRes, eventsRes] = await Promise.all([
-        fetch(`${RES_TIMES_API}/${formattedDate}`),
-        fetch(`${EVENTS_API}?date=${formattedDate}`)
+      const [slotsRes] = await Promise.all([
+        fetch(`${RES_TIMES_API}/${formattedDate}`)
       ]);
 
-      const [slots, events] = await Promise.all([
-        slotsRes.ok ? slotsRes.json() : [],
-        eventsRes.ok ? eventsRes.json() : []
-      ]);
+      const slots = slotsRes.ok ? await slotsRes.json() : [];
 
       // Popola gli orari
       timeSelect.innerHTML = `<option value="" disabled selected>Seleziona ora</option>`;
@@ -829,42 +817,6 @@ if (dateInput) {
         o.innerText = t;
         timeSelect.appendChild(o);
       });
-
-      // Gestione eventi
-      const eventSelect = document.getElementById('eventSelect');
-      const noEventsMessage = document.getElementById('noEventsMessage');
-
-      if (eventSelect) {
-        eventSelect.innerHTML = '<option value="">Seleziona un evento</option>';
-        if (noEventsMessage) noEventsMessage.classList.add('d-none');
-
-        if (events && events.length > 0) {
-          events.forEach(event => {
-            const option = document.createElement('option');
-            option.value = event.id;
-            option.textContent = `${event.titolo} - ${new Date(event.data).toLocaleDateString('it-IT')}`;
-            eventSelect.appendChild(option);
-          });
-
-          // Mostra la sezione eventi
-          const eventSection = document.getElementById('eventRegistrationSection');
-          if (eventSection) {
-            eventSection.classList.remove('d-none');
-          }
-        } else {
-          // Mostra messaggio se non ci sono eventi
-          if (noEventsMessage) {
-            noEventsMessage.classList.remove('d-none');
-            noEventsMessage.textContent = `Non ci sono eventi programmati per il ${new Date(dateInput.value).toLocaleDateString('it-IT')}`;
-          }
-
-          // Nascondi la sezione eventi
-          const eventSection = document.getElementById('eventRegistrationSection');
-          if (eventSection) {
-            eventSection.classList.add('d-none');
-          }
-        }
-      }
     } catch (err) {
       timeSelect.innerHTML = `<option value="" disabled>Errore nel caricamento</option>`;
       console.error(err);
@@ -907,9 +859,10 @@ if (form) {
     const allergensInput = document.getElementById('resAllergens');
     const allergensConsentCheck = document.getElementById('resAllergenConsent');
     const allergensVal = allergensInput ? allergensInput.value.trim() : '';
+    const hasAllergens = isRealAllergenText(allergensVal);
     let allergensConsent = false;
 
-    if (allergensVal.length > 0) {
+    if (hasAllergens) {
       if (!allergensConsentCheck || !allergensConsentCheck.checked) {
         Swal.fire({
           title: 'Consenso Necessario',
@@ -944,8 +897,7 @@ if (form) {
     // Check note is not "Note"
     const finalNote = (noteVal === 'Note') ? '' : noteVal;
 
-    // Allergen handling
-    const finalAllergens = (allergensVal === 'Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.') ? '' : allergensVal;
+    const finalAllergens = hasAllergens ? allergensVal : '';
 
     // Check people
     if (peopleVal === 'Persone' || peopleVal === '') {
@@ -1005,19 +957,6 @@ if (form) {
           color: '#333'
         });
 
-        // Registrazione evento se selezionato
-        const eventId = document.getElementById('eventSelect')?.value;
-        if (eventId) {
-          await registerForEvent(
-            eventId,
-            payload.name,
-            payload.surname,
-            payload.phone,
-            payload.people,
-            payload.note
-          );
-        }
-
         form.reset();
         if (timeSelect) {
           timeSelect.innerHTML = `<option value="" disabled selected>Seleziona ora</option>`;
@@ -1038,7 +977,7 @@ if (form) {
         if (res.status === 422 && err.code === 'PRIVACY_NOT_ACCEPTED') {
           Swal.fire({
             title: 'Privacy Richiesta',
-            text: err.message,
+            text: apiErrorText(err, 'Devi accettare la Privacy Policy.'),
             icon: 'warning',
             confirmButtonColor: '#D4AF37',
             footer: '<a href="privacy.html" target="_blank">Leggi Informativa</a>'
@@ -1046,7 +985,7 @@ if (form) {
         } else {
           Swal.fire({
             title: 'Errore',
-            text: err.message || res.statusText,
+            text: apiErrorText(err, res.statusText),
             icon: 'error',
             confirmButtonColor: '#d33'
           });
@@ -1105,13 +1044,13 @@ if (lookupForm) {
               <strong>${r.date} @ ${r.time}</strong><br>
               Persone: ${r.people}<br>
               Note: ${r.note || '-'}<br>
-              ${r.isEventRegistration ? '<span class="badge bg-info">Evento</span>' : ''}
+              ${r.isEventRegistration || r.eventRegistration || r.eventId ? '<span class="badge bg-info">Evento</span>' : ''}
             </div>
             <button
               class="btn btn-sm btn-danger cancel-btn"
               data-phone="${r.phone}"
               data-date="${r.date}"
-              data-event="${r.isEventRegistration}"
+              data-event="${Boolean(r.isEventRegistration || r.eventRegistration || r.eventId)}"
               data-eventid="${r.eventId || ''}"
             >Annulla</button>
           `;
@@ -1144,10 +1083,8 @@ if (reservationsList) {
       let url;
       let options = { method: 'DELETE' };
 
-      if (isEvent) {
-        if (isEvent) {
-          url = `${EVENTS_API}/${encodeURIComponent(eventId)}/unregister/${encodeURIComponent(phone)}`;
-        }
+      if (isEvent && eventId) {
+        url = `${EVENTS_API}/${encodeURIComponent(eventId)}/unregister/${encodeURIComponent(phone)}`;
       } else {
         url = `${RES_API}/${encodeURIComponent(phone)}/${encodeURIComponent(date)}`;
       }
@@ -1209,9 +1146,10 @@ if (eventForm) {
     const eventAllergensInput = document.getElementById('eventAllergens');
     const eventAllergensConsentCheck = document.getElementById('eventAllergenConsent');
     const eventAllergensVal = eventAllergensInput ? eventAllergensInput.value.trim() : '';
+    const hasEventAllergens = isRealAllergenText(eventAllergensVal);
     let eventAllergensConsent = false;
 
-    if (eventAllergensVal.length > 0) {
+    if (hasEventAllergens) {
       if (!eventAllergensConsentCheck || !eventAllergensConsentCheck.checked) {
         Swal.fire({
           title: 'Consenso Necessario',
@@ -1246,8 +1184,7 @@ if (eventForm) {
     // Check note is not "Note"
     const finalNote = (noteVal === 'Note') ? '' : noteVal;
 
-    // Allergen handling
-    const finalAllergens = (eventAllergensVal === 'Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.') ? '' : eventAllergensVal;
+    const finalAllergens = hasEventAllergens ? eventAllergensVal : '';
 
     if (peopleVal === 'Partecipanti' || peopleVal === '') {
       Swal.fire({ title: 'Errore', text: 'Inserisci il numero di partecipanti.', icon: 'error', confirmButtonColor: '#d33' });
@@ -1275,7 +1212,10 @@ if (eventForm) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(apiErrorText(err, 'Impossibile completare l\'iscrizione'));
+      }
       const data = await res.json();
 
       Swal.fire({
@@ -1300,6 +1240,7 @@ if (eventForm) {
       });
 
       eventForm.reset();
+      closeEventBookModal();
     } catch (err) {
       Swal.fire({
         title: 'Errore',
@@ -1334,12 +1275,7 @@ if (siteHeader) {
 
 const heroVideo = document.getElementById('heroVideo');
 if (heroVideo) {
-  const saveData = navigator.connection && navigator.connection.saveData;
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (saveData || reduceMotion) {
-    heroVideo.pause();
-    heroVideo.removeAttribute('autoplay');
-  }
+  heroVideo.play().catch(() => {});
 }
 
 if (menuSearch) {
@@ -1426,12 +1362,12 @@ async function registerForEvent(eventId, name, surname, phone, partecipanti = 1,
     const res = await fetch(`${EVENT_REGISTER}/${eventId}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, surname, phone, partecipanti, note })
+      body: JSON.stringify({ name, surname, phone, partecipanti, note, privacyAccepted: true })
     });
 
     if (!res.ok) {
-      const err = await res.json();
-      alert(err.message || "Errore iscrizione evento");
+      const err = await res.json().catch(() => ({}));
+      alert(apiErrorText(err, 'Errore iscrizione evento'));
       return;
     }
     alert("Iscrizione evento confermata!");
@@ -1450,13 +1386,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
     // Mostra form corrispondente SOLO dentro #book
     const target = btn.dataset.target;
-    document.querySelectorAll('#book .form_container').forEach(f => f.classList.add('d-none'));
-    document.getElementById(target).classList.remove('d-none');
+    document.getElementById('tavoloForm')?.classList.toggle('d-none', target !== 'tavoloForm');
+    document.getElementById('eventoForm')?.classList.toggle('d-none', target !== 'eventoForm');
 
-    // Se è la scheda eventi → carica eventi
     if (target === "eventoForm") {
-      const selectedDate = document.getElementById('resDate')?.value || null;
-      await loadEventsForRegistration(selectedDate);
+      await loadEventsForRegistration();
     }
   });
 });
@@ -1476,8 +1410,26 @@ function closeNewsletterPopup() {
   }
 }
 
+function initMotion() {
+  const reveal = document.querySelectorAll(
+    '.heading_container, .about_section .detail-box, .about_section .img-box, .book_section .form_container, .footer_section, #googleMap, .offer_section, .location_section'
+  );
+  reveal.forEach(el => el.classList.add('fx-ready'));
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('fx-in');
+      io.unobserve(entry.target);
+    });
+  }, { threshold: 0.14, rootMargin: '0px 0px -8% 0px' });
+
+  document.querySelectorAll('.fx-ready').forEach(el => io.observe(el));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   getYear();
+  initMotion();
 
   if (dateInput) {
     const today = new Date().toISOString().split('T')[0];
@@ -1728,6 +1680,40 @@ const btnSave = document.getElementById('btnSaveConsent');
 if (btnSave) {
   btnSave.addEventListener('click', saveConsent);
 }
+const btnAcceptAll = document.getElementById('btnAcceptAll');
+if (btnAcceptAll) {
+  btnAcceptAll.addEventListener('click', () => {
+    const booking = document.getElementById('consentBooking');
+    const social = document.getElementById('consentSocial');
+    if (booking) booking.checked = true;
+    if (social) social.checked = true;
+    saveConsent();
+  });
+}
+
+const eventBookOverlay = document.getElementById('eventBookOverlay');
+document.getElementById('closeEventBookBtn')?.addEventListener('click', closeEventBookModal);
+eventBookOverlay?.addEventListener('click', (e) => {
+  if (e.target === eventBookOverlay) closeEventBookModal();
+});
+const dishOverlay = document.getElementById('dishOverlay');
+document.getElementById('closeDishBtn')?.addEventListener('click', closeDishSheet);
+document.getElementById('dishSheetDone')?.addEventListener('click', closeDishSheet);
+dishOverlay?.addEventListener('click', (e) => {
+  if (e.target === dishOverlay) closeDishSheet();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+    if (eventBookOverlay?.classList.contains('is-open')) {
+    closeEventBookModal();
+    return;
+  }
+  if (document.getElementById('dishOverlay')?.classList.contains('is-open')) {
+    closeDishSheet();
+    return;
+  }
+  document.getElementById('closeEventsPopupBtn')?.click();
+});
 
 // Avvio
 document.addEventListener('DOMContentLoaded', () => {
@@ -1761,11 +1747,9 @@ function setupAllergenLogic(inputId, consentContainerId, consentCheckboxId) {
   if (!input || !container || !checkbox) return;
 
   input.addEventListener('input', () => {
-    if (input.value.trim().length > 0) {
-      // Mostra checkbox
+    if (isRealAllergenText(input.value)) {
       container.classList.remove('d-none');
     } else {
-      // Nascondi checkbox e resetta
       container.classList.add('d-none');
       checkbox.checked = false;
     }

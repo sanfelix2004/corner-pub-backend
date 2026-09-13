@@ -12,4 +12,5 @@ Thumbs.db
 uploads/
 data/
 .env
+scripts/generated-photos/
 

@@ -16,17 +16,17 @@
 
     <style>
         :root {
-            --primary-color: #4e73df;
-            --secondary-color: #f8f9fc;
-            --accent-color: #2e59d9;
-            --text-color: #5a5c69;
+            --primary-color: #e8c547;
+            --secondary-color: #f6f4ef;
+            --accent-color: #c9a62e;
+            --text-color: #1a1a1a;
         }
 
         body {
             background-color: var(--secondary-color);
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             color: var(--text-color);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
         }
@@ -39,24 +39,35 @@
         }
 
         .login-card {
-            border: 0;
-            border-radius: 0.5rem;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            border: 1px solid rgba(180, 140, 40, 0.22);
+            border-radius: 1.25rem;
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
             overflow: hidden;
-            background-color: white;
+            background-color: #fff7ea;
         }
 
         .login-header {
-            background-color: var(--primary-color);
-            color: white;
+            background-color: #fff;
+            color: #8a6d1d;
             padding: 1.5rem;
             text-align: center;
             margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(180, 140, 40, 0.18);
+        }
+
+        .login-header p {
+            margin: 0 0 0.4rem;
+            color: #8a6d1d;
+            font-size: 0.78rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            font-weight: 700;
         }
 
         .login-header h3 {
-            font-weight: 600;
+            font-weight: 800;
             margin: 0;
+            color: #111;
         }
 
         .login-body {
@@ -69,31 +80,37 @@
 
         .form-control {
             padding: 0.75rem 1rem;
-            border-radius: 0.35rem;
+            border-radius: 0.7rem;
+            background: #fff;
+            border: 1px solid rgba(180, 140, 40, 0.28);
+            color: #111;
             transition: all 0.3s;
         }
 
         .form-control:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(232, 197, 71, 0.25);
+            background: #fff;
+            color: #111;
         }
 
         .btn-login {
             background-color: var(--primary-color);
             border: none;
-            padding: 0.75rem;
-            font-weight: 600;
+            padding: 0.85rem;
+            font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: #111;
+            border-radius: 0.85rem;
             transition: all 0.3s;
         }
 
-        .btn-login:hover {
-            background-color: var(--accent-color);
-        }
-
+        .btn-login:hover,
         .btn-login:focus {
-            box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.5);
+            background-color: var(--accent-color);
+            color: #111;
+            box-shadow: 0 0 0 0.2rem rgba(232, 197, 71, 0.28);
         }
 
         .input-icon {
@@ -105,7 +122,7 @@
             top: 50%;
             transform: translateY(-50%);
             left: 15px;
-            color: #d1d3e2;
+            color: #b08918;
         }
 
         .input-icon input {
@@ -139,7 +156,8 @@
 <div class="login-container">
     <div class="login-card">
         <div class="login-header">
-            <h3><i class="fas fa-user-shield mr-2"></i> Corner Staff</h3>
+            <p>Corner Pub</p>
+            <h3><i class="fas fa-user-shield mr-2"></i> Accesso staff</h3>
         </div>
         <div class="login-body">
             <form method="post" action="/login" autocomplete="off">
