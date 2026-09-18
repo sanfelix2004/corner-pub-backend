@@ -31,6 +31,9 @@ public class PromotionService {
     @Autowired
     private MenuItemRepository menuItemRepository;
 
+    @Autowired
+    private StorageService storageService;
+
     /*
      * ===========================================================
      * 🔹 Metodi di lettura
@@ -179,7 +182,7 @@ public class PromotionService {
 
     private String resolveImageUrl(MenuItem item) {
         if (item.getImageUrl() != null && !item.getImageUrl().isBlank()) {
-            return StorageService.toLocalUrl(item.getImageUrl());
+            return storageService.publicThumbUrl(item.getImageUrl());
         }
         return "/images/about-img.png";
     }

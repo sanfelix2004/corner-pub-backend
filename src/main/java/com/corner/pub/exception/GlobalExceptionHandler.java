@@ -61,6 +61,11 @@ public class GlobalExceptionHandler {
         // Do not return a ResponseEntity, as the response is already committed/broken
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<Void> handleMissingStatic(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return ResponseEntity.notFound().build();
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAll(Exception ex) {
         log.error("🔥 Errore interno non gestito", ex); // ✅ Log visibile in Render

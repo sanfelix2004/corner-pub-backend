@@ -1887,3 +1887,20 @@ body.no-scroll {
   color: #111 !important;
   border-color: var(--gold) !important;
 }
+
+/* Riquadro foto menu: sempre pieno, mai striscia minuscola su sfondo nero. */
+#menu .menu-dish .img-box {
+  padding: 0 !important;
+  overflow: hidden;
+  background: #141414;
+}
+
+#menu .menu-dish .img-box img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  margin: 0 !important;
+}

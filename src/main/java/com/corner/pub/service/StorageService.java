@@ -43,6 +43,8 @@ public class StorageService {
         Files.createDirectories(root);
         Files.createDirectories(root.resolve("prodotti"));
         Files.createDirectories(root.resolve("eventi"));
+        Files.createDirectories(root.resolve("thumbs/prodotti"));
+        Files.createDirectories(root.resolve("thumbs/eventi"));
         log.info("Upload directory: {}", root);
     }
 
@@ -63,6 +65,7 @@ public class StorageService {
         Path dest = safeResolve(relative);
         Files.copy(file.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
         optimizeImage(dest);
+        writeThumb(relative);
         log.info("Salvata foto {} ({} bytes)", relative, Files.size(dest));
         return relative;
     }
@@ -78,6 +81,7 @@ public class StorageService {
         delete(publicUrl);
         if (folder != null && basename != null) {
             deleteByBasename(folder, basename);
+            deleteByBasename("thumbs/" + folder, basename);
         }
     }
 
@@ -154,6 +158,69 @@ public class StorageService {
         }
         String prefix = publicPath.endsWith("/") ? publicPath : publicPath + "/";
         return prefix + localized;
+    }
+
+    /** Miniatura quadrata JPEG per il menu: pesa poco e riempie il riquadro sul telefono. */
+    public String publicThumbUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return imageUrl;
+        }
+        try {
+            String thumbRel = ensureThumb(imageUrl);
+            if (thumbRel != null) {
+                return publicUrl(thumbRel) + "?v=3";
+            }
+        } catch (Exception e) {
+            log.warn("Thumb skip {}: {}", imageUrl, e.getMessage());
+        }
+        String fallback = publicUrl(imageUrl);
+        return fallback == null ? null : fallback + "?v=3";
+    }
+
+    public String ensureThumb(String imageUrl) throws IOException {
+        String localized = toLocalUrl(imageUrl);
+        if (localized == null || localized.isBlank()
+                || localized.startsWith("http://") || localized.startsWith("https://")) {
+            return null;
+        }
+        String relative = localized;
+        String prefix = publicPath.endsWith("/") ? publicPath : publicPath + "/";
+        if (relative.startsWith(prefix)) {
+            relative = relative.substring(prefix.length());
+        } else if (relative.startsWith("/uploads/")) {
+            relative = relative.substring("/uploads/".length());
+        }
+        if (relative.startsWith("thumbs/")) {
+            return relative;
+        }
+        Path original = safeResolve(relative);
+        if (!Files.isRegularFile(original)) {
+            return null;
+        }
+        String fileName = original.getFileName().toString();
+        int dot = fileName.lastIndexOf('.');
+        String base = dot > 0 ? fileName.substring(0, dot) : fileName;
+        Path parent = original.getParent();
+        String folder = parent != null && parent.startsWith(root)
+                ? root.relativize(parent).toString().replace('\\', '/')
+                : "prodotti";
+        String thumbRel = "thumbs/" + folder + "/" + base + ".jpg";
+        Path thumb = safeResolve(thumbRel);
+        if (Files.isRegularFile(thumb)
+                && Files.getLastModifiedTime(thumb).compareTo(Files.getLastModifiedTime(original)) >= 0
+                && Files.size(thumb) > 2000) {
+            return thumbRel;
+        }
+        writeThumbFrom(original, thumb);
+        return Files.isRegularFile(thumb) ? thumbRel : null;
+    }
+
+    public void writeThumb(String relativeOriginal) {
+        try {
+            ensureThumb(relativeOriginal);
+        } catch (Exception e) {
+            log.warn("Thumb write {}: {}", relativeOriginal, e.getMessage());
+        }
     }
 
     /**
@@ -261,11 +328,11 @@ public class StorageService {
             if (src == null) {
                 return;
             }
-            int max = 900;
+            int max = 480;
             int w = src.getWidth();
             int h = src.getHeight();
             long size = Files.size(dest);
-            if (w <= max && h <= max && size < 180_000) {
+            if (w <= max && h <= max && size < 80_000) {
                 return;
             }
             double scale = Math.min(1d, Math.min(max / (double) w, max / (double) h));
@@ -290,7 +357,7 @@ public class StorageService {
                 ImageWriter writer = writers.next();
                 ImageWriteParam param = writer.getDefaultWriteParam();
                 param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                param.setCompressionQuality(0.78f);
+                param.setCompressionQuality(0.72f);
                 try (ImageOutputStream ios = ImageIO.createImageOutputStream(dest.toFile())) {
                     writer.setOutput(ios);
                     writer.write(null, new IIOImage(out, null, null), param);
@@ -303,6 +370,49 @@ public class StorageService {
             log.info("Foto ottimizzata {} -> {} bytes", dest.getFileName(), Files.size(dest));
         } catch (Exception e) {
             log.warn("Optimize skip {}: {}", dest.getFileName(), e.getMessage());
+        }
+    }
+
+    private void writeThumbFrom(Path original, Path thumb) throws IOException {
+        BufferedImage src = ImageIO.read(original.toFile());
+        if (src == null) {
+            return;
+        }
+        Files.createDirectories(thumb.getParent());
+        int target = 400;
+        int w = src.getWidth();
+        int h = src.getHeight();
+        double scale = Math.max(target / (double) w, target / (double) h);
+        int nw = Math.max(1, (int) Math.round(w * scale));
+        int nh = Math.max(1, (int) Math.round(h * scale));
+        int x = (target - nw) / 2;
+        int y = (target - nh) / 2;
+        BufferedImage out = new BufferedImage(target, target, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = out.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setColor(new Color(0x1c1c1c));
+        g.fillRect(0, 0, target, target);
+        g.drawImage(src, x, y, nw, nh, null);
+        g.dispose();
+        writeJpeg(out, thumb, 0.72f);
+        log.info("Thumb {} -> {} bytes", thumb.getFileName(), Files.size(thumb));
+    }
+
+    private void writeJpeg(BufferedImage image, Path dest, float quality) throws IOException {
+        Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
+        if (!writers.hasNext()) {
+            ImageIO.write(image, "jpg", dest.toFile());
+            return;
+        }
+        ImageWriter writer = writers.next();
+        ImageWriteParam param = writer.getDefaultWriteParam();
+        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        param.setCompressionQuality(quality);
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(dest.toFile())) {
+            writer.setOutput(ios);
+            writer.write(null, new IIOImage(image, null, null), param);
+        } finally {
+            writer.dispose();
         }
     }
 }

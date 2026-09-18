@@ -256,7 +256,7 @@ public class MenuItemService {
         response.setDescrizione(item.getDescrizione());
         response.setPrezzo(item.getPrezzo());
         response.setVisibile(item.isVisibile());
-        response.setImageUrl(storageService.publicUrl(item.getImageUrl()));
+        response.setImageUrl(storageService.publicThumbUrl(item.getImageUrl()));
 
         // Carica i link da repository (no lazy su item) e costruisci DTO in modo
         // null-safe

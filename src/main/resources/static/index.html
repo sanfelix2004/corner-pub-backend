@@ -36,11 +36,30 @@
 
   <!-- Custom styles for this template -->
   <link rel="preload" as="image" href="images/slide1.jpg">
-  <link rel="preload" as="video" href="images/hero-video.mp4" type="video/mp4">
   <link href="css/style-premium.css?v=8" rel="stylesheet" />
   <!-- responsive style -->
   <link href="css/responsive.css" rel="stylesheet" />
-  <link href="css/site-ux.css?v=24" rel="stylesheet" />
+  <link href="css/site-ux.css?v=25" rel="stylesheet" />
+  <script>
+    window.__cornerWarmed = window.__cornerWarmed || new Set();
+    window.__cornerBoot = (function () {
+      const menu = fetch('/api/menu').then(r => r.ok ? r.json() : []);
+      const highlights = fetch('/api/in_evidenza').then(r => r.ok ? r.json() : []);
+      const data = Promise.all([menu, highlights]);
+      data.then(([items]) => {
+        (Array.isArray(items) ? items : []).forEach(item => {
+          const url = item && item.imageUrl;
+          if (!url || window.__cornerWarmed.has(url)) return;
+          window.__cornerWarmed.add(url);
+          const img = new Image();
+          img.decoding = 'async';
+          img.fetchPriority = 'high';
+          img.src = url;
+        });
+      }).catch(function () {});
+      return data;
+    })();
+  </script>
 
   <style>
     html,
@@ -135,7 +154,7 @@
 
     <div class="hero_area" id="top">
     <div class="bg-box">
-      <video autoplay muted loop playsinline preload="auto" poster="images/slide1.jpg" id="heroVideo" fetchpriority="high">
+      <video muted loop playsinline preload="metadata" poster="images/slide1.jpg" id="heroVideo">
         <source src="images/hero-video.mp4" type="video/mp4">
         <!-- Fallback to image if video not available -->
         <img src="images/slide1.jpg" alt="Corner Pub">
@@ -712,11 +731,17 @@
     </a>
   </nav>
 
-  <script src="js/custom.js?v=19"></script>
-  <!-- Google Map -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap">
+  <script src="js/custom.js?v=21"></script>
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        var s = document.createElement('script');
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCh39n5U-4IoWpsVGUHWdqB6puEkhRLdmI&callback=myMap';
+        s.async = true;
+        document.body.appendChild(s);
+      }, 1800);
+    });
   </script>
-  <!-- End Google Map -->
 
 </body>
 

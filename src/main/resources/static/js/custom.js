@@ -70,6 +70,7 @@ function apiErrorText(err, fallback = 'Errore') {
 }
 
 const DEFAULT_PHOTO = 'images/about-img.png';
+const warmedPhotos = window.__cornerWarmed || (window.__cornerWarmed = new Set());
 
 function photoUrl(url) {
   const value = String(url || '').trim();
@@ -78,13 +79,35 @@ function photoUrl(url) {
 }
 
 function warmupPhotos(items) {
-  (items || []).slice(0, 16).forEach(item => {
+  const featured = [];
+  const rest = [];
+  (items || []).forEach(item => {
     const url = photoUrl(item.imageUrl);
-    if (!url || url === DEFAULT_PHOTO) return;
+    if (!url || url === DEFAULT_PHOTO || warmedPhotos.has(url)) return;
+    warmedPhotos.add(url);
+    if (featuredIds.includes(item.id)) featured.push(url);
+    else rest.push(url);
+  });
+  featured.concat(rest).forEach(url => {
     const img = new Image();
     img.decoding = 'async';
+    img.fetchPriority = 'high';
     img.src = url;
   });
+}
+
+function startHeroVideo() {
+  const video = document.getElementById('heroVideo');
+  if (!video) return;
+  const play = () => video.play().catch(() => {});
+  video.addEventListener('canplay', play, { once: true });
+  video.preload = 'auto';
+  if (video.readyState >= 2) {
+    play();
+    return;
+  }
+  video.load();
+  play();
 }
 
 function closeMobileNav() {
@@ -179,7 +202,7 @@ function renderPromoItems(promo) {
     return `
       <li class="promo-item">
         <div class="promo-thumb">
-          <img src="${imageUrl}" alt="${item.nome}" loading="lazy" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
+          <img src="${imageUrl}" alt="${item.nome}" loading="eager" fetchpriority="high" decoding="async" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
         </div>
         <div class="promo-info">
           <h5>${item.nome}</h5>
@@ -658,7 +681,7 @@ function renderMenuItems() {
   <div class="col-sm-6 col-lg-4 all menu-item-col">
     <article class="box menu-dish" data-item-id="${item.id}" tabindex="0" style="animation-delay:${Math.min(index, 8) * 40}ms">
       <div class="img-box position-relative">
-        <img src="${imageUrl}" alt="${title}" loading="${index < 8 ? 'eager' : 'lazy'}" fetchpriority="${index < 8 ? 'high' : 'low'}" decoding="async" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'" />
+        <img src="${imageUrl}" alt="${title}" loading="eager" fetchpriority="high" decoding="async" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'" />
         ${featuredIds.includes(item.id)
         ? '<span class="badge badge-warning position-absolute" style="top:8px;right:8px;">★</span>'
         : ''}
@@ -700,22 +723,20 @@ function renderMenuItems() {
 
 async function loadMenu() {
   try {
-    const [menuRes, evRes] = await Promise.all([
-      fetch(MENU_API),
-      fetch(MENU_HIGHLIGHTS)
-    ]);
+    const boot = window.__cornerBoot;
+    const [menuData, highlights] = boot
+      ? await boot
+      : await Promise.all([
+          fetch(MENU_API).then(r => r.json()),
+          fetch(MENU_HIGHLIGHTS).then(r => r.json())
+        ]);
 
-    const [menuData, highlights] = await Promise.all([
-      menuRes.json(),
-      evRes.json()
-    ]);
-
-    allItems = menuData;
-    featuredIds = highlights.map(h => h.itemId);
-    warmupPhotos(allItems.filter(i => featuredIds.includes(i.id)));
+    allItems = Array.isArray(menuData) ? menuData : [];
+    featuredIds = (Array.isArray(highlights) ? highlights : []).map(h => h.itemId);
     warmupPhotos(allItems);
+    startHeroVideo();
 
-    const cats = sortMenuCategories(menuData.map(i => i.categoryName));
+    const cats = sortMenuCategories(allItems.map(i => i.categoryName));
     renderFilters(cats);
 
     const defaultBtn = filters && filters.querySelector('[data-filter="In Evidenza"]');
@@ -1273,10 +1294,6 @@ if (siteHeader) {
   window.addEventListener('scroll', onScroll, { passive: true });
 }
 
-const heroVideo = document.getElementById('heroVideo');
-if (heroVideo) {
-  heroVideo.play().catch(() => {});
-}
 
 if (menuSearch) {
   menuSearch.addEventListener('input', () => {
