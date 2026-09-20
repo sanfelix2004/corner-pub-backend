@@ -125,12 +125,24 @@ public class EventRegistrationService {
         }
 
         EventRegistration saved = registrationRepository.save(registration);
+        if (saved.getUser() != null) {
+            saved.getUser().getName();
+            saved.getUser().getSurname();
+            saved.getUser().getPhone();
+        }
+        if (saved.getEvent() != null) {
+            saved.getEvent().getTitolo();
+            saved.getEvent().getData();
+        }
         // notifica via email l'amministratore DOPO il commit della transazione
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    mailService.notifyEventRegistrationCreated(saved);
+                    try {
+                        mailService.notifyEventRegistrationCreated(saved);
+                    } catch (Exception ignored) {
+                    }
                 }
             });
         } else {
@@ -163,7 +175,10 @@ public class EventRegistrationService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    mailService.notifyEventRegistrationCancelled(reg);
+                    try {
+                        mailService.notifyEventRegistrationCancelled(reg);
+                    } catch (Exception ignored) {
+                    }
                 }
             });
         } else {
@@ -181,7 +196,10 @@ public class EventRegistrationService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    mailService.notifyEventRegistrationCancelled(reg);
+                    try {
+                        mailService.notifyEventRegistrationCancelled(reg);
+                    } catch (Exception ignored) {
+                    }
                 }
             });
         } else {

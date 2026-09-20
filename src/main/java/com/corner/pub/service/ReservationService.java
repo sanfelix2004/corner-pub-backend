@@ -195,12 +195,21 @@ public class ReservationService {
         reservation.setPrivacyPolicyVersion(privacyPolicyVersion);
 
         Reservation saved = reservationRepository.save(reservation);
+        if (saved.getUser() != null) {
+            saved.getUser().getName();
+            saved.getUser().getSurname();
+            saved.getUser().getPhone();
+        }
         runAfterCommit(() -> mailService.notifyReservationCreated(saved));
         return toResponse(saved);
     }
 
     @Transactional
     public ReservationResponse createAdminReservation(ReservationRequest request) {
+        // Inserimento operatore: il consenso è raccolto al banco/telefono.
+        if (!Boolean.TRUE.equals(request.getPrivacyAccepted())) {
+            request.setPrivacyAccepted(true);
+        }
         if (request.getEventId() != null) {
             // Registra l'utente all'evento
             EventRegistrationRequest eventRegRequest = new EventRegistrationRequest();
@@ -297,6 +306,11 @@ public class ReservationService {
                                                                        // v1.0
 
             Reservation saved = reservationRepository.save(reservation);
+            if (saved.getUser() != null) {
+                saved.getUser().getName();
+                saved.getUser().getSurname();
+                saved.getUser().getPhone();
+            }
             runAfterCommit(() -> mailService.notifyReservationCreated(saved));
             return toResponse(saved);
         }

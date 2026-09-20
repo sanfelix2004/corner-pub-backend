@@ -14,21 +14,41 @@ services:
       timeout: 5s
       retries: 10
 
+  mail:
+    image: boky/postfix:latest
+    restart: unless-stopped
+    hostname: mail.cornerpubgiovinazzo.com
+    environment:
+      ALLOWED_SENDER_DOMAINS: cornerpubgiovinazzo.com
+      HOSTNAME: mail.cornerpubgiovinazzo.com
+      TZ: Europe/Rome
+      DKIM_AUTOGENERATE: "true"
+      INET_PROTOCOLS: ipv4
+      POSTFIX_smtpd_tls_security_level: none
+    volumes:
+      - mail_dkim:/etc/opendkim/keys
+
   app:
     build: .
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
+      mail:
+        condition: service_started
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-corner}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-corner}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       APP_UPLOAD_DIR: /app/uploads
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      MAIL_USERNAME: ${MAIL_USERNAME:-sanfelicefrancesco004@gmail.com}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-}
-      MAIL_TO_ADMIN: ${MAIL_TO_ADMIN:-}
+      MAIL_FROM: ${MAIL_FROM:-sanfelicefrancesco004@gmail.com}
+      MAIL_TO_ADMIN: ${MAIL_TO_ADMIN:-sanfelicefrancesco004@gmail.com}
     volumes:
       - uploads:/app/uploads
 
@@ -50,3 +70,4 @@ volumes:
   uploads:
   caddy_data:
   caddy_config:
+  mail_dkim:
