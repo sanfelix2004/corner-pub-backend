@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Locandina IG · Italia – Francia · Corner</title>
+  <style>
+    :root {
+      --gold: #d4af37;
+      --gold-soft: #e5c158;
+      --ink: #0c0c0c;
+      --paper: #f5f2ea;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1a1a1a, var(--ink));
+      color: var(--paper);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      display: grid;
+      place-items: center;
+      padding: 24px 16px 48px;
+      gap: 20px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.1rem, 3vw, 1.5rem);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-align: center;
+      color: var(--gold);
+    }
+    p {
+      margin: 0;
+      max-width: 28rem;
+      text-align: center;
+      color: #cfcfcf;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    .frame {
+      width: min(100%, 420px);
+      aspect-ratio: 9 / 16;
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+      background: #000;
+    }
+    .frame img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    a.btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    a.btn:hover { transform: translateY(-1px); }
+    a.primary {
+      background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+      color: #111;
+    }
+    a.ghost {
+      border: 1px solid rgba(212, 175, 55, 0.55);
+      color: var(--gold-soft);
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+  <h1>Storia Instagram · UEFA Nations League</h1>
+  <p>Italia – Francia · Domani ore 20:45 · In diretta al Corner Giovinazzo. Formato 9:16 pronto per Stories.</p>
+  <div class="frame">
+    <img
+      src="../images/locandine/italia-francia-nations-league-ig-story.jpg"
+      alt="Locandina Instagram Story: Italia contro Francia alle 20:45, in diretta al Corner, con Moise Kean e Kylian Mbappé"
+    />
+  </div>
+  <div class="actions">
+    <a class="btn primary" download="corner-italia-francia-ig-story.jpg" href="../images/locandine/italia-francia-nations-league-ig-story.jpg">Scarica JPG</a>
+    <a class="btn ghost" href="../index.html">Torna al sito</a>
+  </div>
+</body>
+</html>
