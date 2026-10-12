@@ -340,6 +340,7 @@ function eventPosterUrl(event) {
 
 function eventTileHTML(event) {
   const posti = event.postiDisponibili != null ? `${event.postiDisponibili} posti` : '';
+  const series = event.parentEventId ? 'Formula ricorrente' : (event.speciale ? 'Evento speciale' : '');
   return `
     <button type="button" class="event-tile" data-event-id="${event.id}">
       <span class="event-tile-photo">
@@ -348,6 +349,7 @@ function eventTileHTML(event) {
       <span class="event-tile-body">
         <span class="event-tile-date">${escapeHtml(formatEventDate(event.data))}</span>
         <span class="event-tile-title">${escapeHtml(event.titolo || 'Evento')}</span>
+        ${series ? `<span class="event-tile-seats">${escapeHtml(series)}</span>` : ''}
         ${posti ? `<span class="event-tile-seats">${escapeHtml(posti)}</span>` : ''}
         <span class="event-tile-cta">Prenota</span>
       </span>

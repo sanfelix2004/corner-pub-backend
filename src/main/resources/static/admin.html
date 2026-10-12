@@ -723,7 +723,7 @@
                                 required />
                         </div>
                         <div class="form-group col-md-4">
-                            <label>Data e Ora</label>
+                            <label>Data e Ora (prima data / orario)</label>
                             <input type="datetime-local" name="data" class="form-control" required />
                         </div>
                         <div class="form-group col-md-4">
@@ -737,6 +737,85 @@
                             <label>Descrizione</label>
                             <textarea name="descrizione" class="form-control" placeholder="Descrizione evento"
                                 rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-checkbox mt-2">
+                                <input type="checkbox" class="custom-control-input" id="addEventoSpeciale" name="speciale">
+                                <label class="custom-control-label" for="addEventoSpeciale">
+                                    <strong>Evento speciale</strong> (formula / locandina)
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <div class="custom-control custom-checkbox mt-2">
+                                <input type="checkbox" class="custom-control-input" id="addEventoRicorrente" name="ricorrente">
+                                <label class="custom-control-label" for="addEventoRicorrente">
+                                    Ricorrente ogni settimana
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-4" id="addEventoGiornoWrap" style="display:none;">
+                            <label>Giorno della settimana</label>
+                            <select name="giornoSettimana" id="addEventoGiorno" class="form-control">
+                                <option value="">Seleziona…</option>
+                                <option value="1">Lunedì</option>
+                                <option value="2">Martedì</option>
+                                <option value="3">Mercoledì</option>
+                                <option value="4">Giovedì</option>
+                                <option value="5">Venerdì</option>
+                                <option value="6">Sabato</option>
+                                <option value="7">Domenica</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row" id="addEventoFineWrap" style="display:none;">
+                        <div class="form-group col-md-6">
+                            <label>Fine ricorrenza (vuoto = per sempre)</label>
+                            <input type="date" name="dataFine" id="addEventoDataFine" class="form-control" />
+                            <small class="form-text text-muted">Es. All You Can Eat ogni venerdì senza data fine.</small>
+                        </div>
+                    </div>
+
+                    <div id="addEventoNormaleBox" class="border rounded p-3 mb-3" style="display:none; background:#fafafa;">
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" id="addCreaEventoNormale" name="creaEventoNormale">
+                            <label class="custom-control-label" for="addCreaEventoNormale">
+                                Crea anche un <strong>evento normale</strong> subordinato allo speciale
+                            </label>
+                        </div>
+                        <p class="small text-muted mb-2">
+                            L’evento normale è quello prenotabile dal sito. Resta legato allo speciale (stessa locandina/titolo).
+                        </p>
+                        <div id="addPeriodoNormaleWrap" style="display:none;">
+                            <div class="form-group">
+                                <label>Periodo dell’evento normale</label>
+                                <select name="periodoNormale" id="addPeriodoNormale" class="form-control">
+                                    <option value="STESSO">Stesso periodo della specialità</option>
+                                    <option value="RICORRENTE">Ricorrente dedicato (es. ogni venerdì)</option>
+                                </select>
+                            </div>
+                            <div class="form-row" id="addNormaleRicorrenteFields" style="display:none;">
+                                <div class="form-group col-md-6">
+                                    <label>Giorno evento normale</label>
+                                    <select name="giornoSettimanaNormale" id="addGiornoNormale" class="form-control">
+                                        <option value="">Seleziona…</option>
+                                        <option value="1">Lunedì</option>
+                                        <option value="2">Martedì</option>
+                                        <option value="3">Mercoledì</option>
+                                        <option value="4">Giovedì</option>
+                                        <option value="5">Venerdì</option>
+                                        <option value="6">Sabato</option>
+                                        <option value="7">Domenica</option>
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Fine ricorrenza normale (vuoto = per sempre)</label>
+                                    <input type="date" name="dataFineNormale" id="addDataFineNormale" class="form-control" />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -766,6 +845,7 @@
                             <tr>
                                 <th>Locandina</th>
                                 <th>Titolo</th>
+                                <th>Tipo</th>
                                 <th>Descrizione</th>
                                 <th>Data</th>
                                 <th>Posti</th>
@@ -2032,7 +2112,7 @@
                 if (eventi.length === 0) {
                     tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center py-4">
+                    <td colspan="7" class="text-center py-4">
                         <i class="fas fa-calendar-times fa-2x mb-3 text-muted"></i>
                         <p class="mb-0">Nessun evento programmato</p>
                     </td>
@@ -2041,7 +2121,18 @@
                     return;
                 }
 
+                const giorni = ['', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
                 eventi.forEach(evento => {
+                    const tipoBits = [];
+                    if (evento.speciale) tipoBits.push('<span class="badge badge-warning">Speciale</span>');
+                    if (evento.parentEventId) tipoBits.push('<span class="badge badge-info">Normale · subordinato #' + evento.parentEventId + '</span>');
+                    if (!evento.speciale && !evento.parentEventId) tipoBits.push('<span class="badge badge-secondary">Normale</span>');
+                    if (evento.ricorrente) {
+                        const g = giorni[evento.giornoSettimana] || '?';
+                        tipoBits.push('<span class="badge badge-dark">Ogni ' + g + (evento.dataFine ? ' fino ' + evento.dataFine : ' · per sempre') + '</span>');
+                    }
+                    if (evento.figliCount > 0) tipoBits.push('<span class="badge badge-success">' + evento.figliCount + ' date prenotabili</span>');
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
         <td>
@@ -2056,6 +2147,7 @@
             </div>
         </td>
         <td><strong>${escape(evento.titolo)}</strong></td>
+        <td>${tipoBits.join('<br>')}</td>
         <td>${escape(evento.descrizione || '-')}</td>
         <td>${formatDateTime(evento.data)}</td>
         <td>
@@ -2084,7 +2176,7 @@
                 console.error('Error loading events:', error);
                 document.getElementById('eventiTableBody').innerHTML = `
             <tr>
-                <td colspan="6" class="text-center py-4 text-danger">
+                <td colspan="7" class="text-center py-4 text-danger">
                     <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
                     <p>Errore durante il caricamento degli eventi</p>
                 </td>
@@ -2170,7 +2262,7 @@
 
 
         async function deleteEvento(id) {
-            if (!confirm('Sei sicuro di voler eliminare questo evento? Verrà cancellata anche la locandina dal server.')) return;
+            if (!confirm('Sei sicuro di voler eliminare questo evento? Se è uno speciale, verranno cancellate anche tutte le date prenotabili subordinate e la locandina.')) return;
 
             try {
                 const res = await fetch(`/admin/events/${id}`, { method: 'DELETE' });
@@ -2185,16 +2277,70 @@
             }
         }
 
+        function syncAddEventoFormUi() {
+            const speciale = document.getElementById('addEventoSpeciale')?.checked;
+            const ricorrente = document.getElementById('addEventoRicorrente')?.checked;
+            const creaNormale = document.getElementById('addCreaEventoNormale')?.checked;
+            const periodo = document.getElementById('addPeriodoNormale')?.value;
+            const giornoWrap = document.getElementById('addEventoGiornoWrap');
+            const fineWrap = document.getElementById('addEventoFineWrap');
+            const normaleBox = document.getElementById('addEventoNormaleBox');
+            const periodoWrap = document.getElementById('addPeriodoNormaleWrap');
+            const normaleRic = document.getElementById('addNormaleRicorrenteFields');
+            if (giornoWrap) giornoWrap.style.display = ricorrente ? '' : 'none';
+            if (fineWrap) fineWrap.style.display = ricorrente ? '' : 'none';
+            if (normaleBox) normaleBox.style.display = speciale ? '' : 'none';
+            if (periodoWrap) periodoWrap.style.display = (speciale && creaNormale) ? '' : 'none';
+            if (normaleRic) normaleRic.style.display = (speciale && creaNormale && periodo === 'RICORRENTE') ? '' : 'none';
+            const giorno = document.getElementById('addEventoGiorno');
+            if (giorno) giorno.required = !!ricorrente;
+        }
+        ['addEventoSpeciale', 'addEventoRicorrente', 'addCreaEventoNormale', 'addPeriodoNormale'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', syncAddEventoFormUi);
+        });
+        syncAddEventoFormUi();
+
         document.getElementById('formAddEvento').addEventListener('submit', async e => {
             e.preventDefault();
             const form = e.target;
+            const speciale = document.getElementById('addEventoSpeciale').checked;
+            const ricorrente = document.getElementById('addEventoRicorrente').checked;
+            const creaNormale = document.getElementById('addCreaEventoNormale').checked;
 
-            // Costruisci FormData per invio multipart (no Content-Type esplicito)
+            if (ricorrente && !form.giornoSettimana.value) {
+                alert('Seleziona il giorno della settimana per la ricorrenza');
+                return;
+            }
+            if (speciale && creaNormale && form.periodoNormale.value === 'RICORRENTE' && !form.giornoSettimanaNormale.value) {
+                alert('Seleziona il giorno per l\'evento normale ricorrente');
+                return;
+            }
+
             const formData = new FormData();
             formData.append('titolo', form.titolo.value);
             formData.append('descrizione', form.descrizione.value);
             formData.append('data', form.data.value);
             if (form.postiTotali.value) formData.append('postiTotali', form.postiTotali.value);
+            formData.append('speciale', speciale ? 'true' : 'false');
+            formData.append('ricorrente', ricorrente ? 'true' : 'false');
+            if (ricorrente && form.giornoSettimana.value) {
+                formData.append('giornoSettimana', form.giornoSettimana.value);
+            }
+            if (ricorrente && form.dataFine.value) {
+                formData.append('dataFine', form.dataFine.value);
+            }
+            formData.append('creaEventoNormale', (speciale && creaNormale) ? 'true' : 'false');
+            if (speciale && creaNormale) {
+                formData.append('periodoNormale', form.periodoNormale.value || 'STESSO');
+                if (form.periodoNormale.value === 'RICORRENTE') {
+                    if (form.giornoSettimanaNormale.value) {
+                        formData.append('giornoSettimanaNormale', form.giornoSettimanaNormale.value);
+                    }
+                    if (form.dataFineNormale.value) {
+                        formData.append('dataFineNormale', form.dataFineNormale.value);
+                    }
+                }
+            }
             if (form.poster && form.poster.files && form.poster.files[0]) {
                 formData.append('poster', form.poster.files[0]);
             }
@@ -2206,11 +2352,21 @@
                 });
 
                 if (res.ok) {
-                    alert('✅ Evento creato con successo!');
+                    const created = await res.json().catch(() => ({}));
+                    const extra = created.figliCount
+                        ? ` Create anche ${created.figliCount} date prenotabili subordinate.`
+                        : '';
+                    alert('✅ Evento creato con successo!' + extra);
                     form.reset();
+                    syncAddEventoFormUi();
                     loadEventi();
                 } else {
-                    alert('❌ Errore durante la creazione dell\'evento');
+                    let msg = 'Errore durante la creazione dell\'evento';
+                    try {
+                        const err = await res.json();
+                        msg = err.message || err.error || Object.values(err).join(', ') || msg;
+                    } catch (_) {}
+                    alert('❌ ' + msg);
                 }
             } catch (error) {
                 console.error('Error creating event:', error);
