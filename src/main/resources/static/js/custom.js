@@ -351,7 +351,7 @@ function eventTileHTML(event) {
         <span class="event-tile-title">${escapeHtml(event.titolo || 'Evento')}</span>
         ${series ? `<span class="event-tile-seats">${escapeHtml(series)}</span>` : ''}
         ${posti ? `<span class="event-tile-seats">${escapeHtml(posti)}</span>` : ''}
-        <span class="event-tile-cta">Prenota</span>
+        <span class="event-tile-cta">Prenotati</span>
       </span>
     </button>`;
 }
@@ -475,7 +475,7 @@ function showEventsPopup(events) {
       <button id="closeEventsPopupBtn" class="corner-modal-close" aria-label="Chiudi">&times;</button>
       <p class="event-welcome-kicker">Corner Pub</p>
       <h2 id="eventsWelcomeTitle">Prossimi eventi</h2>
-      <p class="event-welcome-lead">Tocca una locandina per prenotare il tuo posto.</p>
+      <p class="event-welcome-lead">Tocca una locandina e premi Prenotati.</p>
       <div class="event-cards-grid events-list">
         ${events.map(eventTileHTML).join('')}
       </div>
