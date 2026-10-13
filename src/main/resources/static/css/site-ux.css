@@ -1211,16 +1211,18 @@ body.no-scroll {
 
 .event-cards-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 14px;
   width: 100%;
-  max-width: 640px;
+  max-width: 420px;
   margin: 0 auto;
 }
 
-.event-cards-grid:has(.event-tile:only-child) {
-  grid-template-columns: minmax(0, 1fr);
-  max-width: none;
+@media (min-width: 700px) {
+  .event-cards-grid:has(.event-tile:nth-child(2)) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 720px;
+  }
 }
 
 .event-tile {
@@ -1228,6 +1230,7 @@ body.no-scroll {
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: auto;
   padding: 0;
   border: 1px solid rgba(232, 197, 71, 0.28);
   background: #14110c;
@@ -1247,7 +1250,7 @@ body.no-scroll {
   display: block;
   width: 100%;
   aspect-ratio: 1 / 1;
-  max-height: min(52dvh, 380px);
+  max-height: min(46dvh, 320px);
   overflow: hidden;
   background: radial-gradient(circle at 30% 20%, #3a2f14, #121212 70%);
   flex: 0 0 auto;
@@ -1626,9 +1629,9 @@ body.no-scroll {
   flex-direction: column;
   width: 100%;
   max-width: 420px;
-  height: min(82dvh, 720px);
-  max-height: min(82dvh, 720px);
-  overflow: hidden; /* niente scroll: bottone sempre in vista */
+  height: auto; /* si adatta al contenuto: niente buco sotto */
+  max-height: min(88dvh, 760px);
+  overflow: hidden;
   background:
     radial-gradient(circle at top, #2a2212 0%, #121212 48%, #0b0b0b 100%);
   color: #fff;
@@ -1673,25 +1676,36 @@ body.no-scroll {
   min-height: 0;
   width: 100%;
   max-width: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  overflow: visible;
+}
+
+/* Con più eventi: lista scrollabile dentro il popup, ogni card ha Prenota ora */
+.event-welcome .event-cards-grid:has(.event-tile:nth-child(2)) {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
 }
 
 .event-welcome .event-tile {
-  flex: 1 1 auto;
-  min-height: 0;
-  height: 100%;
-  max-height: none;
+  height: auto;
+  flex: none;
   border-radius: 18px;
 }
 
 .event-welcome .event-tile-photo {
-  flex: 1 1 auto;
-  min-height: 0;
-  aspect-ratio: auto;
+  flex: 0 0 auto;
+  aspect-ratio: 1 / 1;
   height: auto;
-  max-height: none;
+  max-height: min(42dvh, 280px);
+}
+
+.event-welcome .event-cards-grid:has(.event-tile:nth-child(2)) .event-tile-photo {
+  max-height: min(30dvh, 210px);
+  aspect-ratio: 4 / 3;
 }
 
 .event-welcome .event-tile-body {
@@ -1701,10 +1715,6 @@ body.no-scroll {
 .event-welcome .event-tile-title {
   font-size: 1.05rem;
   -webkit-line-clamp: 1;
-}
-
-.event-welcome .event-tile-seats {
-  display: none; /* meno testo = più spazio al bottone */
 }
 
 .event-welcome .event-tile-cta {
@@ -1752,12 +1762,25 @@ body.no-scroll {
   box-shadow: none;
   max-width: 420px;
   width: min(100%, 420px);
-  max-height: min(82dvh, 720px);
-  height: min(82dvh, 720px);
+  max-height: min(88dvh, 760px);
+  height: auto;
   padding: 0;
   margin: 0;
   overflow: hidden;
   transform: translateY(18px);
+}
+
+/* Sezione Prenotazioni → Registrazione Evento */
+#eventoForm .event-cards-grid {
+  max-width: 420px;
+}
+
+#eventoForm .event-tile-photo {
+  max-height: min(42dvh, 300px);
+}
+
+#eventoForm .event-cards-grid:has(.event-tile:nth-child(2)) .event-tile-photo {
+  max-height: min(32dvh, 240px);
 }
 
 .popup-overlay.corner-events-overlay.visible .popup-container {
