@@ -39,7 +39,7 @@
   <link href="css/style-premium.css?v=8" rel="stylesheet" />
   <!-- responsive style -->
   <link href="css/responsive.css" rel="stylesheet" />
-  <link href="css/site-ux.css?v=25" rel="stylesheet" />
+  <link href="css/site-ux.css?v=34" rel="stylesheet" />
   <script>
     window.__cornerWarmed = window.__cornerWarmed || new Set();
     window.__cornerBoot = (function () {
@@ -181,7 +181,10 @@
               <li class="nav-item active">
                 <a class="nav-link" href="#top">Home <span class="sr-only">(current)</span></a>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" id="navSpeciali" style="display: none;">
+                <a class="nav-link" href="#specialiSection">Speciali</a>
+              </li>
+              <li class="nav-item" id="navPromozioni" style="display: none;">
                 <a class="nav-link" href="#promotionsSection">Promozioni</a>
               </li>
               <li class="nav-item">
@@ -256,42 +259,57 @@
     </section>
     <!-- end slider section -->
   </div>
-  <svg class="site-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+  <svg id="waveSpecialeTop" class="site-wave speciale-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="display: none;" aria-hidden="true">
+    <path fill="#FFBE33" fill-opacity="0.55"
+      d="M0,192L30,176C60,160,120,128,180,106.7C240,85,300,75,360,106.7C420,139,480,213,540,240C600,267,660,245,720,202.7C780,160,840,96,900,112C960,128,1020,224,1080,218.7C1140,213,1200,107,1260,58.7C1320,11,1380,21,1410,26.7L1440,32L1440,0L1410,0C1380,0,1320,0,1260,0C1200,0,1140,0,1080,0C1020,0,960,0,900,0C840,0,780,0,720,0C660,0,600,0,540,0C480,0,420,0,360,0C300,0,240,0,180,0C120,0,60,0,30,0L0,0Z">
+    </path>
+  </svg>
+
+  <!-- Sezione Speciali: periodi lunghi senza iscrizione -->
+  <section id="specialiSection" class="speciali_section layout_padding-bottom" style="display: none;" hidden>
+    <div class="container">
+      <div class="heading_container heading_center">
+        <h2>In evidenza</h2>
+      </div>
+      <div id="specialiContainer" class="speciali-container"></div>
+    </div>
+  </section>
+
+  <svg id="waveSpecialeBottom" class="site-wave speciale-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="display: none;" aria-hidden="true">
+    <path fill="#FFE1A8" fill-opacity="1"
+      d="M0,160L24,138.7C48,117,96,75,144,96C192,117,240,203,288,197.3C336,192,384,96,432,58.7C480,21,528,43,576,80C624,117,672,171,720,202.7C768,235,816,245,864,256C912,267,960,277,1008,272C1056,267,1104,245,1152,202.7C1200,160,1248,96,1296,85.3C1344,75,1392,117,1416,138.7L1440,160L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z">
+    </path>
+  </svg>
+
+  <svg id="wavePromoTop" class="site-wave promo-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="display: none;" aria-hidden="true">
     <path fill="#FFBE33" fill-opacity="0.45"
       d="M0,192L30,176C60,160,120,128,180,106.7C240,85,300,75,360,106.7C420,139,480,213,540,240C600,267,660,245,720,202.7C780,160,840,96,900,112C960,128,1020,224,1080,218.7C1140,213,1200,107,1260,58.7C1320,11,1380,21,1410,26.7L1440,32L1440,0L1410,0C1380,0,1320,0,1260,0C1200,0,1140,0,1080,0C1020,0,960,0,900,0C840,0,780,0,720,0C660,0,600,0,540,0C480,0,420,0,360,0C300,0,240,0,180,0C120,0,60,0,30,0L0,0Z">
     </path>
   </svg>
 
-  <!-- Sezione Promozioni -->
-  <section id="promotionsSection" class="food_section layout_padding-bottom">
+  <!-- Sezione Promozioni: visibile solo se ci sono promo attive dal BE -->
+  <section id="promotionsSection" class="food_section layout_padding-bottom" style="display: none;" hidden>
     <div class="container">
       <div class="heading_container heading_center">
         <h2>Le Nostre Promozioni</h2>
+        <p class="promo-lead" id="promoLead"></p>
       </div>
 
-      <!-- Lista titoli promozioni -->
-      <ul class="filters_menu" id="promoTitlesList">
-        <!-- Titoli delle promo generati dinamicamente -->
-      </ul>
+      <ul class="filters_menu" id="promoTitlesList"></ul>
 
-      <!-- Prodotti della promozione selezionata -->
       <div class="filters-content">
-        <div class="row grid" id="promoItemsContainer">
-          <!-- Prodotti generati dinamicamente -->
-        </div>
+        <div class="row grid" id="promoItemsContainer"></div>
       </div>
     </div>
   </section>
 
-
-
   <div class="site-wave-wrap" style="line-height: 0; margin-bottom: -2px;">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+    <svg id="wavePromoBottomTop" class="promo-wave" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="display: none;" aria-hidden="true">
       <path fill="#FFE1A8" fill-opacity="1"
         d="M0,160L24,138.7C48,117,96,75,144,96C192,117,240,203,288,197.3C336,192,384,96,432,58.7C480,21,528,43,576,80C624,117,672,171,720,202.7C768,235,816,245,864,256C912,267,960,277,1008,272C1056,267,1104,245,1152,202.7C1200,160,1248,96,1296,85.3C1344,75,1392,117,1416,138.7L1440,160L1440,320L1416,320C1392,320,1344,320,1296,320C1248,320,1200,320,1152,320C1104,320,1056,320,1008,320C960,320,912,320,864,320C816,320,768,320,720,320C672,320,624,320,576,320C528,320,480,320,432,320C384,320,336,320,288,320C240,320,192,320,144,320C96,320,48,320,24,320L0,320Z">
       </path>
     </svg>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="margin-top: -1px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="margin-top: -1px;" aria-hidden="true">
       <path fill="#FFE1A8" fill-opacity="1"
         d="M0,256L20,256C40,256,80,256,120,234.7C160,213,200,171,240,176C280,181,320,235,360,234.7C400,235,440,181,480,176C520,171,560,213,600,240C640,267,680,277,720,250.7C760,224,800,160,840,154.7C880,149,920,203,960,192C1000,181,1040,107,1080,112C1120,117,1160,203,1200,229.3C1240,256,1280,224,1320,218.7C1360,213,1400,235,1420,245.3L1440,256L1440,0L1420,0C1400,0,1360,0,1320,0C1280,0,1240,0,1200,0C1160,0,1120,0,1080,0C1040,0,1000,0,960,0C920,0,880,0,840,0C800,0,760,0,720,0C680,0,640,0,600,0C560,0,520,0,480,0C440,0,400,0,360,0C320,0,280,0,240,0C200,0,160,0,120,0C80,0,40,0,20,0L0,0Z">
       </path>
@@ -402,7 +420,7 @@
             <i class="fa fa-cutlery me-2"></i> Prenotazione Tavolo
           </button>
           <button class="tab-btn" data-target="eventoForm">
-            <i class="fa fa-calendar me-2"></i> Prenotati all'evento
+            <i class="fa fa-calendar me-2"></i> Registrazione Evento
           </button>
         </div>
 
@@ -596,54 +614,73 @@
   <div id="customToast"></div>
 
   <div id="eventBookOverlay" class="corner-modal-overlay" hidden>
-    <div class="corner-modal event-book-sheet sheet-light" role="dialog" aria-modal="true" aria-labelledby="eventBookTitle">
+    <div class="corner-modal event-book-sheet" role="dialog" aria-modal="true" aria-labelledby="eventBookTitle">
       <button type="button" class="corner-modal-close" id="closeEventBookBtn" aria-label="Chiudi">&times;</button>
-      <div class="event-book-hero">
+      <div class="event-book-media">
         <img id="eventBookPoster" alt="" src="images/about-img.png" onerror="this.onerror=null;this.src='images/about-img.png'">
-        <div class="event-book-hero-copy">
-          <p class="event-book-kicker">Prenotati all'evento</p>
-          <h3 id="eventBookTitle"></h3>
-          <p id="eventBookMeta"></p>
-        </div>
+        <div class="event-book-media-fade" aria-hidden="true"></div>
       </div>
-      <form id="eventForm" class="event-book-form">
-        <input type="hidden" id="eventSelect" value="" />
-        <div class="mb-3">
-          <input id="eventName" type="text" class="form-control" value="Nome" required />
-        </div>
-        <div class="mb-3">
-          <input id="eventSurname" type="text" class="form-control" value="Cognome" required />
-        </div>
-        <div class="mb-3">
-          <input id="eventPhone" type="text" class="form-control" value="Telefono" required />
-        </div>
-        <div class="mb-3">
-          <input id="eventPartecipanti" type="text" class="form-control" value="Partecipanti" required />
-        </div>
-        <div class="mb-3">
-          <textarea id="eventNote" class="form-control" rows="2">Note</textarea>
-        </div>
-        <div class="mb-3">
-          <textarea id="eventAllergens" class="form-control" rows="2">Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.</textarea>
-        </div>
-        <div id="eventAllergenConsentContainer" class="mb-3 form-check text-left d-none" style="padding-left: 2.5rem;">
-          <input type="checkbox" class="form-check-input" id="eventAllergenConsent" style="transform: scale(1.2); margin-left: -1.8rem;">
-          <label class="form-check-label" for="eventAllergenConsent" style="font-size: 0.85rem; margin-left: 5px;">
-            Acconsento al trattamento dei dati relativi alla salute (allergeni) esclusivamente per la gestione dell'evento in sicurezza.
-          </label>
-        </div>
+      <div class="event-book-panel">
+        <p class="event-book-kicker">Prenotati all'evento</p>
+        <h3 id="eventBookTitle"></h3>
+        <p id="eventBookMeta" class="event-book-meta"></p>
         <div id="postiDisponibili" class="event-book-seats"></div>
-        <div class="mb-4 form-check text-left" style="padding-left: 2.5rem;">
-          <input type="checkbox" class="form-check-input" id="eventPrivacyCheck" style="transform: scale(1.5); margin-left: -1.8rem;">
-          <label class="form-check-label" for="eventPrivacyCheck" style="font-size: 0.9rem; margin-left: 5px;">
-            Ho letto e accetto la <a href="privacy.html" target="_blank" style="text-decoration: underline; color: #D4AF37;">Privacy Policy</a>.
-          </label>
-        </div>
-        <div class="btn_box text-center">
-          <button type="submit" class="btn event-prenotati-btn">Prenotati</button>
-        </div>
-        <p id="eventMessage" class="mt-3 text-center"></p>
-      </form>
+        <form id="eventForm" class="event-book-form">
+          <input type="hidden" id="eventSelect" value="" />
+          <div class="event-book-slot" id="eventOccurrenceWrap" hidden>
+            <input type="hidden" id="eventOccurrence" value="" />
+            <p class="event-occurrence-label" id="eventOccurrenceLabel"></p>
+            <label class="event-field-label" for="eventTime">Orario</label>
+            <select id="eventTime" class="form-control" aria-label="Scegli l'orario">
+              <option value="">Scegli l'orario</option>
+            </select>
+          </div>
+          <div class="event-field-grid">
+            <div class="event-field">
+              <label class="event-field-label" for="eventName">Nome</label>
+              <input id="eventName" type="text" class="form-control" value="Nome" autocomplete="given-name" required />
+            </div>
+            <div class="event-field">
+              <label class="event-field-label" for="eventSurname">Cognome</label>
+              <input id="eventSurname" type="text" class="form-control" value="Cognome" autocomplete="family-name" required />
+            </div>
+          </div>
+          <div class="event-field-grid">
+            <div class="event-field">
+              <label class="event-field-label" for="eventPhone">Telefono</label>
+              <input id="eventPhone" type="tel" class="form-control" value="Telefono" autocomplete="tel" required />
+            </div>
+            <div class="event-field">
+              <label class="event-field-label" for="eventPartecipanti">Persone</label>
+              <input id="eventPartecipanti" type="text" inputmode="numeric" class="form-control" value="Partecipanti" required />
+            </div>
+          </div>
+          <div class="event-field">
+            <label class="event-field-label" for="eventNote">Note <span>(opzionale)</span></label>
+            <textarea id="eventNote" class="form-control" rows="2">Note</textarea>
+          </div>
+          <div class="event-field">
+            <label class="event-field-label" for="eventAllergens">Allergeni <span>(opzionale)</span></label>
+            <textarea id="eventAllergens" class="form-control" rows="2">Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.</textarea>
+          </div>
+          <div id="eventAllergenConsentContainer" class="event-check d-none">
+            <input type="checkbox" class="form-check-input" id="eventAllergenConsent">
+            <label class="form-check-label" for="eventAllergenConsent">
+              Acconsento al trattamento dei dati relativi alla salute (allergeni) esclusivamente per la gestione dell'evento in sicurezza.
+            </label>
+          </div>
+          <div class="event-check">
+            <input type="checkbox" class="form-check-input" id="eventPrivacyCheck">
+            <label class="form-check-label" for="eventPrivacyCheck">
+              Ho letto e accetto la <a href="privacy.html" target="_blank">Privacy Policy</a>.
+            </label>
+          </div>
+          <div class="btn_box">
+            <button type="submit" class="btn event-prenotati-btn">Prenotati</button>
+          </div>
+          <p id="eventMessage" class="event-book-message"></p>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -731,7 +768,7 @@
     </a>
   </nav>
 
-  <script src="js/custom.js?v=22"></script>
+  <script src="js/custom.js?v=34"></script>
   <script>
     window.addEventListener('load', function () {
       setTimeout(function () {
