@@ -39,7 +39,7 @@
   <link href="css/style-premium.css?v=8" rel="stylesheet" />
   <!-- responsive style -->
   <link href="css/responsive.css" rel="stylesheet" />
-  <link href="css/site-ux.css?v=34" rel="stylesheet" />
+  <link href="css/site-ux.css?v=35" rel="stylesheet" />
   <script>
     window.__cornerWarmed = window.__cornerWarmed || new Set();
     window.__cornerBoot = (function () {
@@ -613,7 +613,7 @@
   <!-- Toast Notification -->
   <div id="customToast"></div>
 
-  <div id="eventBookOverlay" class="corner-modal-overlay" hidden>
+  <div id="eventBookOverlay" class="corner-modal-overlay event-book-overlay" hidden>
     <div class="corner-modal event-book-sheet" role="dialog" aria-modal="true" aria-labelledby="eventBookTitle">
       <button type="button" class="corner-modal-close" id="closeEventBookBtn" aria-label="Chiudi">&times;</button>
       <div class="event-book-media">
@@ -675,11 +675,11 @@
               Ho letto e accetto la <a href="privacy.html" target="_blank">Privacy Policy</a>.
             </label>
           </div>
-          <div class="btn_box">
-            <button type="submit" class="btn event-prenotati-btn">Prenotati</button>
-          </div>
           <p id="eventMessage" class="event-book-message"></p>
         </form>
+      </div>
+      <div class="event-book-footer">
+        <button type="submit" form="eventForm" class="btn event-prenotati-btn">Prenotati</button>
       </div>
     </div>
   </div>
@@ -768,7 +768,7 @@
     </a>
   </nav>
 
-  <script src="js/custom.js?v=34"></script>
+  <script src="js/custom.js?v=35"></script>
   <script>
     window.addEventListener('load', function () {
       setTimeout(function () {
