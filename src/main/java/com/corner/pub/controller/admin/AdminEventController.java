@@ -5,9 +5,6 @@ import com.corner.pub.dto.request.EventRegistrationRequest;
 import com.corner.pub.dto.request.EventTableAssignmentRequest;
 import com.corner.pub.dto.response.EventRegistrationResponse;
 import com.corner.pub.dto.response.EventResponse;
-import com.corner.pub.dto.response.UserResponse;
-import com.corner.pub.model.Event;
-import com.corner.pub.model.EventRegistration;
 import com.corner.pub.repository.EventRepository;
 import com.corner.pub.service.EventRegistrationService;
 import com.corner.pub.service.EventService;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/admin/events")
@@ -48,21 +44,16 @@ public class AdminEventController {
 
     @GetMapping
     public ResponseEntity<List<EventResponse>> getAllEvents() {
-        List<Event> events = eventRepository.findAllByOrderByDataAsc();
-        List<EventResponse> response = events.stream()
-                .map(event -> new EventResponse(event,
-                        registrationService.getTotalePartecipantiByEventId(event.getId())))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(eventService.listAllAdmin());
     }
 
     @GetMapping("/{eventId}")
     public ResponseEntity<EventResponse> getEvent(@PathVariable Long eventId) {
-        return eventRepository.findById(eventId)
-                .map(event -> ResponseEntity.ok(
-                        new EventResponse(event,
-                                registrationService.getTotalePartecipantiByEventId(eventId))))
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            return ResponseEntity.ok(eventService.getById(eventId));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 

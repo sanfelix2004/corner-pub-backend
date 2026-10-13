@@ -10,6 +10,7 @@ const BASE_URL = "";
 const MENU_API = `${BASE_URL}/api/menu`;                 // Menu principale
 const MENU_HIGHLIGHTS = `${BASE_URL}/api/in_evidenza`;          // Piatti in evidenza
 const PROMOTIONS_API = `${BASE_URL}/api/promotions/attive`;    // Promozioni attive
+const SPECIALI_API = `${BASE_URL}/api/speciali/attivi`;          // Speciali di periodo
 
 // =========================
 // 🎉 EVENTI
@@ -36,6 +37,7 @@ const menuCount = document.getElementById('menuCount');
 
 let featuredIds = [];
 let allItems = [];
+let pendingMenuCategory = null;
 let currentFilter = 'In Evidenza';
 let searchQuery = '';
 
@@ -129,6 +131,162 @@ function debugPrint(msg) {
 
 
 
+// === SEZIONE SPECIALI (periodi senza iscrizione) ===
+async function loadSpeciali() {
+  const container = document.getElementById('specialiContainer');
+  if (!container) return;
+
+  try {
+    const response = await fetch(SPECIALI_API);
+    if (!response.ok) throw new Error(await response.text());
+    const speciali = await response.json();
+
+    if (!Array.isArray(speciali) || speciali.length === 0) {
+      toggleSpecialiVisibility(false);
+      return;
+    }
+
+    toggleSpecialiVisibility(true);
+    container.innerHTML = speciali.map(renderSpecialeCard).join('');
+    container.querySelectorAll('[data-speciale-cta]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const cat = btn.getAttribute('data-cta-categoria');
+        const url = btn.getAttribute('data-cta-url');
+        if (cat) {
+          e.preventDefault();
+          openMenuCategory(cat);
+        } else if (url && url.startsWith('#')) {
+          e.preventDefault();
+          const target = document.querySelector(url);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+    container.querySelectorAll('[data-speciale-book]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const eventId = btn.getAttribute('data-evento-id');
+        if (eventId) navigateToEventRegistration(eventId);
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    toggleSpecialiVisibility(false);
+  }
+}
+
+function renderSpecialeCard(s) {
+  const titolo = escapeHtml(s.titolo || 'Speciale');
+  const kicker = escapeHtml(s.kicker || '');
+  const descrizione = escapeHtml(s.descrizione || '');
+  const img = escapeHtml(photoUrl(s.immagineUrl));
+  const ctaTesto = escapeHtml(s.ctaTesto || 'Scopri di più');
+  const ctaCat = (s.ctaCategoria || '').trim();
+  const ctaUrl = (s.ctaUrl || '').trim();
+  const eventoId = s.eventoId;
+  const showPrenota = Boolean(eventoId) && s.mostraPrenotati !== false;
+  const hasCustomCta = Boolean(s.ctaTesto || ctaCat || ctaUrl);
+  const href = ctaCat ? '#menu' : (ctaUrl || '#book');
+  const dateLabel = s.periodoLabel || formatSpecialeDates(s.dataInizio, s.dataFine);
+  const actions = [];
+  if (showPrenota) {
+    actions.push(`<a href="#book" class="speciale-cta" data-speciale-book data-evento-id="${escapeHtml(eventoId)}">Prenotati ora</a>`);
+  }
+  if (hasCustomCta && !(showPrenota && !ctaCat && !ctaUrl && /prenotati/i.test(s.ctaTesto || ''))) {
+    actions.push(`<a class="speciale-cta${showPrenota ? ' speciale-cta-secondary' : ''}" href="${escapeHtml(href)}"
+             data-speciale-cta
+             data-cta-categoria="${escapeHtml(ctaCat)}"
+             data-cta-url="${escapeHtml(ctaUrl)}">${ctaTesto}</a>`);
+  }
+
+  return `
+    <article class="speciale-card">
+      <div class="speciale-card-media">
+        <img src="${img}" alt="${titolo}" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
+      </div>
+      <div class="speciale-card-body">
+        <span class="speciale-kicker">${kicker || dateLabel || 'In corso'}</span>
+        <h3>${titolo}</h3>
+        ${descrizione ? `<p>${descrizione}</p>` : ''}
+        ${dateLabel ? `<div class="speciale-dates">${dateLabel}</div>` : ''}
+        ${actions.length ? `<div class="speciale-cta-row">${actions.join('')}</div>` : ''}
+      </div>
+    </article>
+  `;
+}
+
+function formatSpecialeDates(start, end) {
+  if (!start && !end) return '';
+  const fmt = (v) => {
+    try {
+      return new Date(v).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
+    } catch {
+      return String(v || '');
+    }
+  };
+  if (start && !end) return `Dal ${fmt(start)} · per sempre`;
+  if (start && end) return `${fmt(start)} – ${fmt(end)}`;
+  return fmt(start || end);
+}
+
+function toggleSpecialiVisibility(has) {
+  const section = document.getElementById('specialiSection');
+  if (!section) return;
+  section.hidden = !has;
+  section.style.display = has ? '' : 'none';
+  ['waveSpecialeTop', 'waveSpecialeBottom'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = has ? '' : 'none';
+  });
+  const nav = document.getElementById('navSpeciali');
+  if (nav) nav.style.display = has ? '' : 'none';
+}
+
+function openMenuCategory(categoryName) {
+  const wanted = String(categoryName || '').trim().toLowerCase();
+  if (!wanted) {
+    document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  pendingMenuCategory = categoryName;
+  try {
+    history.replaceState(null, '', `#menu?cat=${encodeURIComponent(categoryName)}`);
+  } catch (_) {}
+  applyPendingMenuCategory();
+  document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function readMenuCategoryFromHash() {
+  try {
+    const hash = window.location.hash || '';
+    if (!hash.startsWith('#menu')) return null;
+    const qIndex = hash.indexOf('?');
+    if (qIndex === -1) return null;
+    const params = new URLSearchParams(hash.slice(qIndex + 1));
+    return params.get('cat');
+  } catch {
+    return null;
+  }
+}
+
+function applyPendingMenuCategory() {
+  if (!filters) return false;
+  const cat = pendingMenuCategory || readMenuCategoryFromHash();
+  if (!cat) return false;
+  const wanted = String(cat).trim().toLowerCase();
+  const btn = [...filters.querySelectorAll('li')].find(li =>
+    String(li.getAttribute('data-filter') || '').trim().toLowerCase() === wanted
+  );
+  if (!btn) return false;
+  filters.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.getAttribute('data-filter');
+  pendingMenuCategory = null;
+  renderMenuItems();
+  btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  return true;
+}
+
 // === SEZIONE PROMOZIONI ===
 async function loadPromotions() {
   const listContainer = document.getElementById('promoTitlesList');
@@ -140,14 +298,16 @@ async function loadPromotions() {
     if (!response.ok) throw new Error(await response.text());
     const promotions = await response.json();
 
-    if (!promotions || promotions.length === 0) {
-      togglePromotionsVisibility(false);   // nascondi tutto
+    if (!Array.isArray(promotions) || promotions.length === 0) {
+      togglePromotionsVisibility(false);
       return;
     }
 
-    togglePromotionsVisibility(true);      // mostra
+    togglePromotionsVisibility(true);
+
+    listContainer.style.display = promotions.length > 1 ? '' : 'none';
     listContainer.innerHTML = promotions.map((p, idx) => `
-      <li class="${idx === 0 ? 'active' : ''}" data-promo-index="${idx}">${p.nome}</li>
+      <li class="${idx === 0 ? 'active' : ''}" data-promo-index="${idx}">${escapeHtml(p.nome || 'Promozione')}</li>
     `).join('');
 
     listContainer.querySelectorAll('li').forEach(li => {
@@ -163,100 +323,98 @@ async function loadPromotions() {
     renderPromoItems(promotions[0]);
   } catch (err) {
     console.error(err);
-    togglePromotionsVisibility(false);     // in errore, nascondi
+    togglePromotionsVisibility(false);
   }
 }
 
-// utilità se non l'hai già messa
 const fmtEUR = n => `€${Number(n).toFixed(2)}`;
 
 function renderPromoItems(promo) {
   const cardsContainer = document.getElementById('promoItemsContainer');
+  const lead = document.getElementById('promoLead');
   if (!cardsContainer) return;
+
+  if (lead) {
+    lead.textContent = '';
+    lead.style.display = 'none';
+  }
 
   const prodotti = Array.isArray(promo.items) ? promo.items : [];
   if (prodotti.length === 0) {
-    cardsContainer.innerHTML = '<center><div class="col-12 text-center">Nessun prodotto in promozione</div></center>';
-    // rimuovi eventuale vecchio summary
-    const oldSummary = document.getElementById('promoSummary');
-    if (oldSummary) oldSummary.remove();
+    cardsContainer.innerHTML = '<div class="col-12"><p class="promo-empty">Nessun prodotto in questa promozione</p></div>';
     return;
   }
 
-  // calcolo totali
   let totaleOriginale = 0;
   let totaleScontato = 0;
+  let maxSconto = 0;
 
-  const rows = prodotti.map(item => {
+  const tiles = prodotti.map((item, index) => {
     const prezzoOriginale = Number(item.prezzoOriginale || 0);
     const sconto = Number(item.scontoPercentuale || 0);
     const prezzoFinale = (item.prezzoScontato != null)
       ? Number(item.prezzoScontato)
       : prezzoOriginale * (1 - sconto / 100);
-    const imageUrl = photoUrl(item.imageUrl);
-    const cat = item.categoryName || '';
+    const imageUrl = escapeHtml(photoUrl(item.imageUrl));
+    const nome = escapeHtml(item.nome || '');
+    const cat = escapeHtml(item.categoryName || '');
 
     totaleOriginale += prezzoOriginale;
     totaleScontato += prezzoFinale;
+    if (sconto > maxSconto) maxSconto = sconto;
 
     return `
-      <li class="promo-item">
-        <div class="promo-thumb">
-          <img src="${imageUrl}" alt="${item.nome}" loading="eager" fetchpriority="high" decoding="async" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
+      <article class="promo-tile" style="--i:${index}">
+        <div class="promo-tile-photo">
+          <img src="${imageUrl}" alt="${nome}" loading="eager" decoding="async" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
+          ${sconto ? `<span class="promo-tile-badge">-${sconto}%</span>` : ''}
         </div>
-        <div class="promo-info">
-          <h5>${item.nome}</h5>
-          <div class="meta">${cat}</div>
+        <div class="promo-tile-body">
+          <h4>${nome}</h4>
+          ${cat ? `<span class="promo-tile-cat">${cat}</span>` : ''}
+          <div class="promo-tile-prices">
+            ${prezzoOriginale ? `<span class="old">${fmtEUR(prezzoOriginale)}</span>` : ''}
+            <span class="new">${fmtEUR(prezzoFinale)}</span>
+          </div>
         </div>
-        <div class="promo-prices">
-          ${prezzoOriginale ? `<span class="old">${fmtEUR(prezzoOriginale)}</span>` : ''}
-          ${sconto ? `<span class="badge">-${sconto}%</span>` : ''}
-          <span class="new">${fmtEUR(prezzoFinale)}</span>
-        </div>
-      </li>
+      </article>
     `;
   }).join('');
 
-  // costruisco un'unica card
-  const html = `
+  const nomePromo = escapeHtml(promo.nome || 'Promozione');
+  const descrizione = escapeHtml((promo.descrizione || '').trim());
+  const risparmio = Math.max(0, totaleOriginale - totaleScontato);
+
+  cardsContainer.innerHTML = `
     <div class="col-12">
-      <div class="promo-list-card">
-        <div class="promo-list-header">
-          <div>${promo.nome || 'Promozione'}</div>
-          <div style="font-weight:900;">${prodotti.length} articoli</div>
-        </div>
-        <ul class="promo-items">
-          ${rows}
-        </ul>
-        <div class="promo-totals">
-          <div class="line"><span>Totale senza sconto</span><span class="without-discount">${fmtEUR(totaleOriginale)}</span></div>
-          <div class="line"><span>Totale con sconto</span><span class="with-discount">${fmtEUR(totaleScontato)}</span></div>
-          <div class="line"><span>Risparmio</span><span class="saving">${fmtEUR(totaleOriginale - totaleScontato)}</span></div>
-        </div>
+      <div class="promo-showcase">
+        <header class="promo-showcase-head">
+          <div class="promo-showcase-copy">
+            <span class="promo-kicker">${maxSconto ? `Fino a −${maxSconto}%` : 'Offerta'}</span>
+            <h3>${nomePromo}</h3>
+            ${descrizione ? `<p>${descrizione}</p>` : ''}
+          </div>
+          <div class="promo-save-card" aria-label="Risparmio">
+            <span class="promo-save-label">Risparmi</span>
+            <span class="promo-save-value">${fmtEUR(risparmio)}</span>
+            <span class="promo-save-meta">${prodotti.length} ${prodotti.length === 1 ? 'prodotto' : 'prodotti'}</span>
+          </div>
+        </header>
+        <div class="promo-grid">${tiles}</div>
+        <footer class="promo-showcase-foot">
+          <div class="promo-foot-line">
+            <span>Prima</span>
+            <span class="old">${fmtEUR(totaleOriginale)}</span>
+          </div>
+          <div class="promo-foot-line highlight">
+            <span>Con lo sconto</span>
+            <span class="new">${fmtEUR(totaleScontato)}</span>
+          </div>
+        </footer>
       </div>
     </div>
   `;
-
-  // rimuovo eventuale vecchio riepilogo separato
-  const oldSummary = document.getElementById('promoSummary');
-  if (oldSummary) oldSummary.remove();
-
-  // inserisco la nuova card unica
-  cardsContainer.innerHTML = html;
-
-  // piccola animazione d'entrata
-  const card = cardsContainer.querySelector('.promo-list-card');
-  if (card) {
-    card.style.opacity = 0; card.style.transform = 'translateY(8px)';
-    requestAnimationFrame(() => {
-      card.style.transition = 'opacity .25s ease, transform .25s ease';
-      card.style.opacity = 1; card.style.transform = 'translateY(0)';
-    });
-  }
 }
-
-
-
 
 function createPromoCard(promo, item) {
   const categoriaSlug = (item.categoryName || 'generico').replace(/\s+/g, '-');
@@ -334,38 +492,141 @@ function formatEventDate(iso) {
   });
 }
 
+function formatOccurrenceOption(isoDate, timeIso) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  let label = date.toLocaleDateString('it-IT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  });
+  if (timeIso) {
+    const time = new Date(timeIso);
+    if (!Number.isNaN(time.getTime())) {
+      label += ' · ' + time.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+    }
+  }
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function eventTimeSlots(isoDate) {
+  const slots = [];
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  for (let minutes = 20 * 60; minutes <= 23 * 60; minutes += 30) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    const value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    if (isoDate === today) {
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      if (minutes <= nowMin) continue;
+    }
+    slots.push(value);
+  }
+  return slots;
+}
+
+function currentOccurrenceDate(event) {
+  const dates = Array.isArray(event?.prossimeDate) ? event.prossimeDate : [];
+  if (dates.length) return dates[0];
+  const raw = String(event?.data || '');
+  return raw.length >= 10 ? raw.slice(0, 10) : '';
+}
+
+function formatEventCardDate(event) {
+  const next = currentOccurrenceDate(event);
+  if (event?.ricorrente && next) return formatOccurrenceOption(next);
+  if (event?.ricorrente && event.periodoLabel) return event.periodoLabel;
+  return formatEventDate(event?.data);
+}
+
+let specialiPosterByEventId = {};
+let specialiPosterBySpecialeId = {};
+let specialiWarmPromise = null;
+
+async function warmSpecialiPosters() {
+  if (specialiWarmPromise) return specialiWarmPromise;
+  specialiWarmPromise = fetch(SPECIALI_API)
+    .then(r => (r.ok ? r.json() : []))
+    .then(list => {
+      (Array.isArray(list) ? list : []).forEach(item => {
+        const img = photoUrl(item?.immagineUrl || item?.immagine_url);
+        if (!img || img === DEFAULT_PHOTO) return;
+        if (item?.eventoId != null) specialiPosterByEventId[String(item.eventoId)] = img;
+        if (item?.id != null) specialiPosterBySpecialeId[String(item.id)] = img;
+      });
+      return specialiPosterByEventId;
+    })
+    .catch(() => ({}));
+  return specialiWarmPromise;
+}
+
 function eventPosterUrl(event) {
-  return photoUrl(event?.posterUrl || event?.poster_url);
+  const own = String(event?.posterUrl || event?.poster_url || '').trim();
+  if (own && own !== 'null' && own !== 'undefined') {
+    // Preferisci locandina evento; se 404, onerror passerà allo speciale
+    return photoUrl(own);
+  }
+  const fromEvent = specialiPosterByEventId[String(event?.id)];
+  if (fromEvent) return fromEvent;
+  const fromSpeciale = specialiPosterBySpecialeId[String(event?.specialeId)];
+  if (fromSpeciale) return fromSpeciale;
+  return DEFAULT_PHOTO;
+}
+
+function bindEventPosterFallback(img, event) {
+  if (!img) return;
+  const fallback =
+    specialiPosterByEventId[String(event?.id)] ||
+    specialiPosterBySpecialeId[String(event?.specialeId)] ||
+    DEFAULT_PHOTO;
+  img.onerror = function () {
+    this.onerror = null;
+    if (fallback && this.src.indexOf(fallback) === -1) {
+      this.src = fallback;
+      return;
+    }
+    this.src = DEFAULT_PHOTO;
+  };
 }
 
 function eventTileHTML(event) {
   const posti = event.postiDisponibili != null ? `${event.postiDisponibili} posti` : '';
+  const series = event.ricorrente
+    ? (event.periodoLabel || 'Formula ricorrente')
+    : '';
   return `
     <button type="button" class="event-tile" data-event-id="${event.id}">
       <span class="event-tile-photo">
-        <img src="${escapeHtml(eventPosterUrl(event))}" alt="${escapeHtml(event.titolo || 'Evento')}" loading="lazy" onerror="this.onerror=null;this.src='${DEFAULT_PHOTO}'">
+        <img src="${escapeHtml(eventPosterUrl(event))}" alt="${escapeHtml(event.titolo || 'Evento')}" loading="lazy" data-event-poster="${event.id}">
       </span>
+      <span class="event-tile-scrim" aria-hidden="true"></span>
       <span class="event-tile-body">
-        <span class="event-tile-date">${escapeHtml(formatEventDate(event.data))}</span>
+        <span class="event-tile-date">${escapeHtml(formatEventCardDate(event))}</span>
         <span class="event-tile-title">${escapeHtml(event.titolo || 'Evento')}</span>
+        ${series ? `<span class="event-tile-seats">${escapeHtml(series)}</span>` : ''}
         ${posti ? `<span class="event-tile-seats">${escapeHtml(posti)}</span>` : ''}
-        <span class="event-tile-cta">Prenota</span>
+        <span class="event-tile-cta">Prenotati ora</span>
       </span>
     </button>`;
 }
 
 function bindEventTiles(root, afterClick) {
   root.querySelectorAll('.event-tile').forEach(tile => {
+    const event = cachedEvents.find(item => String(item.id) === String(tile.dataset.eventId));
+    const img = tile.querySelector('img');
+    if (event && img) bindEventPosterFallback(img, event);
     tile.addEventListener('click', () => {
-      const event = cachedEvents.find(item => String(item.id) === String(tile.dataset.eventId));
-      if (!event) return;
+      const selected = cachedEvents.find(item => String(item.id) === String(tile.dataset.eventId));
+      if (!selected) return;
       if (typeof afterClick === 'function') afterClick();
-      openEventBookModal(event);
+      openEventBookModal(selected);
     });
   });
 }
 
-function renderEventCards(events) {
+async function renderEventCards(events) {
+  await warmSpecialiPosters();
   cachedEvents = Array.isArray(events) ? events : [];
   const grid = document.getElementById('eventCardsGrid');
   const empty = document.getElementById('noEventsMessage');
@@ -383,9 +644,31 @@ function renderEventCards(events) {
   bindEventTiles(grid);
 }
 
-function openEventBookModal(event) {
+function fillEventOccurrenceSelect(event) {
+  const wrap = document.getElementById('eventOccurrenceWrap');
+  const hidden = document.getElementById('eventOccurrence');
+  const label = document.getElementById('eventOccurrenceLabel');
+  const timeSelect = document.getElementById('eventTime');
+  if (!wrap) return;
+  const next = currentOccurrenceDate(event);
+  if (hidden) hidden.value = next || '';
+  if (label) {
+    label.textContent = next ? formatOccurrenceOption(next) : '';
+  }
+  if (timeSelect) {
+    const slots = next ? eventTimeSlots(next) : [];
+    timeSelect.innerHTML = `<option value="">Scegli l'orario</option>` +
+      slots.map(t => `<option value="${t}">${t}</option>`).join('');
+    timeSelect.required = Boolean(next);
+    timeSelect.value = '';
+  }
+  wrap.hidden = !next;
+}
+
+async function openEventBookModal(event) {
   const overlay = document.getElementById('eventBookOverlay');
   if (!overlay || !event) return;
+  await warmSpecialiPosters();
   const select = document.getElementById('eventSelect');
   if (select) select.value = String(event.id);
   const title = document.getElementById('eventBookTitle');
@@ -393,13 +676,19 @@ function openEventBookModal(event) {
   const poster = document.getElementById('eventBookPoster');
   const seats = document.getElementById('postiDisponibili');
   if (title) title.textContent = event.titolo || 'Evento';
-  if (meta) meta.textContent = [formatEventDate(event.data), event.descrizione].filter(Boolean).join(' · ');
+  if (meta) {
+    const bits = [formatEventCardDate(event)];
+    if (event.descrizione) bits.push(event.descrizione);
+    meta.textContent = bits.join(' · ');
+  }
   if (poster) {
-    poster.onerror = function () {
-      this.onerror = null;
-      this.src = DEFAULT_PHOTO;
-    };
-    poster.src = eventPosterUrl(event);
+    bindEventPosterFallback(poster, event);
+    // Se la locandina evento è rotta, parti già dallo speciale
+    const preferred =
+      specialiPosterByEventId[String(event.id)] ||
+      specialiPosterBySpecialeId[String(event.specialeId)] ||
+      eventPosterUrl(event);
+    poster.src = preferred;
     poster.alt = event.titolo || 'Evento';
   }
   if (seats) {
@@ -407,6 +696,7 @@ function openEventBookModal(event) {
       ? `${event.postiDisponibili} posti disponibili`
       : '';
   }
+  fillEventOccurrenceSelect(event);
   overlay.hidden = false;
   requestAnimationFrame(() => overlay.classList.add('is-open'));
   document.body.classList.add('no-scroll');
@@ -415,7 +705,13 @@ function openEventBookModal(event) {
 function closeEventBookModal() {
   const overlay = document.getElementById('eventBookOverlay');
   const select = document.getElementById('eventSelect');
+  const occurrence = document.getElementById('eventOccurrence');
+  const occurrenceWrap = document.getElementById('eventOccurrenceWrap');
   if (select) select.value = '';
+  if (occurrence) occurrence.value = '';
+  const timeSelect = document.getElementById('eventTime');
+  if (timeSelect) timeSelect.value = '';
+  if (occurrenceWrap) occurrenceWrap.hidden = true;
   if (!overlay) return;
   overlay.classList.remove('is-open');
   document.body.classList.remove('no-scroll');
@@ -463,17 +759,18 @@ function closeDishSheet() {
   setTimeout(() => { overlay.hidden = true; }, 280);
 }
 
-function showEventsPopup(events) {
+async function showEventsPopup(events) {
   if (!events || events.length === 0) return;
+  await warmSpecialiPosters();
   cachedEvents = events;
 
   const modalHTML = `
   <div id="eventsPopupOverlay" class="popup-overlay corner-events-overlay" role="dialog" aria-modal="true" aria-labelledby="eventsWelcomeTitle">
-    <div class="popup-container event-welcome sheet-light">
+    <div class="popup-container event-welcome">
       <button id="closeEventsPopupBtn" class="corner-modal-close" aria-label="Chiudi">&times;</button>
       <p class="event-welcome-kicker">Corner Pub</p>
       <h2 id="eventsWelcomeTitle">Prossimi eventi</h2>
-      <p class="event-welcome-lead">Tocca una locandina per prenotare il tuo posto.</p>
+      <p class="event-welcome-lead">Scegli la locandina e prenotati in un tap.</p>
       <div class="event-cards-grid events-list">
         ${events.map(eventTileHTML).join('')}
       </div>
@@ -510,7 +807,14 @@ async function navigateToEventRegistration(eventId) {
     if (!cachedEvents.length) {
       await loadEventsForRegistration();
     }
-    const event = cachedEvents.find(item => String(item.id) === String(eventId));
+    let event = cachedEvents.find(item => String(item.id) === String(eventId));
+    if (!event) {
+      const res = await fetch(`${EVENTS_API}/${eventId}`);
+      if (res.ok) {
+        event = await res.json();
+        cachedEvents = [...cachedEvents, event];
+      }
+    }
     if (event) {
       openEventBookModal(event);
       return;
@@ -540,7 +844,7 @@ async function checkAndShowEvents() {
     const events = await res.json();
 
     if (events && events.length > 0) {
-      showEventsPopup(events);
+      await showEventsPopup(events);
     } else {
       sessionStorage.setItem('eventsPopupShown', 'true');
     }
@@ -739,18 +1043,20 @@ async function loadMenu() {
     const cats = sortMenuCategories(allItems.map(i => i.categoryName));
     renderFilters(cats);
 
-    const defaultBtn = filters && filters.querySelector('[data-filter="In Evidenza"]');
-    const firstCatBtn = filters && filters.querySelector('li');
-    if (defaultBtn) {
-      defaultBtn.classList.add('active');
-      currentFilter = 'In Evidenza';
-      renderMenuItems();
-    } else if (firstCatBtn) {
-      firstCatBtn.classList.add('active');
-      currentFilter = firstCatBtn.getAttribute('data-filter');
-      renderMenuItems();
-    } else if (container) {
-      container.innerHTML = '<p class="text-center">Il menu verrà pubblicato a breve.</p>';
+    if (!applyPendingMenuCategory()) {
+      const defaultBtn = filters && filters.querySelector('[data-filter="In Evidenza"]');
+      const firstCatBtn = filters && filters.querySelector('li');
+      if (defaultBtn) {
+        defaultBtn.classList.add('active');
+        currentFilter = 'In Evidenza';
+        renderMenuItems();
+      } else if (firstCatBtn) {
+        firstCatBtn.classList.add('active');
+        currentFilter = firstCatBtn.getAttribute('data-filter');
+        renderMenuItems();
+      } else if (container) {
+        container.innerHTML = '<p class="text-center">Il menu verrà pubblicato a breve.</p>';
+      }
     }
   } catch (err) {
     if (container) {
@@ -1227,6 +1533,16 @@ if (eventForm) {
       alert('Seleziona un evento prima di procedere.');
       return;
     }
+    const occurrenceHidden = document.getElementById('eventOccurrence');
+    const timeSelect = document.getElementById('eventTime');
+    if (occurrenceHidden && occurrenceHidden.value) {
+      payload.occurrenceDate = occurrenceHidden.value;
+    }
+    if (!timeSelect || !timeSelect.value) {
+      Swal.fire({ title: 'Scegli l\'orario', text: 'Seleziona a che ora vuoi venire.', icon: 'warning', confirmButtonColor: '#D4AF37' });
+      return;
+    }
+    payload.occurrenceTime = timeSelect.value;
     try {
       const res = await fetch(`${EVENT_REGISTER}/${eventId}/register`, {
         method: 'POST',
@@ -1244,7 +1560,7 @@ if (eventForm) {
         html: `
           <div style="text-align: left; font-size: 1.1rem; line-height: 1.6;">
             <p><strong>Evento:</strong> ${data.event.titolo}</p>
-            <p><strong>Data:</strong> ${new Date(data.event.data).toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
+            <p><strong>Data:</strong> ${data.occurrenceDate ? formatOccurrenceOption(data.occurrenceDate) : ''}${data.occurrenceTime ? ' · ' + String(data.occurrenceTime).slice(0, 5) : ''}</p>
             <p><strong>Nome:</strong> ${data.name} ${data.surname}</p>
             <p><strong>Partecipanti:</strong> ${data.partecipanti}</p>
             ${data.note ? `<p><strong>Note:</strong> ${data.note}</p>` : ''}
@@ -1453,6 +1769,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dateInput.setAttribute('min', today);
   }
 
+  loadSpeciali();
   loadPromotions();
   loadMenu();
   checkAndShowEvents();
@@ -1556,31 +1873,16 @@ function togglePromotionsVisibility(hasPromos) {
   const section = document.getElementById('promotionsSection');
   if (!section) return;
 
-  // mostra/nascondi la sezione
+  section.hidden = !hasPromos;
   section.style.display = hasPromos ? '' : 'none';
 
-  // ONDA SOPRA: cerca lo svg immediatamente precedente
-  (function hidePrevWave() {
-    let el = section.previousElementSibling;
-    while (el && el.tagName && el.tagName.toLowerCase() !== 'svg') {
-      el = el.previousElementSibling;
-    }
-    if (el && el.tagName && el.tagName.toLowerCase() === 'svg') {
-      el.style.display = hasPromos ? '' : 'none';
-    }
-  })();
+  ['wavePromoTop', 'wavePromoBottomTop'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = hasPromos ? '' : 'none';
+  });
 
-  // ONDE SOTTO: blocco subito dopo la sezione (ha due svg)
-  (function hideOnlyFirstBottomWave() {
-    const after = section.nextElementSibling;           // <div> con due svg
-    if (!after) return;
-    const firstSvg = after.querySelector('svg:first-of-type');
-    if (firstSvg) firstSvg.style.display = hasPromos ? '' : 'none';
-    // il secondo svg resta visibile
-  })();
-
-  // Link “Promozioni” nel menu
-  const navPromoLi = document.querySelector('a.nav-link[href="#promotionsSection"]')?.closest('li');
+  const navPromoLi = document.getElementById('navPromozioni')
+    || document.querySelector('a.nav-link[href="#promotionsSection"]')?.closest('li');
   if (navPromoLi) navPromoLi.style.display = hasPromos ? '' : 'none';
 }
 // =========================
