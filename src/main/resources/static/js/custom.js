@@ -599,15 +599,15 @@ function eventTileHTML(event) {
     <button type="button" class="event-tile" data-event-id="${event.id}">
       <span class="event-tile-photo">
         <img src="${escapeHtml(eventPosterUrl(event))}" alt="${escapeHtml(event.titolo || 'Evento')}" loading="lazy" data-event-poster="${event.id}">
+        <span class="event-tile-scrim" aria-hidden="true"></span>
+        <span class="event-tile-body">
+          <span class="event-tile-date">${escapeHtml(formatEventCardDate(event))}</span>
+          <span class="event-tile-title">${escapeHtml(event.titolo || 'Evento')}</span>
+          ${series ? `<span class="event-tile-seats">${escapeHtml(series)}</span>` : ''}
+          ${posti ? `<span class="event-tile-seats">${escapeHtml(posti)}</span>` : ''}
+        </span>
       </span>
-      <span class="event-tile-scrim" aria-hidden="true"></span>
-      <span class="event-tile-body">
-        <span class="event-tile-date">${escapeHtml(formatEventCardDate(event))}</span>
-        <span class="event-tile-title">${escapeHtml(event.titolo || 'Evento')}</span>
-        ${series ? `<span class="event-tile-seats">${escapeHtml(series)}</span>` : ''}
-        ${posti ? `<span class="event-tile-seats">${escapeHtml(posti)}</span>` : ''}
-        <span class="event-tile-cta">Prenotati ora</span>
-      </span>
+      <span class="event-tile-cta">Prenota ora</span>
     </button>`;
 }
 
@@ -770,7 +770,7 @@ async function showEventsPopup(events) {
       <button id="closeEventsPopupBtn" class="corner-modal-close" aria-label="Chiudi">&times;</button>
       <p class="event-welcome-kicker">Corner Pub</p>
       <h2 id="eventsWelcomeTitle">Prossimi eventi</h2>
-      <p class="event-welcome-lead">Scegli la locandina e prenotati in un tap.</p>
+      <p class="event-welcome-lead">Scegli la locandina e tocca Prenota ora.</p>
       <div class="event-cards-grid events-list">
         ${events.map(eventTileHTML).join('')}
       </div>
