@@ -14,3 +14,8 @@ data/
 .env
 scripts/generated-photos/
 
+# Frontend (Vite / Node)
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
