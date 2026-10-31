@@ -100,7 +100,8 @@ public class AdminEventController {
     public ResponseEntity<Void> registerToEvent(
             @PathVariable Long eventId,
             @RequestBody @Valid EventRegistrationRequest request) {
-        registrationService.register(eventId, request);
+        // Back office: può iscrivere anche se le prenotazioni pubbliche sono chiuse
+        registrationService.register(eventId, request, false);
         return ResponseEntity.ok().build();
     }
 

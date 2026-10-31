@@ -360,6 +360,26 @@
         <div id="sectionPrenotazioni" class="card-section hidden">
             <h4><i class="fas fa-calendar-alt"></i> Gestione Prenotazioni</h4>
 
+            <!-- Blocco “siamo pieni”: chiude le prenotazioni dal sito (il back office può comunque inserire) -->
+            <div class="bo-gate-panel mb-4" id="bookingGatePanel" aria-live="polite">
+                <div class="bo-gate-copy">
+                    <strong><i class="fas fa-door-closed"></i> Siamo pieni?</strong>
+                    <p class="mb-0 text-muted">Chiudi le prenotazioni dal sito. Dal back office puoi ancora inserirle a mano.</p>
+                </div>
+                <div class="bo-gate-actions">
+                    <button type="button" id="btnGateTable" class="bo-gate-btn" aria-pressed="false"
+                        onclick="toggleBookingGate('table')">
+                        <span class="bo-gate-status" id="gateTableStatus">Aperte</span>
+                        <span class="bo-gate-label">Prenotazioni tavolo</span>
+                    </button>
+                    <button type="button" id="btnGateEvent" class="bo-gate-btn" aria-pressed="false"
+                        onclick="toggleBookingGate('event')">
+                        <span class="bo-gate-status" id="gateEventStatus">Aperte</span>
+                        <span class="bo-gate-label">Prenotazioni evento</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Tab Navigation -->
             <ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
                 <li class="nav-item">
@@ -1079,6 +1099,7 @@
             if (section === 'home') {
                 if (typeof loadHome === 'function') loadHome();
             } else if (section === 'prenotazioni') {
+                loadBookingGates();
                 loadTableBookings();
             } else if (section === 'menu') {
                 loadMenuItems();
@@ -1095,6 +1116,77 @@
                 loadEventi();
             } else if (section === 'categorie') {
                 loadCategories();
+            }
+        }
+
+        // ---- Blocco prenotazioni (“siamo pieni”) ----
+        let bookingGateState = { tableBookingsBlocked: false, eventBookingsBlocked: false };
+
+        function renderBookingGates(settings) {
+            bookingGateState = {
+                tableBookingsBlocked: !!settings.tableBookingsBlocked,
+                eventBookingsBlocked: !!settings.eventBookingsBlocked
+            };
+            const tableBtn = document.getElementById('btnGateTable');
+            const eventBtn = document.getElementById('btnGateEvent');
+            const tableStatus = document.getElementById('gateTableStatus');
+            const eventStatus = document.getElementById('gateEventStatus');
+            if (!tableBtn || !eventBtn) return;
+
+            tableBtn.classList.toggle('is-blocked', bookingGateState.tableBookingsBlocked);
+            tableBtn.setAttribute('aria-pressed', String(bookingGateState.tableBookingsBlocked));
+            tableStatus.textContent = bookingGateState.tableBookingsBlocked ? 'Chiuse · pieni' : 'Aperte';
+
+            eventBtn.classList.toggle('is-blocked', bookingGateState.eventBookingsBlocked);
+            eventBtn.setAttribute('aria-pressed', String(bookingGateState.eventBookingsBlocked));
+            eventStatus.textContent = bookingGateState.eventBookingsBlocked ? 'Chiuse · pieni' : 'Aperte';
+        }
+
+        async function loadBookingGates() {
+            try {
+                const res = await fetch('/admin/booking-settings');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                renderBookingGates(await res.json());
+            } catch (err) {
+                console.error('Errore caricamento stato prenotazioni:', err);
+            }
+        }
+
+        async function toggleBookingGate(kind) {
+            const payload = {};
+            if (kind === 'table') {
+                payload.tableBookingsBlocked = !bookingGateState.tableBookingsBlocked;
+            } else if (kind === 'event') {
+                payload.eventBookingsBlocked = !bookingGateState.eventBookingsBlocked;
+            } else {
+                return;
+            }
+
+            const btn = document.getElementById(kind === 'table' ? 'btnGateTable' : 'btnGateEvent');
+            if (btn) btn.disabled = true;
+            try {
+                const res = await fetch('/admin/booking-settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    alert(apiErrorText(err, 'Impossibile aggiornare lo stato'));
+                    return;
+                }
+                const settings = await res.json();
+                renderBookingGates(settings);
+                const closed = kind === 'table' ? settings.tableBookingsBlocked : settings.eventBookingsBlocked;
+                const label = kind === 'table' ? 'prenotazioni tavolo' : 'prenotazioni evento';
+                alert(closed
+                    ? `Chiuse le ${label} dal sito (siamo pieni).`
+                    : `Riaperte le ${label} dal sito.`);
+            } catch (err) {
+                console.error(err);
+                alert('Errore di connessione');
+            } finally {
+                if (btn) btn.disabled = false;
             }
         }
 
