@@ -61,6 +61,7 @@ public class ReservationService {
     private final EventRegistrationService eventRegistrationService;
     private final MailService mailService;
     private final UserRepository userRepository; // aggiunto
+    private final BookingSettingsService bookingSettingsService;
 
     @Value("${privacy.policy.version}")
     private String privacyPolicyVersion;
@@ -145,6 +146,8 @@ public class ReservationService {
 
     @Transactional
     public ReservationResponse createReservation(ReservationRequest request) {
+        bookingSettingsService.assertTableBookingsOpen();
+
         User user = userService.findOrCreate(request.getName(), request.getSurname(), request.getPhone());
 
         // Aggiorna versione privacy utente se necessario
@@ -216,7 +219,8 @@ public class ReservationService {
             eventRegRequest.setName(request.getName());
             eventRegRequest.setSurname(request.getSurname());
             eventRegRequest.setPhone(request.getPhone());
-            eventRegistrationService.register(request.getEventId(), eventRegRequest);
+            // Back office: può iscrivere anche se le prenotazioni pubbliche sono chiuse
+            eventRegistrationService.register(request.getEventId(), eventRegRequest, false);
 
             // Crea anche la prenotazione associata
             User user = userService.findOrCreate(request.getName(), request.getSurname(), request.getPhone());

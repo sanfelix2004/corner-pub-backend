@@ -441,6 +441,77 @@ body.bo-app .btn-warning {
   }
 }
 
+/* Pannello “siamo pieni” — chiude prenotazioni pubbliche */
+.bo-gate-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--bo-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+.bo-gate-copy strong {
+  display: block;
+  font-size: 1rem;
+  margin-bottom: 2px;
+}
+
+.bo-gate-copy p {
+  font-size: 0.85rem;
+  max-width: 36rem;
+}
+
+.bo-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.bo-gate-btn {
+  min-width: 160px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 2px solid #1f9d55;
+  background: #e8f8ef;
+  color: #146c3a;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.bo-gate-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.bo-gate-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.bo-gate-btn .bo-gate-status {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.bo-gate-btn .bo-gate-label {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.bo-gate-btn.is-blocked {
+  border-color: #c62828;
+  background: #fdecea;
+  color: #8e1b1b;
+}
+
 .bo-photo-cell {
   display: flex;
   flex-direction: column;

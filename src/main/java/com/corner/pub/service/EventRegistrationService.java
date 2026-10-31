@@ -35,6 +35,7 @@ public class EventRegistrationService {
     private final EventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
     private final MailService mailService;
+    private final BookingSettingsService bookingSettingsService;
     private final String privacyPolicyVersion;
     private final String publicBaseUrl;
 
@@ -42,12 +43,14 @@ public class EventRegistrationService {
             EventRepository eventRepository,
             EventRegistrationRepository registrationRepository,
             MailService mailService,
+            BookingSettingsService bookingSettingsService,
             @Value("${privacy.policy.version}") String privacyPolicyVersion,
             @Value("${app.public-base-url:https://cornerpubgiovinazzo.com}") String publicBaseUrl) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.registrationRepository = registrationRepository;
         this.mailService = mailService;
+        this.bookingSettingsService = bookingSettingsService;
         this.privacyPolicyVersion = privacyPolicyVersion;
         this.publicBaseUrl = publicBaseUrl.endsWith("/")
                 ? publicBaseUrl.substring(0, publicBaseUrl.length() - 1)
@@ -59,6 +62,19 @@ public class EventRegistrationService {
     // -----------------------------
     @Transactional
     public EventRegistrationResponse register(Long eventId, EventRegistrationRequest request) {
+        return register(eventId, request, true);
+    }
+
+    /**
+     * @param enforcePublicGate se true (sito pubblico) rispetta il blocco “siamo pieni”;
+     *                          se false (back office) permette comunque l'inserimento.
+     */
+    @Transactional
+    public EventRegistrationResponse register(Long eventId, EventRegistrationRequest request, boolean enforcePublicGate) {
+        if (enforcePublicGate) {
+            bookingSettingsService.assertEventBookingsOpen();
+        }
+
         User user = userRepository.findByPhone(request.getPhone())
                 .map(existingUser -> {
                     if (request.getSurname() != null && !request.getSurname().isBlank()) {

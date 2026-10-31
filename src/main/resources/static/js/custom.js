@@ -27,6 +27,50 @@ const RES_USER_API = `${RES_API}/user`;                      // Prenotazioni di 
 const RES_TIMES_API = `${RES_API}/available`;                 // Orari disponibili
 const RES_LOOKUP_API = `${RES_API}`;                           // Lookup per telefono/data
 const RES_NOTIFY_API = `${RES_API}/notify`;                    // Notifica contatto staff
+const BOOKING_SETTINGS_API = `${BASE_URL}/api/booking-settings`;
+
+/** Stato “siamo pieni” letto dal backend (aggiornato all’avvio). */
+let bookingGate = { tableBookingsBlocked: false, eventBookingsBlocked: false };
+
+async function loadBookingSettings() {
+  try {
+    const res = await fetch(BOOKING_SETTINGS_API);
+    if (!res.ok) return;
+    bookingGate = await res.json();
+    applyBookingGateUi();
+  } catch (err) {
+    console.warn('Impossibile caricare lo stato prenotazioni:', err);
+  }
+}
+
+function applyBookingGateUi() {
+  const tableBanner = document.getElementById('tableFullBanner');
+  const eventBanner = document.getElementById('eventFullBanner');
+  const tavoloForm = document.getElementById('tavoloForm');
+  const eventoForm = document.getElementById('eventoForm');
+  const reservationForm = document.getElementById('reservationForm');
+  const eventForm = document.getElementById('eventForm');
+
+  const tableBlocked = !!bookingGate.tableBookingsBlocked;
+  const eventBlocked = !!bookingGate.eventBookingsBlocked;
+
+  if (tableBanner) tableBanner.classList.toggle('d-none', !tableBlocked);
+  if (eventBanner) eventBanner.classList.toggle('d-none', !eventBlocked);
+
+  if (tavoloForm) tavoloForm.classList.toggle('booking-blocked', tableBlocked);
+  if (eventoForm) eventoForm.classList.toggle('booking-blocked', eventBlocked);
+
+  if (reservationForm) {
+    reservationForm.querySelectorAll('input, select, textarea, button').forEach((el) => {
+      el.disabled = tableBlocked;
+    });
+  }
+  if (eventForm) {
+    eventForm.querySelectorAll('input, select, textarea, button').forEach((el) => {
+      el.disabled = eventBlocked;
+    });
+  }
+}
 // =========================
 // 📌 RIFERIMENTI DOM MENU
 // =========================
@@ -1159,6 +1203,15 @@ if (dateInput) {
 if (form) {
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (bookingGate.tableBookingsBlocked) {
+      Swal.fire({
+        title: 'Siamo al completo',
+        text: 'Le prenotazioni tavolo sono momentaneamente chiuse.',
+        icon: 'info',
+        confirmButtonColor: '#D4AF37'
+      });
+      return;
+    }
     // PHONE VALIDATION GUARD
     const phoneField = document.getElementById('resPhone');
     if (!window.__isValidPhone(phoneField?.value)) {
@@ -1449,6 +1502,15 @@ const eventForm = document.getElementById('eventForm');
 if (eventForm) {
   eventForm.addEventListener('submit', async e => {
     e.preventDefault();
+    if (bookingGate.eventBookingsBlocked) {
+      Swal.fire({
+        title: 'Siamo al completo',
+        text: 'Le iscrizioni agli eventi sono momentaneamente chiuse.',
+        icon: 'info',
+        confirmButtonColor: '#D4AF37'
+      });
+      return;
+    }
     // PHONE VALIDATION GUARD
     const phoneField = document.getElementById('eventPhone');
     if (!window.__isValidPhone(phoneField?.value)) {
@@ -1691,6 +1753,10 @@ function showToast(message, isError = false) {
 }
 
 async function registerForEvent(eventId, name, surname, phone, partecipanti = 1, note = "") {
+  if (bookingGate.eventBookingsBlocked) {
+    alert('Siamo al completo: le iscrizioni agli eventi sono momentaneamente chiuse.');
+    return;
+  }
   try {
     const res = await fetch(`${EVENT_REGISTER}/${eventId}/register`, {
       method: 'POST',
@@ -1774,6 +1840,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadMenu();
   checkAndShowEvents();
   loadEventsForRegistration();
+  loadBookingSettings();
 
   // === GESTIONE CAMPI PRE-COMPILATI (Simil-Placeholder) ===
   function initDefaultValue(id, defaultValue) {
