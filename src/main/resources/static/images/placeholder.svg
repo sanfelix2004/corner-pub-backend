@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Foto non disponibile">
+  <rect width="400" height="400" fill="#1c1c1c"/>
+  <g fill="none" stroke="#d4af37" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".55">
+    <path d="M128 186c0-40 32-66 72-66s72 26 72 66Z"/>
+    <path d="M120 212h160"/>
+    <path d="M124 238c12-9 24-9 36 0s24 9 36 0 24-9 36 0 24 9 44 0"/>
+    <path d="M128 262h144v6a22 22 0 0 1-22 22h-100a22 22 0 0 1-22-22Z"/>
+  </g>
+</svg>
