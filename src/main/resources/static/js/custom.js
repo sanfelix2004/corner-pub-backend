@@ -1260,30 +1260,27 @@ if (form) {
     const phoneVal = document.getElementById('resPhone').value.trim();
     const peopleVal = document.getElementById('resPeople').value.trim();
     const noteVal = document.getElementById('resNote').value.trim();
+    const peopleNum = parseInt(peopleVal, 10);
 
-    // Validation against default values
-    if (nameVal === 'Nome' || nameVal === '') {
+    if (!nameVal) {
       Swal.fire({ title: 'Errore', text: 'Inserisci il tuo nome.', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
-    if (surnameVal === 'Cognome' || surnameVal === '') {
+    if (!surnameVal) {
       Swal.fire({ title: 'Errore', text: 'Inserisci il tuo cognome.', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
-    if (phoneVal === 'Telefono' || phoneVal === '') {
+    if (!phoneVal) {
       Swal.fire({ title: 'Errore', text: 'Inserisci un numero di telefono.', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
-    // Check note is not "Note"
-    const finalNote = (noteVal === 'Note') ? '' : noteVal;
-
-    const finalAllergens = hasAllergens ? allergensVal : '';
-
-    // Check people
-    if (peopleVal === 'Persone' || peopleVal === '') {
-      Swal.fire({ title: 'Errore', text: 'Inserisci il numero di persone.', icon: 'error', confirmButtonColor: '#d33' });
+    if (!Number.isFinite(peopleNum) || peopleNum < 1 || peopleNum > 20) {
+      Swal.fire({ title: 'Errore', text: 'Inserisci un numero di persone valido (1–20).', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
+    const finalNote = noteVal;
+
+    const finalAllergens = hasAllergens ? allergensVal : '';
 
     const payload = {
       name: nameVal,
@@ -1291,7 +1288,7 @@ if (form) {
       phone: phoneVal,
       date: dateInput.value,
       time: timeSelect.value,
-      people: parseInt(peopleVal, 10),
+      people: peopleNum,
       note: finalNote,
       privacyAccepted: true,
       allergensNote: finalAllergens || null,
@@ -1556,35 +1553,32 @@ if (eventForm) {
     const phoneVal = document.getElementById('eventPhone').value.trim();
     const peopleVal = document.getElementById('eventPartecipanti').value.trim();
     const noteVal = document.getElementById('eventNote').value.trim();
+    const peopleNum = parseInt(peopleVal, 10);
 
-    // Validation against default values
-    if (nameVal === 'Nome' || nameVal === '') {
+    if (!nameVal) {
       Swal.fire({ title: 'Errore', text: 'Inserisci il tuo nome.', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
-    if (surnameVal === 'Cognome' || surnameVal === '') {
+    if (!surnameVal) {
       Swal.fire({ title: 'Errore', text: 'Inserisci il tuo cognome.', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
-    if (phoneVal === 'Telefono' || phoneVal === '') {
+    if (!phoneVal) {
       Swal.fire({ title: 'Errore', text: 'Inserisci un numero di telefono.', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
-    // Check note is not "Note"
-    const finalNote = (noteVal === 'Note') ? '' : noteVal;
-
-    const finalAllergens = hasEventAllergens ? eventAllergensVal : '';
-
-    if (peopleVal === 'Partecipanti' || peopleVal === '') {
-      Swal.fire({ title: 'Errore', text: 'Inserisci il numero di partecipanti.', icon: 'error', confirmButtonColor: '#d33' });
+    if (!Number.isFinite(peopleNum) || peopleNum < 1 || peopleNum > 20) {
+      Swal.fire({ title: 'Errore', text: 'Inserisci un numero di partecipanti valido (1–20).', icon: 'error', confirmButtonColor: '#d33' });
       return;
     }
+    const finalNote = noteVal;
+    const finalAllergens = hasEventAllergens ? eventAllergensVal : '';
 
     const payload = {
       name: nameVal,
       surname: surnameVal,
       phone: phoneVal,
-      partecipanti: parseInt(peopleVal, 10),
+      partecipanti: peopleNum,
       note: finalNote,
       privacyAccepted: true, // Aggiunto per GDPR
       allergensNote: finalAllergens || null,
@@ -1842,82 +1836,16 @@ document.addEventListener('DOMContentLoaded', () => {
   loadEventsForRegistration();
   loadBookingSettings();
 
-  // === GESTIONE CAMPI PRE-COMPILATI (Simil-Placeholder) ===
-  function initDefaultValue(id, defaultValue) {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    // Al caricamento, se vuoto (o reset), rimetti default
-    if (!el.value) el.value = defaultValue;
-
-    el.addEventListener('focus', () => {
-      if (el.value === defaultValue) {
-        el.value = '';
-      }
-    });
-
-    el.addEventListener('blur', () => {
-      if (!el.value.trim()) {
-        el.value = defaultValue;
-      }
-    });
-  }
-
-  // Applica ai campi Reservation
-  ['resName', 'eventName'].forEach(id => initDefaultValue(id, 'Nome'));
-  ['resSurname', 'eventSurname'].forEach(id => initDefaultValue(id, 'Cognome'));
-  ['resPhone', 'eventPhone'].forEach(id => initDefaultValue(id, 'Telefono'));
-
-  // Funzione per campi che devono diventare numerici
-  function initNumberField(id, defaultValue) {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    // Al caricamento, se vuoto (o reset), rimetti default
-    if (!el.value) el.value = defaultValue;
-
-    el.addEventListener('focus', () => {
-      if (el.value === defaultValue) {
-        el.value = '';
-      }
-      el.type = 'number';
-      el.min = '1';
-    });
-
-    el.addEventListener('blur', () => {
-      if (!el.value.trim()) {
-        el.type = 'text';
-        el.value = defaultValue;
-      }
-    });
-  }
-
-  initNumberField('resPeople', 'Persone');
-  initNumberField('eventPartecipanti', 'Partecipanti');
-
-  // Note e Allergeni
-  ['resNote', 'eventNote'].forEach(id => initDefaultValue(id, 'Note'));
-  const allergenText = 'Allergeni / Intolleranze alimentari (opzionale) - Inserisci SOLO se necessario per la sicurezza alimentare.';
-  ['resAllergens', 'eventAllergens'].forEach(id => initDefaultValue(id, allergenText));
-
-  // Gestione speciale Data (perché cambia type)
+  // Data minima in fuso Europe/Rome (evita lo scarto UTC di toISOString)
   const rd = document.getElementById('resDate');
   if (rd) {
-    if (!rd.value) rd.value = "Data";
-    rd.addEventListener('focus', function () {
-      if (this.value === 'Data') {
-        this.value = '';
-      }
-      this.type = 'date';
-      // Se min non è settato, mettilo a oggi
-      if (!this.min) this.min = new Date().toISOString().split('T')[0];
-    });
-    rd.addEventListener('blur', function () {
-      if (!this.value) {
-        this.type = 'text';
-        this.value = 'Data';
-      }
-    });
+    const romeToday = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Rome',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    rd.min = romeToday;
   }
 
 });
@@ -2103,11 +2031,18 @@ document.addEventListener('keydown', (e) => {
 
 // Avvio
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Force Scroll to Top (User Preference)
+  // Deep-link: se c'è un hash (#menu, #book...) non forzare il top
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual';
   }
-  window.scrollTo(0, 0);
+  if (!window.location.hash) {
+    window.scrollTo(0, 0);
+  } else {
+    const target = document.querySelector(window.location.hash);
+    if (target) {
+      requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }
 
   // 2. Init GDPR
   initGDPR();
