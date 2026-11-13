@@ -8,7 +8,7 @@
     <title>Corner – Back Office</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <link rel="stylesheet" href="css/admin-ux.css?v=4" />
+    <link rel="stylesheet" href="css/admin-ux.css?v=6" />
     <style>
         /* Aggiungi alla sezione style */
         #eventRegAvailable.text-danger {
@@ -55,6 +55,35 @@
 
         .hidden {
             display: none;
+        }
+
+        .weekday-picks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .weekday-chip {
+            margin: 0;
+            cursor: pointer;
+        }
+        .weekday-chip input {
+            display: none;
+        }
+        .weekday-chip span {
+            display: inline-block;
+            min-width: 44px;
+            text-align: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid #d8d8d8;
+            background: #fff;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .weekday-chip input:checked + span {
+            background: #d4af37;
+            border-color: #d4af37;
+            color: #111;
         }
 
         /* Header styles */
@@ -317,9 +346,10 @@
             <button type="button" class="bo-nav-btn is-active" data-section="home" onclick="showSection('home')"><i class="fas fa-bolt"></i> Panoramica</button>
             <button type="button" class="bo-nav-btn" data-section="prenotazioni" onclick="showSection('prenotazioni')"><i class="fas fa-calendar-alt"></i> Prenotazioni</button>
             <button type="button" class="bo-nav-btn" data-section="eventi" onclick="showSection('eventi')"><i class="fas fa-calendar-check"></i> Eventi</button>
-            <button type="button" class="bo-nav-btn" data-section="menu" onclick="showSection('menu')"><i class="fas fa-utensils"></i> Menu</button>
+            <button type="button" class="bo-nav-btn" data-section="menu" onclick="showSection('menu')"><i class="fas fa-utensils"></i> Menù</button>
             <button type="button" class="bo-nav-btn" data-section="evidenza" onclick="showSection('evidenza')"><i class="fas fa-star"></i> In evidenza</button>
             <button type="button" class="bo-nav-btn" data-section="promozioni" onclick="showSection('promozioni')"><i class="fas fa-tag"></i> Promozioni</button>
+            <button type="button" class="bo-nav-btn" data-section="speciali" onclick="showSection('speciali')"><i class="fas fa-fire"></i> Speciali</button>
             <button type="button" class="bo-nav-btn" data-section="categorie" onclick="showSection('categorie')"><i class="fas fa-layer-group"></i> Categorie</button>
             <button type="button" class="bo-nav-btn" data-section="utenti" onclick="showSection('utenti')"><i class="fas fa-users"></i> Utenti</button>
         </nav>
@@ -333,7 +363,7 @@
             <p class="bo-kicker">Staff</p>
             <h1 id="boPageTitle">Panoramica</h1>
         </div>
-        <input id="boQuickSearch" class="bo-search" type="search" placeholder="Cerca in pagina · ⌘K" />
+        <input id="boQuickSearch" class="bo-search" type="search" placeholder="Cerca prenotazione, piatto… · ⌘K" />
     </header>
     <div class="container bo-container">
         <div class="page-header">
@@ -360,7 +390,6 @@
         <div id="sectionPrenotazioni" class="card-section hidden">
             <h4><i class="fas fa-calendar-alt"></i> Gestione Prenotazioni</h4>
 
-            <!-- Blocco “siamo pieni”: chiude le prenotazioni dal sito (il back office può comunque inserire) -->
             <div class="bo-gate-panel mb-4" id="bookingGatePanel" aria-live="polite">
                 <div class="bo-gate-copy">
                     <strong><i class="fas fa-door-closed"></i> Siamo pieni?</strong>
@@ -379,6 +408,7 @@
                     </button>
                 </div>
             </div>
+
 
             <!-- Tab Navigation -->
             <ul class="nav nav-tabs mb-4" id="bookingTabs" role="tablist">
@@ -516,73 +546,82 @@
 
         <!-- Menu Section -->
         <div id="sectionMenu" class="card-section hidden">
-            <h4><i class="fas fa-utensils"></i> Gestione Menu</h4>
+            <div class="bo-section-head">
+                <div>
+                    <h4 class="mb-1"><i class="fas fa-utensils"></i> Menu</h4>
+                    <p class="bo-help mb-0">Cerca, cambia categoria al volo, nascondi o modifica un piatto.</p>
+                </div>
+                <button type="button" class="btn btn-success" id="btnOpenAddDish"
+                    onclick="document.getElementById('addDishPanel').open = true; document.getElementById('addDishPanel').scrollIntoView({behavior:'smooth',block:'nearest'});">
+                    <i class="fas fa-plus"></i> Nuovo piatto
+                </button>
+            </div>
 
-            <!-- Add New Item -->
-            <details class="form-card mb-5 bo-create">
-                <summary class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi nuovo piatto</summary>
-                <form id="formAddNewItem">
+            <div class="bo-toolbar" id="menuToolbar">
+                <label class="bo-toolbar-search">
+                    <i class="fas fa-search"></i>
+                    <input type="search" id="menuFilterQuery" placeholder="Cerca piatto o descrizione…" autocomplete="off" />
+                </label>
+                <select id="menuFilterCategory" class="form-control" aria-label="Filtra categoria">
+                    <option value="">Tutte le categorie</option>
+                </select>
+                <label class="bo-check-inline">
+                    <input type="checkbox" id="menuFilterHidden" />
+                    Solo nascosti
+                </label>
+                <span class="bo-toolbar-count" id="menuFilterCount"></span>
+            </div>
+
+            <details class="form-card mb-4 bo-create" id="addDishPanel">
+                <summary><i class="fas fa-plus-circle"></i> Aggiungi nuovo piatto</summary>
+                <form id="formAddNewItem" class="mt-3">
                     <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label>Titolo</label>
-                            <input type="text" name="titolo" class="form-control" placeholder="Nome del piatto"
-                                required />
+                        <div class="form-group col-md-4">
+                            <label>Nome del piatto</label>
+                            <input type="text" name="titolo" class="form-control" placeholder="Es. El Clasico" required />
                         </div>
-                        <div class="form-group col-md-2">
+                        <div class="form-group col-md-4">
                             <label>Categoria</label>
                             <select name="categoria" class="form-control" id="categoriaSelectMenu" required>
-                                <option value="">Seleziona Categoria</option>
+                                <option value="">Seleziona categoria</option>
                             </select>
                         </div>
-                        <div class="form-group col-md-3">
-                            <label>Descrizione</label>
-                            <input type="text" name="descrizione" class="form-control" placeholder="Descrizione" />
-                        </div>
-                        <div class="form-group col-md-2">
+                        <div class="form-group col-md-4">
                             <label>Prezzo (€)</label>
-                            <input type="number" step="0.01" name="prezzo" class="form-control" placeholder="0.00"
-                                required />
-                        </div>
-                        <div class="form-group col-md-2">
-                            <label>Foto del piatto</label>
-                            <input type="file" name="image" accept="image/*" class="form-control-file" required />
-                            <small class="form-text text-muted">Verrà salvata sul server Aruba.</small>
+                            <input type="number" step="0.01" min="0" name="prezzo" class="form-control" placeholder="0.00" required />
                         </div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group col-md-2">
-                            <label>Visibile</label>
-                            <select name="visibile" class="form-control">
-                                <option value="true">✅ Sì</option>
-                                <option value="false">❌ No</option>
-                            </select>
+                        <div class="form-group col-md-8">
+                            <label>Descrizione</label>
+                            <input type="text" name="descrizione" class="form-control" placeholder="Ingredienti, note…" />
                         </div>
-                        <div class="form-group col-md-3 mt-4 pt-2">
-                            <button type="submit" class="btn btn-success btn-action">
-                                <i class="fas fa-save"></i> Salva Piatto
-                            </button>
+                        <div class="form-group col-md-4">
+                            <label>Foto</label>
+                            <input type="file" name="image" accept="image/*" class="form-control-file" required />
+                            <small class="form-text text-muted">Consigliata una foto quadrata.</small>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group col-md-12">
-                            <label><i class="fa-solid fa-triangle-exclamation"></i> Allergeni</label>
-
-                            <!-- nuovo selettore compatto -->
+                            <label><i class="fas fa-triangle-exclamation"></i> Allergeni</label>
                             <div id="allergenSelectAdd"></div>
-
-                            <small class="text-muted d-block mt-1">
-                                Clicca per selezionare uno o più allergeni e imposta “Contiene” o “Tracce”.
-                            </small>
+                            <small class="text-muted d-block mt-1">Seleziona e imposta “Contiene” o “Tracce”.</small>
                         </div>
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center" style="gap:12px">
+                        <label class="bo-check-inline mb-0">
+                            <input type="checkbox" name="visibile" value="true" checked />
+                            Mostra subito sul sito
+                        </label>
+                        <button type="submit" class="btn btn-success btn-action ml-auto">
+                            <i class="fas fa-save"></i> Salva piatto
+                        </button>
                     </div>
                 </form>
             </details>
 
-            <!-- Menu List -->
-            <div class="mt-4">
-                <h5 class="mb-3"><i class="fas fa-list"></i> Menu Attuale</h5>
-                <div id="menuTablesContainer"></div>
-            </div>
+            <div id="menuTablesContainer" class="bo-menu-board"></div>
         </div>
 
         <!-- Evidenza Section -->
@@ -706,6 +745,251 @@
             </div>
         </div>
 
+        <!-- Speciali Section -->
+        <div id="sectionSpeciali" class="card-section hidden">
+            <h4><i class="fas fa-fire"></i> Speciali di periodo</h4>
+            <p class="text-muted mb-4">Puoi crearne quanti vuoi. Annunci sul sito; opzionalmente crei anche un evento normale prenotabile, con lo stesso periodo oppure ricorrente (es. ogni venerdì). Lascia la data fine vuota per una durata illimitata.</p>
+
+            <details class="form-card mb-5 bo-create" open>
+                <summary class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi speciale</summary>
+                <form id="formAddSpeciale" enctype="multipart/form-data">
+                    <input type="hidden" name="tema" value="default">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Titolo</label>
+                            <input type="text" class="form-control" name="titolo" placeholder="Titolo dello speciale" required>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Sottotitolo (opzionale)</label>
+                            <input type="text" class="form-control" name="kicker" placeholder="Breve sottotitolo o periodo">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Descrizione</label>
+                            <textarea name="descrizione" class="form-control" rows="3" placeholder="Descrizione dell'annuncio"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label>Data inizio</label>
+                            <input type="date" name="dataInizio" class="form-control" required>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Data fine</label>
+                            <input type="date" name="dataFine" id="specialeDataFine" class="form-control">
+                            <small class="text-muted">Vuota = per sempre</small>
+                        </div>
+                        <div class="form-group col-md-3 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="specialePerSempre">
+                                <label class="form-check-label" for="specialePerSempre">Per sempre</label>
+                            </div>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Attivo</label>
+                            <select name="attivo" class="form-control">
+                                <option value="true" selected>Sì</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-12">
+                            <label>Giorni della settimana (opzionale)</label>
+                            <div class="weekday-picks" id="specialeGiorni"></div>
+                            <small class="text-muted">Es. solo venerdì per All You Can Eat · per sempre ogni venerdì</small>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Testo bottone (CTA)</label>
+                            <input type="text" class="form-control" name="ctaTesto" placeholder="Testo del bottone">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>Categoria menu (opzionale)</label>
+                            <input type="text" class="form-control" name="ctaCategoria" list="specialeCategorieList" placeholder="Nome categoria menu">
+                            <datalist id="specialeCategorieList"></datalist>
+                            <small class="text-muted">Nome esatto della categoria da aprire</small>
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label>URL CTA (se non usi categoria)</label>
+                            <input type="text" class="form-control" name="ctaUrl" placeholder="Link interno o esterno">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label>Immagine / poster</label>
+                            <input type="file" name="immagine" accept="image/*" class="form-control-file">
+                        </div>
+                    </div>
+                    <div class="form-card mb-3" style="border:1px dashed #c9a227;padding:16px;border-radius:12px;background:#fffdf6;">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="creaEventoSubordinato">
+                            <label class="form-check-label" for="creaEventoSubordinato">
+                                <strong>Crea anche un evento normale subordinato</strong> (prenotabile dal sito)
+                            </label>
+                        </div>
+                        <div id="eventoSubordinatoFields" class="d-none">
+                            <p class="small text-muted mb-2">L'evento resta collegato allo speciale. Le iscrizioni si riazzerano ogni data (es. ogni venerdì); gli utenti restano in anagrafica.</p>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="mostraPrenotati" checked>
+                                <label class="form-check-label" for="mostraPrenotati">
+                                    Aggiungi il bottone <strong>Prenotati ora</strong> sullo speciale
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="d-block">Periodo dell'evento</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="eventoPeriodoMode" id="eventoPeriodoStesso" value="STESSO" checked>
+                                    <label class="form-check-label" for="eventoPeriodoStesso">Stesso periodo della specialità</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="eventoPeriodoMode" id="eventoPeriodoRicorrente" value="RICORRENTE">
+                                    <label class="form-check-label" for="eventoPeriodoRicorrente">Ricorrente dedicato (es. ogni venerdì)</label>
+                                </div>
+                            </div>
+                            <div id="eventoGiorniWrap" class="form-group d-none">
+                                <label>Giorni dell'evento</label>
+                                <div class="weekday-picks" id="eventoGiorni"></div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Ora evento</label>
+                                    <input type="time" name="eventoOra" class="form-control" value="20:00">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Posti (vuoto = illimitati)</label>
+                                    <input type="number" name="eventoPostiTotali" class="form-control" min="1" placeholder="Es. 40">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Titolo evento (opzionale)</label>
+                                    <input type="text" name="eventoTitolo" class="form-control" placeholder="Default: titolo speciale">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Aggiungi speciale
+                    </button>
+                </form>
+            </details>
+
+            <div class="table-responsive">
+                <table class="table custom-table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Speciale</th>
+                            <th>Periodo</th>
+                            <th>CTA</th>
+                            <th>Stato</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="specialiTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="modal fade" id="editSpecialeModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Modifica speciale</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="editSpecialeForm">
+                                <input type="hidden" id="editSpecialeId">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label>Titolo</label>
+                                        <input type="text" id="editSpecialeTitolo" class="form-control" required>
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label>Sottotitolo</label>
+                                        <input type="text" id="editSpecialeKicker" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Descrizione</label>
+                                    <textarea id="editSpecialeDescrizione" class="form-control" rows="3"></textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Data inizio</label>
+                                        <input type="date" id="editSpecialeInizio" class="form-control" required>
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Data fine</label>
+                                        <input type="date" id="editSpecialeFine" class="form-control">
+                                        <small class="text-muted">Vuota = per sempre</small>
+                                    </div>
+                                    <div class="form-group col-md-4 d-flex align-items-end">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="editSpecialePerSempre">
+                                            <label class="form-check-label" for="editSpecialePerSempre">Per sempre</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Giorni della settimana</label>
+                                    <div class="weekday-picks" id="editSpecialeGiorni"></div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Testo bottone (CTA)</label>
+                                        <input type="text" id="editSpecialeCtaTesto" class="form-control">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>Categoria menu</label>
+                                        <input type="text" id="editSpecialeCtaCategoria" class="form-control" list="specialeCategorieList">
+                                    </div>
+                                    <div class="form-group col-md-4">
+                                        <label>URL CTA</label>
+                                        <input type="text" id="editSpecialeCtaUrl" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group col-md-4">
+                                        <label>Attivo</label>
+                                        <select id="editSpecialeAttivo" class="form-control">
+                                            <option value="true">Sì</option>
+                                            <option value="false">No</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group col-md-8 d-flex align-items-end">
+                                        <div class="form-check mb-2" id="editMostraPrenotatiWrap">
+                                            <input class="form-check-input" type="checkbox" id="editMostraPrenotati">
+                                            <label class="form-check-label" for="editMostraPrenotati">
+                                                Mostra il bottone <strong>Prenotati ora</strong> (serve un evento collegato)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Immagine attuale</label>
+                                    <div id="editSpecialePreview" class="mb-2"></div>
+                                    <label for="editSpecialeImmagine">Sostituisci immagine</label>
+                                    <input type="file" id="editSpecialeImmagine" class="form-control-file" accept="image/*">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger mr-auto" onclick="eliminaSpecialeFromModal()">
+                                <i class="fas fa-trash-alt"></i> Elimina
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
+                            <button type="button" class="btn btn-success" onclick="updateSpeciale()">
+                                <i class="fas fa-save"></i> Salva modifiche
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Utenti Section -->
         <div id="sectionUtenti" class="card-section hidden">
             <h4><i class="fas fa-users"></i> Gestione Utenti</h4>
@@ -743,7 +1027,7 @@
                                 required />
                         </div>
                         <div class="form-group col-md-4">
-                            <label>Data e Ora (prima data / orario)</label>
+                            <label>Data e Ora</label>
                             <input type="datetime-local" name="data" class="form-control" required />
                         </div>
                         <div class="form-group col-md-4">
@@ -759,83 +1043,23 @@
                                 rows="3"></textarea>
                         </div>
                     </div>
-
                     <div class="form-row">
                         <div class="form-group col-md-4">
-                            <div class="custom-control custom-checkbox mt-2">
-                                <input type="checkbox" class="custom-control-input" id="addEventoSpeciale" name="speciale">
-                                <label class="custom-control-label" for="addEventoSpeciale">
-                                    <strong>Evento speciale</strong> (formula / locandina)
-                                </label>
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="eventoRicorrente" name="ricorrente">
+                                <label class="form-check-label" for="eventoRicorrente">Evento ricorrente</label>
                             </div>
                         </div>
+                        <div class="form-group col-md-8" id="eventoRicorrenteFields">
+                            <label>Giorni (es. ogni venerdì)</label>
+                            <div class="weekday-picks" id="eventoGiorniForm"></div>
+                            <small class="text-muted">La data sopra è l'inizio; senza data fine resta per sempre.</small>
+                        </div>
+                    </div>
+                    <div class="form-row d-none" id="eventoDataFineRow">
                         <div class="form-group col-md-4">
-                            <div class="custom-control custom-checkbox mt-2">
-                                <input type="checkbox" class="custom-control-input" id="addEventoRicorrente" name="ricorrente">
-                                <label class="custom-control-label" for="addEventoRicorrente">
-                                    Ricorrente ogni settimana
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-group col-md-4" id="addEventoGiornoWrap" style="display:none;">
-                            <label>Giorno della settimana</label>
-                            <select name="giornoSettimana" id="addEventoGiorno" class="form-control">
-                                <option value="">Seleziona…</option>
-                                <option value="1">Lunedì</option>
-                                <option value="2">Martedì</option>
-                                <option value="3">Mercoledì</option>
-                                <option value="4">Giovedì</option>
-                                <option value="5">Venerdì</option>
-                                <option value="6">Sabato</option>
-                                <option value="7">Domenica</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row" id="addEventoFineWrap" style="display:none;">
-                        <div class="form-group col-md-6">
-                            <label>Fine ricorrenza (vuoto = per sempre)</label>
-                            <input type="date" name="dataFine" id="addEventoDataFine" class="form-control" />
-                            <small class="form-text text-muted">Es. All You Can Eat ogni venerdì senza data fine.</small>
-                        </div>
-                    </div>
-
-                    <div id="addEventoNormaleBox" class="border rounded p-3 mb-3" style="display:none; background:#fafafa;">
-                        <div class="custom-control custom-checkbox mb-2">
-                            <input type="checkbox" class="custom-control-input" id="addCreaEventoNormale" name="creaEventoNormale">
-                            <label class="custom-control-label" for="addCreaEventoNormale">
-                                Crea anche un <strong>evento normale</strong> subordinato allo speciale
-                            </label>
-                        </div>
-                        <p class="small text-muted mb-2">
-                            L’evento normale è quello prenotabile dal sito. Resta legato allo speciale (stessa locandina/titolo).
-                        </p>
-                        <div id="addPeriodoNormaleWrap" style="display:none;">
-                            <div class="form-group">
-                                <label>Periodo dell’evento normale</label>
-                                <select name="periodoNormale" id="addPeriodoNormale" class="form-control">
-                                    <option value="STESSO">Stesso periodo della specialità</option>
-                                    <option value="RICORRENTE">Ricorrente dedicato (es. ogni venerdì)</option>
-                                </select>
-                            </div>
-                            <div class="form-row" id="addNormaleRicorrenteFields" style="display:none;">
-                                <div class="form-group col-md-6">
-                                    <label>Giorno evento normale</label>
-                                    <select name="giornoSettimanaNormale" id="addGiornoNormale" class="form-control">
-                                        <option value="">Seleziona…</option>
-                                        <option value="1">Lunedì</option>
-                                        <option value="2">Martedì</option>
-                                        <option value="3">Mercoledì</option>
-                                        <option value="4">Giovedì</option>
-                                        <option value="5">Venerdì</option>
-                                        <option value="6">Sabato</option>
-                                        <option value="7">Domenica</option>
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label>Fine ricorrenza normale (vuoto = per sempre)</label>
-                                    <input type="date" name="dataFineNormale" id="addDataFineNormale" class="form-control" />
-                                </div>
-                            </div>
+                            <label>Data fine (vuota = per sempre)</label>
+                            <input type="date" name="dataFine" class="form-control">
                         </div>
                     </div>
 
@@ -865,7 +1089,6 @@
                             <tr>
                                 <th>Locandina</th>
                                 <th>Titolo</th>
-                                <th>Tipo</th>
                                 <th>Descrizione</th>
                                 <th>Data</th>
                                 <th>Posti</th>
@@ -888,12 +1111,19 @@
                             </button>
                         </div>
                         <div class="modal-body">
+                            <p class="small text-muted" id="iscrittiModalHint">Per gli eventi ricorrenti le iscrizioni si riazzerano ogni data. Gli utenti restano salvati in anagrafica.</p>
+                            <div class="form-group" id="iscrittiDateWrap">
+                                <label for="iscrittiDateFilter">Data (ogni venerdì è un elenco a parte)</label>
+                                <select id="iscrittiDateFilter" class="form-control"></select>
+                            </div>
+                            <p class="small mb-2" id="iscrittiSeatsHint"></p>
                             <div class="table-responsive">
                                 <table class="table">
                                     <thead>
                                         <tr>
                                             <th>Nome</th>
                                             <th>Telefono</th>
+                                            <th>Data evento</th>
                                             <th>Data Iscrizione</th>
                                             <th>Persone</th>
                                             <th>Policy</th>
@@ -943,10 +1173,24 @@
                                     </div>
                                 </div>
                                 <div class="form-row">
-                                    <div class="form-group col-md-6">
+                                    <div class="form-group col-md-4">
                                         <label>Posti Totali</label>
                                         <input type="number" id="editEventoPosti" class="form-control" min="1">
                                     </div>
+                                    <div class="form-group col-md-4 d-flex align-items-end">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="editEventoRicorrente">
+                                            <label class="form-check-label" for="editEventoRicorrente">Evento ricorrente</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-4" id="editEventoFineWrap">
+                                        <label>Data fine (vuota = per sempre)</label>
+                                        <input type="date" id="editEventoDataFine" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group" id="editEventoGiorniWrap">
+                                    <label>Giorni (es. ogni venerdì)</label>
+                                    <div class="weekday-picks" id="editEventoGiorni"></div>
                                 </div>
                                 <div class="form-group">
                                     <label>Locandina attuale</label>
@@ -961,6 +1205,9 @@
                             </form>
                         </div>
                         <div class="modal-footer">
+                            <button type="button" class="btn btn-danger mr-auto" onclick="deleteEventoFromModal()">
+                                <i class="fas fa-trash-alt"></i> Elimina
+                            </button>
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Annulla</button>
                             <button type="button" class="btn btn-success" onclick="updateEvento()">
                                 <i class="fas fa-save"></i> Salva modifiche
@@ -973,42 +1220,36 @@
 
         <!-- Categorie Section -->
         <div id="sectionCategorie" class="card-section hidden">
-            <h4><i class="fas fa-layer-group"></i> Gestione Categorie</h4>
+            <div class="bo-section-head">
+                <div>
+                    <h4 class="mb-1"><i class="fas fa-layer-group"></i> Categorie</h4>
+                    <p class="bo-help mb-0">Rinomina una categoria per aggiornare tutti i piatti. Eliminare una categoria cancella anche i suoi piatti.</p>
+                </div>
+            </div>
 
-            <!-- Add New Category -->
-            <details class="form-card mb-5 bo-create">
-                <summary class="mb-3"><i class="fas fa-plus-circle"></i> Aggiungi categoria</summary>
-                <form id="formAddCategory">
+            <details class="form-card mb-4 bo-create" open>
+                <summary><i class="fas fa-plus-circle"></i> Nuova categoria</summary>
+                <form id="formAddCategory" class="mt-3">
                     <div class="form-row align-items-end">
-                        <div class="form-group col-md-8">
-                            <label>Nome Categoria</label>
+                        <div class="form-group col-md-8 mb-0">
+                            <label>Nome</label>
                             <input type="text" id="newCategoryName" class="form-control"
-                                placeholder="Esempio: Panini, Bevande..." required>
+                                placeholder="Es. Panini, Bevande, Fritti…" required>
                         </div>
-                        <div class="form-group col-md-4">
+                        <div class="form-group col-md-4 mb-0">
                             <button type="submit" class="btn btn-success btn-block">
-                                <i class="fas fa-save"></i> Salva Categoria
+                                <i class="fas fa-save"></i> Salva
                             </button>
                         </div>
                     </div>
                 </form>
             </details>
 
-            <!-- Categories List -->
-            <div class="mt-4">
-                <h5 class="mb-3"><i class="fas fa-list"></i> Categorie Attuali</h5>
-                <div class="table-responsive">
-                    <table class="table custom-table">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Nome</th>
-                                <th>Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody id="categoriesTableBody"></tbody>
-                    </table>
-                </div>
+            <div id="categoriesCards" class="bo-cat-grid"></div>
+            <div class="table-responsive d-none">
+                <table class="table custom-table">
+                    <tbody id="categoriesTableBody"></tbody>
+                </table>
             </div>
 
             <!-- Modifica Categoria Modal -->
@@ -1046,8 +1287,11 @@
         <button type="button" data-section="home" onclick="showSection('home')"><i class="fas fa-bolt"></i>Home</button>
         <button type="button" data-section="prenotazioni" onclick="showSection('prenotazioni')"><i class="fas fa-calendar-alt"></i>Prenota</button>
         <button type="button" data-section="eventi" onclick="showSection('eventi')"><i class="fas fa-calendar-check"></i>Eventi</button>
-        <button type="button" data-section="menu" onclick="showSection('menu')"><i class="fas fa-utensils"></i>Menu</button>
+        <button type="button" data-section="menu" onclick="showSection('menu')"><i class="fas fa-utensils"></i>Menù</button>
+        <button type="button" data-section="categorie" onclick="showSection('categorie')"><i class="fas fa-layer-group"></i>Categorie</button>
+        <button type="button" data-section="speciali" onclick="showSection('speciali')"><i class="fas fa-fire"></i>Altro</button>
     </nav>
+    <div id="boToast" class="bo-toast" hidden role="status" aria-live="polite"></div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -1056,9 +1300,30 @@
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
-        function escape(str) {
-            if (!str) return '';
-            return str.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+                function escape(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function toast(message, tone) {
+            const el = document.getElementById('boToast');
+            if (!el) { alert(message); return; }
+            el.hidden = false;
+            el.dataset.tone = tone || 'ok';
+            el.textContent = message;
+            clearTimeout(toast._t);
+            toast._t = setTimeout(() => { el.hidden = true; }, 2800);
+        }
+
+        function allergensForRequest(list) {
+            return (list || [])
+                .filter(a => a && a.status && a.status !== 'FREE')
+                .map(a => ({ code: a.code, status: String(a.status).toUpperCase() }));
         }
 
         function apiErrorText(err, fallback) {
@@ -1066,6 +1331,9 @@
         }
 
         let cachedEventi = [];
+        let cachedSpeciali = [];
+        let cachedIscritti = [];
+        let cachedIscrittiEventId = null;
 
         function formatDate(dateStr) {
             if (!dateStr) return '';
@@ -1089,7 +1357,7 @@
 
         // Section management
         function showSection(section) {
-            ['home', 'prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti', 'eventi', 'categorie'].forEach(s => {
+            ['home', 'prenotazioni', 'menu', 'evidenza', 'promozioni', 'speciali', 'utenti', 'eventi', 'categorie'].forEach(s => {
                 const el = document.getElementById('section' + capitalize(s));
                 if (el) el.classList.add('hidden');
             });
@@ -1110,6 +1378,8 @@
                 loadInEvidenza();
             } else if (section === 'promozioni') {
                 loadPromozioni();
+            } else if (section === 'speciali') {
+                loadSpeciali();
             } else if (section === 'utenti') {
                 loadUtenti();
             } else if (section === 'eventi') {
@@ -1119,7 +1389,8 @@
             }
         }
 
-        // ---- Blocco prenotazioni (“siamo pieni”) ----
+
+        // ---- Blocco prenotazioni (siamo pieni) ----
         let bookingGateState = { tableBookingsBlocked: false, eventBookingsBlocked: false };
 
         function renderBookingGates(settings) {
@@ -1172,7 +1443,7 @@
                 });
                 if (!res.ok) {
                     const err = await res.json().catch(() => ({}));
-                    alert(apiErrorText(err, 'Impossibile aggiornare lo stato'));
+                    alert((err && (err.message || err.error)) || 'Impossibile aggiornare lo stato');
                     return;
                 }
                 const settings = await res.json();
@@ -1189,6 +1460,7 @@
                 if (btn) btn.disabled = false;
             }
         }
+
 
         // Prenotazioni functions
         async function loadReservations() {
@@ -1398,8 +1670,65 @@
         });
 
 
+        let MENU_CACHE = [];
+        let MENU_CATEGORIES = [];
+        const MENU_CATEGORY_ORDER = [
+            'panini', 'bevande', 'wrap', 'sfizi', 'dolci', 'birre', 'fritti', 'starter',
+            'insalat', 'combo', 'bombette', 'polpette', 'carne', 'pinse', 'vino', 'toast'
+        ];
+        function categoryRank(name) {
+            const value = String(name || '').toLowerCase();
+            const index = MENU_CATEGORY_ORDER.findIndex(key => value.includes(key));
+            return index === -1 ? 999 : index;
+        }
+        function sortCategoryNames(names) {
+            return [...names].sort((a, b) => categoryRank(a) - categoryRank(b) || String(a).localeCompare(String(b), 'it'));
+        }
+
+
+        function menuCategoryOptions(selected, includeEmpty) {
+            const opts = (includeEmpty ? '<option value="">Seleziona categoria</option>' : '')
+                + MENU_CATEGORIES.map(name =>
+                    `<option value="${escape(name)}"${name === selected ? ' selected' : ''}>${escape(name)}</option>`
+                ).join('');
+            return opts;
+        }
+
+        function applyMenuFilters() {
+            const q = (document.getElementById('menuFilterQuery')?.value || '').trim().toLowerCase();
+            const cat = document.getElementById('menuFilterCategory')?.value || '';
+            const onlyHidden = document.getElementById('menuFilterHidden')?.checked;
+            let shown = 0;
+            document.querySelectorAll('.bo-dish-card').forEach(card => {
+                const hay = (card.dataset.search || '');
+                const matchQ = !q || hay.includes(q);
+                const matchCat = !cat || card.dataset.category === cat;
+                const matchVis = !onlyHidden || card.dataset.visible === 'false';
+                const ok = matchQ && matchCat && matchVis;
+                card.hidden = !ok;
+                if (ok) shown += 1;
+            });
+            document.querySelectorAll('.bo-menu-group').forEach(group => {
+                const any = [...group.querySelectorAll('.bo-dish-card')].some(card => !card.hidden);
+                group.hidden = !any;
+            });
+            const count = document.getElementById('menuFilterCount');
+            if (count) count.textContent = shown === 1 ? '1 piatto' : `${shown} piatti`;
+        }
+
+        function bindMenuFilters() {
+            ['menuFilterQuery', 'menuFilterCategory', 'menuFilterHidden'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || el.dataset.bound) return;
+                el.dataset.bound = '1';
+                el.addEventListener('input', applyMenuFilters);
+                el.addEventListener('change', applyMenuFilters);
+            });
+        }
+
         async function loadMenuItems() {
             CURRENT_EDIT_ID = null;
+            bindMenuFilters();
             try {
                 const [resMenu, resCat] = await Promise.all([
                     fetch('/admin/menu'),
@@ -1408,115 +1737,114 @@
 
                 if (!resMenu.ok) throw new Error('HTTP ' + resMenu.status);
                 const data = await resMenu.json();
+                MENU_CACHE = Array.isArray(data) ? data : [];
 
-                let availableCategories = new Set();
+                const names = new Set();
                 if (resCat.ok) {
-                    const params = await resCat.json(); // [{id,name}]
-                    params.forEach(p => availableCategories.add(p.name));
+                    const params = await resCat.json();
+                    (params || []).forEach(p => names.add(p.name));
+                }
+                MENU_CACHE.forEach(item => names.add(item.categoryName || 'Altro'));
+                MENU_CATEGORIES = sortCategoryNames([...names].filter(Boolean));
+
+                populateSelect('Menu', MENU_CATEGORIES);
+
+                const filterCat = document.getElementById('menuFilterCategory');
+                if (filterCat) {
+                    const prev = filterCat.value;
+                    filterCat.innerHTML = '<option value="">Tutte le categorie</option>'
+                        + MENU_CATEGORIES.map(name => `<option value="${escape(name)}">${escape(name)}</option>`).join('');
+                    if ([...filterCat.options].some(o => o.value === prev)) filterCat.value = prev;
+                }
+
+                const container = document.getElementById('menuTablesContainer');
+                if (!MENU_CACHE.length) {
+                    container.innerHTML = `
+        <div class="bo-empty">
+          <i class="fas fa-utensils"></i>
+          <h4>Menu vuoto</h4>
+          <p>Aggiungi il primo piatto con il pulsante sopra.</p>
+        </div>`;
+                    applyMenuFilters();
+                    return;
                 }
 
                 const grouped = {};
-                (data || []).forEach(item => {
+                MENU_CACHE.forEach(item => {
                     const cat = item.categoryName || 'Altro';
-                    availableCategories.add(cat); // Ensure used categories are also listed
                     if (!grouped[cat]) grouped[cat] = [];
                     grouped[cat].push(item);
                 });
 
-                populateSelect('Menu', [...availableCategories].sort());
-                const container = document.getElementById('menuTablesContainer');
-                container.innerHTML = '';
-
-                if (!data || data.length === 0) {
-                    container.innerHTML = `
-        <div class="alert alert-info text-center">
-          <i class="fas fa-info-circle fa-2x mb-3"></i>
-          <h4>Menu vuoto</h4>
-          <p>Non ci sono piatti nel menu al momento</p>
-        </div>`;
-                    return;
-                }
-
-                Object.keys(grouped).sort().forEach(cat => {
-                    const section = document.createElement('div');
-                    section.classList.add('mb-5');
-
-                    const rows = grouped[cat].map(item => {
+                container.innerHTML = sortCategoryNames(Object.keys(grouped)).map(cat => {
+                    const cards = grouped[cat].map(item => {
                         const safeId = Number(item.id);
-                        const imgSrc = (item.imageUrl && item.imageUrl.trim() !== '')
+                        const imgSrc = (item.imageUrl && item.imageUrl.trim())
                             ? item.imageUrl
                             : '/images/about-img.png';
-
-                        // ——— testo allergeni sotto la descrizione ———
                         const allergensText = ((item.allergens || [])
                             .filter(a => a && a.status && a.status !== 'FREE')
                             .map(a => {
                                 const label = (a.label || a.code || '').toString();
                                 const status = (a.status || '').toString().toUpperCase();
-                                return `${label}${status === 'MAY_CONTAIN' ? ' (tracce)' : ' (contiene)'}`;
-                            }))
-                            .join(', ');
-
+                                return `${label}${status === 'MAY_CONTAIN' ? ' (tracce)' : ''}`;
+                            })).join(', ');
+                        const search = `${item.titolo || ''} ${item.descrizione || ''} ${cat}`.toLowerCase();
                         return `
-          <tr id="menu-row-${safeId}">
-            <td>
-              <div class="bo-photo-cell">
-                <img src="${imgSrc}" onerror="this.onerror=null;this.src='/images/about-img.png'" class="thumb" />
-                <label class="btn btn-sm btn-outline-primary btn-action mb-0">
-                  <i class="fas fa-sync-alt"></i> Cambia
-                  <input type="file" accept="image/*" hidden onchange="replaceMenuPhotoFromInput(${safeId}, this)">
-                </label>
+          <article class="bo-dish-card" id="menu-row-${safeId}"
+            data-id="${safeId}"
+            data-category="${escape(cat)}"
+            data-visible="${item.visibile ? 'true' : 'false'}"
+            data-search="${escape(search)}">
+            <div class="bo-dish-media">
+              <img src="${escape(imgSrc)}" alt="" onerror="this.onerror=null;this.src='/images/about-img.png'" />
+              <label class="bo-photo-btn" title="Cambia foto">
+                <i class="fas fa-camera"></i>
+                <input type="file" accept="image/*" hidden onchange="replaceMenuPhotoFromInput(${safeId}, this)">
+              </label>
+            </div>
+            <div class="bo-dish-body">
+              <div class="bo-dish-top">
+                <h3>${escape(item.titolo || '')}</h3>
+                <strong class="bo-price">€${Number(item.prezzo || 0).toFixed(2)}</strong>
               </div>
-            </td>
-            <td>${escape(item.titolo || '')}</td>
-            <td>
-              ${escape(item.descrizione || '-')}
-              ${allergensText
-                                ? `<div class="small text-muted mt-1"><strong>Allergeni:</strong> ${escape(allergensText)}</div>`
-                                : ``}
-            </td>
-            <td>€${Number(item.prezzo || 0).toFixed(2)}</td>
-            <td>
-              <button class="status-badge btn btn-sm ${item.visibile ? 'bg-success' : 'bg-secondary'}"
-                      onclick="toggleVisibility(${safeId})" title="Clicca per cambiare stato">
-                ${item.visibile ? 'Visibile' : 'Nascosto'}
-              </button>
-            </td>
-            <td>-</td>
-            <td class="text-nowrap">
-              <button class="btn btn-sm btn-warning btn-action"
-                onclick="openEditItemModal(${safeId})">
-                <i class="fas fa-edit"></i> Modifica
-              </button>
-              <button class="btn btn-sm btn-danger btn-action" onclick="deleteMenuItem(${safeId})">
-                <i class="fas fa-trash-alt"></i> Elimina
-              </button>
-            </td>
-          </tr>`;
+              <p class="bo-dish-desc">${escape(item.descrizione || 'Nessuna descrizione')}</p>
+              ${allergensText ? `<p class="bo-dish-allergens"><strong>Allergeni:</strong> ${escape(allergensText)}</p>` : ''}
+              <div class="bo-dish-actions">
+                <label class="bo-inline-field">
+                  <span>Categoria</span>
+                  <select class="form-control form-control-sm"
+                    data-prev="${escape(cat)}"
+                    onchange="changeItemCategory(${safeId}, this.value, this)"
+                    aria-label="Cambia categoria">
+                    ${menuCategoryOptions(cat, false)}
+                  </select>
+                </label>
+                <button type="button" class="bo-pill ${item.visibile ? 'is-on' : 'is-off'}"
+                        onclick="toggleVisibility(${safeId})" title="Mostra o nascondi sul sito">
+                  ${item.visibile ? 'Visibile sul sito' : 'Nascosto'}
+                </button>
+                <button type="button" class="btn btn-sm btn-warning btn-action" onclick="openEditItemModal(${safeId})">
+                  <i class="fas fa-edit"></i> Modifica
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-action" onclick="deleteMenuItem(${safeId})">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+          </article>`;
                     }).join('');
+                    return `
+        <section class="bo-menu-group" data-group="${escape(cat)}">
+          <header class="bo-menu-group-head">
+            <h5>${escape(cat)}</h5>
+            <span>${grouped[cat].length}</span>
+          </header>
+          <div class="bo-dish-grid">${cards}</div>
+        </section>`;
+                }).join('');
 
-                    section.innerHTML = `
-        <h5 class="d-flex align-items-center">
-          <i class="fas fa-utensils me-2"></i> ${escape(cat)}
-        </h5>
-        <div class="table-responsive">
-          <table class="table custom-table">
-            <thead class="thead-light">
-              <tr>
-                <th>Foto</th>
-                <th>Titolo</th>
-                <th>Descrizione</th>
-                <th>Prezzo</th>
-                <th>Stato</th>
-                <th>Allergeni</th>
-                <th>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>`;
-                    container.appendChild(section);
-                });
+                applyMenuFilters();
             } catch (error) {
                 console.error('Error loading menu items:', error);
                 document.getElementById('menuTablesContainer').innerHTML = `
@@ -1526,18 +1854,48 @@
             }
         }
 
+        async function changeItemCategory(id, newCategory, selectEl) {
+            const previous = (selectEl && selectEl.dataset.prev)
+                || (MENU_CACHE.find(i => String(i.id) === String(id)) || {}).categoryName;
+            if (!newCategory || newCategory === previous) return;
+            if (selectEl) selectEl.disabled = true;
+            try {
+                const resItem = await fetch(`/api/menu/${id}`);
+                if (!resItem.ok) throw new Error('load');
+                const item = await resItem.json();
+                const data = {
+                    titolo: item.titolo,
+                    categoryName: newCategory,
+                    descrizione: item.descrizione || '',
+                    prezzo: item.prezzo,
+                    allergens: allergensForRequest(item.allergens)
+                };
+                const formData = new FormData();
+                formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+                const res = await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
+                if (!res.ok) throw new Error('save');
+                toast('Spostato in “' + newCategory + '”');
+                await loadMenuItems();
+            } catch (error) {
+                console.error('Error changing category:', error);
+                if (selectEl && previous) selectEl.value = previous;
+                toast('Non riesco a cambiare categoria', 'err');
+            } finally {
+                if (selectEl) selectEl.disabled = false;
+            }
+        }
+
         document.getElementById('formAddNewItem').addEventListener('submit', async e => {
             e.preventDefault();
             const form = e.target;
-
             const allergens = readAllergenSelect('allergenSelectAdd');
+            const showOnSite = !(form.visibile && form.visibile.type === 'checkbox') || form.visibile.checked;
 
             const data = {
                 titolo: form.titolo.value,
                 categoryName: form.categoria.value,
                 descrizione: form.descrizione.value,
                 prezzo: parseFloat(form.prezzo.value),
-                visibile: form.visibile.value === 'true',
                 allergens
             };
 
@@ -1545,49 +1903,63 @@
             formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
             if (form.image.files[0]) formData.append('image', form.image.files[0]);
 
+            const submitBtn = form.querySelector('[type="submit"]');
+            if (submitBtn) submitBtn.disabled = true;
             try {
                 const res = await fetch('/admin/menu', { method: 'POST', body: formData });
-                if (res.ok) {
-                    alert('✅ Piatto aggiunto con successo!');
-                    form.reset();
-                    // reset anche il selettore allergeni
-                    renderAllergenSelect('allergenSelectAdd');
-                    await loadMenuItems();
-                } else {
-                    alert('❌ Errore durante l\'aggiunta del piatto');
+                if (!res.ok) {
+                    toast('Errore durante il salvataggio', 'err');
+                    return;
                 }
+                const created = await res.json().catch(() => null);
+                if (!showOnSite && created && created.id) {
+                    await fetch(`/admin/menu/${created.id}/toggle`, { method: 'PATCH' });
+                }
+                toast('Piatto aggiunto');
+                form.reset();
+                if (form.visibile) form.visibile.checked = true;
+                renderAllergenSelect('allergenSelectAdd');
+                const panel = document.getElementById('addDishPanel');
+                if (panel) panel.open = false;
+                await loadMenuItems();
             } catch (error) {
                 console.error('Error adding menu item:', error);
-                alert('❌ Errore durante l\'aggiunta del piatto');
+                toast('Errore durante il salvataggio', 'err');
+            } finally {
+                if (submitBtn) submitBtn.disabled = false;
             }
         });
 
         async function toggleVisibility(id) {
             try {
-                await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
+                const res = await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
+                if (!res.ok) throw new Error('toggle');
                 await loadMenuItems();
+                toast('Visibilità aggiornata');
             } catch (error) {
                 console.error('Error toggling visibility:', error);
-                alert('Errore durante l\'aggiornamento dello stato');
+                toast('Errore aggiornamento stato', 'err');
             }
         }
 
         async function deleteMenuItem(id) {
-            if (!confirm('Sei sicuro di voler eliminare questo piatto? Verrà cancellata anche la foto dal server.')) return;
+            if (!confirm('Eliminare questo piatto? Verrà cancellata anche la foto.')) return;
             try {
-                await fetch(`/admin/menu/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/admin/menu/${id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('delete');
                 if (CURRENT_EDIT_ID === id) CURRENT_EDIT_ID = null;
+                toast('Piatto eliminato');
                 await loadMenuItems();
             } catch (error) {
                 console.error('Error deleting menu item:', error);
-                alert('Errore durante l\'eliminazione del piatto');
+                toast('Errore durante l\'eliminazione', 'err');
             }
         }
 
         async function replaceMenuPhotoFromInput(id, input) {
             const file = input && input.files && input.files[0];
             if (!file) return;
-            if (!confirm('Sostituisco la foto e cancello quella precedente dal server Aruba?')) {
+            if (!confirm('Sostituire la foto del piatto?')) {
                 input.value = '';
                 return;
             }
@@ -1597,36 +1969,36 @@
                 const res = await fetch(`/admin/menu/${id}/image`, { method: 'PUT', body: formData });
                 input.value = '';
                 if (!res.ok) {
-                    alert('❌ Errore durante la sostituzione della foto');
+                    toast('Errore sostituzione foto', 'err');
                     return;
                 }
-                alert('✅ Foto sostituita. Quella precedente è stata cancellata dal server.');
+                toast('Foto aggiornata');
+                const item = await res.json().catch(() => null);
                 await loadMenuItems();
                 const editingId = document.getElementById('editItemId') && document.getElementById('editItemId').value;
                 if (String(editingId) === String(id)) {
-                    const item = await res.json().catch(() => null);
                     refreshEditPhotoPreview(item && item.imageUrl);
                 }
             } catch (error) {
                 console.error('Error replacing menu photo:', error);
-                alert('❌ Errore durante la sostituzione della foto');
+                toast('Errore sostituzione foto', 'err');
             }
         }
 
         async function deleteMenuPhoto(id) {
-            if (!confirm('Cancello la foto dal server Aruba? Il piatto resta, senza immagine.')) return;
+            if (!confirm('Eliminare la foto? Il piatto resta senza immagine.')) return;
             try {
                 const res = await fetch(`/admin/menu/${id}/image`, { method: 'DELETE' });
                 if (!res.ok) {
-                    alert('❌ Errore durante la cancellazione della foto');
+                    toast('Errore cancellazione foto', 'err');
                     return;
                 }
-                alert('✅ Foto cancellata dal server.');
+                toast('Foto eliminata');
                 refreshEditPhotoPreview(null);
                 await loadMenuItems();
             } catch (error) {
                 console.error('Error deleting menu photo:', error);
-                alert('❌ Errore durante la cancellazione della foto');
+                toast('Errore cancellazione foto', 'err');
             }
         }
 
@@ -1647,49 +2019,41 @@
             imgContainer.innerHTML = `<img src="${previewSrc}" class="img-thumbnail" style="max-height: 150px;" onerror="this.onerror=null;this.src='/images/about-img.png'">`;
         }
 
-        // NEW: Open Edit Modal
         async function openEditItemModal(id) {
             try {
-                // Ensure helper data is ready
                 await ensureAllergenCatalog();
-
-                // Fetch Item Details
                 const res = await fetch(`/api/menu/${id}`);
                 if (!res.ok) throw new Error('Errore nel caricamento del piatto');
                 const item = await res.json();
 
-                // Populate Categories Select (reuse existing loader or fetch)
-                const catRes = await fetch('/admin/categories');
-                const categories = await catRes.json();
-                const catSelect = document.getElementById('editItemCategory');
-                catSelect.innerHTML = categories.map(c =>
-                    `<option value="${c.name}">${c.name}</option>`
-                ).join('');
+                if (!MENU_CATEGORIES.length) {
+                    const catRes = await fetch('/admin/categories');
+                    const categories = await catRes.json();
+                    MENU_CATEGORIES = (categories || []).map(c => c.name).sort((a, b) => a.localeCompare(b, 'it'));
+                }
 
-                // Populate Fields
+                const catSelect = document.getElementById('editItemCategory');
+                catSelect.innerHTML = menuCategoryOptions(item.categoryName || '', false);
+
                 document.getElementById('editItemId').value = item.id;
                 document.getElementById('editItemTitolo').value = item.titolo;
                 document.getElementById('editItemDesc').value = item.descrizione || '';
                 document.getElementById('editItemPrezzo').value = item.prezzo;
                 document.getElementById('editItemVisibile').value = String(item.visibile);
-
-                // Select Category (safe match)
+                document.getElementById('editItemVisibile').dataset.original = String(item.visibile);
                 catSelect.value = item.categoryName || '';
 
                 refreshEditPhotoPreview(item.imageUrl);
                 document.getElementById('editItemImage').value = '';
 
-                // Allergens
                 const pre = {};
                 (item.allergens || []).forEach(a => pre[a.code] = a.status);
                 renderAllergenSelect('allergenSelectEditModal', pre);
 
-                // Show Modal
                 $('#editMenuItemModal').modal('show');
-
             } catch (error) {
                 console.error('Error opening edit modal:', error);
-                alert('Impossibile caricare i dettagli del piatto.');
+                toast('Impossibile caricare il piatto', 'err');
             }
         }
 
@@ -1700,6 +2064,7 @@
             const descrizione = document.getElementById('editItemDesc').value;
             const prezzo = parseFloat(document.getElementById('editItemPrezzo').value);
             const visibile = document.getElementById('editItemVisibile').value === 'true';
+            const originalVisibile = document.getElementById('editItemVisibile').dataset.original === 'true';
 
             const allergens = readAllergenSelect('allergenSelectEditModal');
             const imageInput = document.getElementById('editItemImage');
@@ -1709,31 +2074,28 @@
                 categoryName,
                 descrizione,
                 prezzo,
-                visibile,
                 allergens
             };
 
             const formData = new FormData();
             formData.append('data', new Blob([JSON.stringify(data)], { type: 'application/json' }));
-
-            if (imageInput.files.length > 0) {
-                formData.append('image', imageInput.files[0]);
-            }
+            if (imageInput.files.length > 0) formData.append('image', imageInput.files[0]);
 
             try {
                 const res = await fetch(`/admin/menu/${id}`, { method: 'PUT', body: formData });
-                if (res.ok) {
-                    $('#editMenuItemModal').modal('hide');
-                    alert(imageInput.files.length > 0
-                        ? '✅ Piatto aggiornato. La foto precedente è stata cancellata dal server.'
-                        : '✅ Piatto aggiornato con successo');
-                    loadMenuItems();
-                } else {
-                    alert('❌ Errore durante l\'aggiornamento');
+                if (!res.ok) {
+                    toast('Errore durante l\'aggiornamento', 'err');
+                    return;
                 }
+                if (visibile !== originalVisibile) {
+                    await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
+                }
+                $('#editMenuItemModal').modal('hide');
+                toast('Piatto aggiornato');
+                loadMenuItems();
             } catch (error) {
                 console.error('Error updating menu item:', error);
-                alert('Errore di connessione');
+                toast('Errore di connessione', 'err');
             }
         }
 
@@ -2116,6 +2478,432 @@
             }
         }
 
+        // Speciali di periodo
+        async function loadSpeciali() {
+            const tbody = document.getElementById('specialiTableBody');
+            const list = document.getElementById('specialeCategorieList');
+            if (!tbody) return;
+
+            try {
+                const [specialiRes, catRes] = await Promise.all([
+                    fetch('/admin/speciali'),
+                    fetch('/admin/categories').catch(() => null)
+                ]);
+
+                if (list) {
+                    let cats = [];
+                    try {
+                        if (catRes && catRes.ok) {
+                            const raw = await catRes.json();
+                            cats = Array.isArray(raw) ? raw.map(c => c.name || c.nome || c).filter(Boolean) : [];
+                        }
+                    } catch (_) {}
+                    if (!cats.length) {
+                        try {
+                            const menuRes = await fetch('/admin/menu');
+                            if (menuRes.ok) {
+                                const menu = await menuRes.json();
+                                cats = [...new Set((menu || []).map(i => i.categoryName).filter(Boolean))];
+                            }
+                        } catch (_) {}
+                    }
+                    list.innerHTML = cats.map(c => `<option value="${String(c).replace(/"/g, '&quot;')}"></option>`).join('');
+                }
+
+                if (!specialiRes.ok) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Errore caricamento speciali</td></tr>`;
+                    return;
+                }
+
+                const data = await specialiRes.json();
+                cachedSpeciali = Array.isArray(data) ? data : [];
+                if (!Array.isArray(data) || data.length === 0) {
+                    tbody.innerHTML = `
+                      <tr><td colspan="5" class="text-center py-4">
+                        <i class="fas fa-fire fa-2x mb-3 text-muted"></i>
+                        <p class="mb-0">Nessuno speciale creato</p>
+                      </td></tr>`;
+                    return;
+                }
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                tbody.innerHTML = data.map(s => {
+                    const start = s.dataInizio ? new Date(s.dataInizio) : null;
+                    const end = s.dataFine ? new Date(s.dataFine) : null;
+                    const forever = !s.dataFine;
+                    const inRange = start && today >= start && (forever || today <= end);
+                    const stato = !s.attivo ? 'Spento' : (inRange ? 'In corso' : 'Fuori periodo');
+                    const badge = !s.attivo ? 'bg-secondary' : (inRange ? 'bg-success' : 'bg-warning text-dark');
+                    const bits = [];
+                    if (s.eventoId && s.mostraPrenotati) bits.push('Prenotati ora');
+                    if (s.ctaCategoria) bits.push(`Menu → ${s.ctaCategoria}`);
+                    else if (s.ctaUrl) bits.push(s.ctaUrl);
+                    else if (s.ctaTesto) bits.push(s.ctaTesto);
+                    const cta = bits.length ? bits.join('<br>') : '—';
+                    const days = s.periodoLabel ? `<div class="small text-muted mt-1">${s.periodoLabel}</div>` : '';
+                    const periodo = forever
+                        ? `${s.dataInizio ? formatDate(s.dataInizio) : '-'}<br><span class="badge bg-info text-dark mt-1">Per sempre</span>${days}`
+                        : `${s.dataInizio ? formatDate(s.dataInizio) : '-'}<br><span class="text-muted small">al</span><br>${formatDate(s.dataFine)}${days}`;
+                    const img = s.immagineUrl
+                        ? `<img src="${s.immagineUrl}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:8px;margin-right:10px;vertical-align:middle;">`
+                        : '';
+                    return `
+                      <tr>
+                        <td>${img}<strong>${s.titolo || '-'}</strong>
+                          <div class="small text-muted">${s.kicker || s.descrizione || ''}</div>
+                        </td>
+                        <td>${periodo}</td>
+                        <td class="small">${cta}</td>
+                        <td><span class="status-badge ${badge}">${stato}</span></td>
+                        <td class="text-nowrap">
+                          <button class="btn btn-sm btn-outline-secondary btn-action" onclick="toggleSpeciale(${s.id}, ${s.attivo})">
+                            <i class="fas fa-${s.attivo ? 'pause' : 'play'}"></i>
+                          </button>
+                          <button class="btn btn-sm btn-warning btn-action" onclick="openEditSpecialeModal(${s.id})">
+                            <i class="fas fa-edit"></i> Modifica
+                          </button>
+                          <button class="btn btn-sm btn-danger btn-action" onclick="eliminaSpeciale(${s.id})">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </td>
+                      </tr>`;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-4">Errore caricamento speciali</td></tr>`;
+            }
+        }
+
+        function weekdayPickerHTML(name) {
+            const days = [
+                ['1', 'Lun'], ['2', 'Mar'], ['3', 'Mer'], ['4', 'Gio'],
+                ['5', 'Ven'], ['6', 'Sab'], ['7', 'Dom']
+            ];
+            return days.map(([value, label]) => `
+                <label class="weekday-chip">
+                    <input type="checkbox" value="${value}" data-weekday-group="${name}">
+                    <span>${label}</span>
+                </label>`).join('');
+        }
+
+        function selectedWeekdays(group) {
+            return [...document.querySelectorAll(`[data-weekday-group="${group}"]:checked`)]
+                .map(el => el.value)
+                .join(',');
+        }
+
+        function fillWeekdayPickers() {
+            const speciale = document.getElementById('specialeGiorni');
+            const evento = document.getElementById('eventoGiorni');
+            const eventoForm = document.getElementById('eventoGiorniForm');
+            const editSpeciale = document.getElementById('editSpecialeGiorni');
+            const editEvento = document.getElementById('editEventoGiorni');
+            if (speciale && !speciale.dataset.ready) {
+                speciale.innerHTML = weekdayPickerHTML('speciale');
+                speciale.dataset.ready = '1';
+            }
+            if (evento && !evento.dataset.ready) {
+                evento.innerHTML = weekdayPickerHTML('eventoSub');
+                evento.dataset.ready = '1';
+            }
+            if (eventoForm && !eventoForm.dataset.ready) {
+                eventoForm.innerHTML = weekdayPickerHTML('evento');
+                eventoForm.dataset.ready = '1';
+            }
+            if (editSpeciale && !editSpeciale.dataset.ready) {
+                editSpeciale.innerHTML = weekdayPickerHTML('editSpeciale');
+                editSpeciale.dataset.ready = '1';
+            }
+            if (editEvento && !editEvento.dataset.ready) {
+                editEvento.innerHTML = weekdayPickerHTML('editEvento');
+                editEvento.dataset.ready = '1';
+            }
+        }
+
+        function setWeekdays(group, raw) {
+            const wanted = String(raw || '').split(/[,;\s]+/).map(s => s.trim()).filter(Boolean);
+            document.querySelectorAll(`[data-weekday-group="${group}"]`).forEach(el => {
+                el.checked = wanted.includes(el.value);
+            });
+        }
+
+        function isoDateOnly(value) {
+            if (!value) return '';
+            return String(value).slice(0, 10);
+        }
+
+        function toDateTimeLocal(value) {
+            if (!value) return '';
+            const s = String(value);
+            if (s.length >= 16) return s.slice(0, 16);
+            if (s.length >= 10) return s.slice(0, 10) + 'T20:00';
+            return '';
+        }
+
+        (function initSpecialeForeverToggle() {
+            const forever = document.getElementById('specialePerSempre');
+            const fine = document.getElementById('specialeDataFine');
+            if (!forever || !fine) return;
+            const sync = () => {
+                fine.disabled = forever.checked;
+                fine.required = false;
+                if (forever.checked) fine.value = '';
+            };
+            forever.addEventListener('change', sync);
+            sync();
+        })();
+
+        (function initEventoSubordinatoFields() {
+            fillWeekdayPickers();
+            const toggle = document.getElementById('creaEventoSubordinato');
+            const fields = document.getElementById('eventoSubordinatoFields');
+            const dedicated = document.getElementById('eventoPeriodoRicorrente');
+            const stesso = document.getElementById('eventoPeriodoStesso');
+            const giorniWrap = document.getElementById('eventoGiorniWrap');
+            if (!toggle || !fields) return;
+            const sync = () => {
+                fields.classList.toggle('d-none', !toggle.checked);
+                const showDays = toggle.checked && dedicated && dedicated.checked;
+                if (giorniWrap) giorniWrap.classList.toggle('d-none', !showDays);
+            };
+            toggle.addEventListener('change', sync);
+            dedicated?.addEventListener('change', sync);
+            stesso?.addEventListener('change', sync);
+            sync();
+        })();
+
+        (function initEventoRicorrente() {
+            fillWeekdayPickers();
+            const toggle = document.getElementById('eventoRicorrente');
+            const row = document.getElementById('eventoDataFineRow');
+            if (!toggle) return;
+            const sync = () => {
+                row?.classList.toggle('d-none', !toggle.checked);
+            };
+            toggle.addEventListener('change', sync);
+            sync();
+        })();
+
+        (function initEditSpecialeForever() {
+            const forever = document.getElementById('editSpecialePerSempre');
+            const fine = document.getElementById('editSpecialeFine');
+            if (!forever || !fine) return;
+            forever.addEventListener('change', () => {
+                fine.disabled = forever.checked;
+                if (forever.checked) fine.value = '';
+            });
+        })();
+
+        (function initEditEventoRicorrente() {
+            fillWeekdayPickers();
+            const toggle = document.getElementById('editEventoRicorrente');
+            const wrap = document.getElementById('editEventoGiorniWrap');
+            const fineWrap = document.getElementById('editEventoFineWrap');
+            if (!toggle) return;
+            const sync = () => {
+                wrap?.classList.toggle('d-none', !toggle.checked);
+                fineWrap?.classList.toggle('d-none', !toggle.checked);
+            };
+            toggle.addEventListener('change', sync);
+            sync();
+        })();
+
+        document.getElementById('formAddSpeciale')?.addEventListener('submit', async e => {
+            e.preventDefault();
+            const form = e.target;
+            const fd = new FormData(form);
+            const forever = document.getElementById('specialePerSempre')?.checked;
+            if (forever || !String(fd.get('dataFine') || '').trim()) {
+                fd.delete('dataFine');
+            }
+            const specialeGiorni = selectedWeekdays('speciale');
+            if (specialeGiorni) fd.set('giorniSettimana', specialeGiorni);
+            else fd.delete('giorniSettimana');
+            const creaEvento = document.getElementById('creaEventoSubordinato')?.checked;
+            fd.set('creaEventoSubordinato', creaEvento ? 'true' : 'false');
+            fd.set('mostraPrenotati', (creaEvento && document.getElementById('mostraPrenotati')?.checked) ? 'true' : 'false');
+            ['eventoPostiTotali', 'eventoTitolo'].forEach(key => {
+                if (!String(fd.get(key) || '').trim()) fd.delete(key);
+            });
+            if (creaEvento) {
+                const mode = document.querySelector('input[name="eventoPeriodoMode"]:checked')?.value || 'STESSO';
+                fd.set('eventoPeriodoMode', mode);
+                if (mode === 'STESSO' && forever && !specialeGiorni) {
+                    alert('Per uno speciale per sempre scegli i giorni (es. venerdì) oppure usa il ricorrente dedicato.');
+                    return;
+                }
+                if (mode === 'RICORRENTE') {
+                    const giorni = selectedWeekdays('eventoSub');
+                    if (!giorni) {
+                        alert('Per il ricorrente dedicato scegli almeno un giorno (es. venerdì)');
+                        return;
+                    }
+                    fd.set('eventoGiorniSettimana', giorni);
+                }
+            } else {
+                fd.delete('eventoPeriodoMode');
+                fd.delete('eventoGiorniSettimana');
+                fd.delete('eventoOra');
+                fd.delete('eventoPostiTotali');
+                fd.delete('eventoTitolo');
+            }
+            try {
+                const res = await fetch('/admin/speciali', { method: 'POST', body: fd });
+                if (res.ok) {
+                    alert('Speciale aggiunto');
+                    form.reset();
+                    const foreverCb = document.getElementById('specialePerSempre');
+                    const fine = document.getElementById('specialeDataFine');
+                    if (foreverCb) foreverCb.checked = false;
+                    if (fine) fine.disabled = false;
+                    document.querySelectorAll('[data-weekday-group]').forEach(el => { el.checked = false; });
+                    const crea = document.getElementById('creaEventoSubordinato');
+                    if (crea) crea.checked = false;
+                    document.getElementById('eventoSubordinatoFields')?.classList.add('d-none');
+                    document.getElementById('eventoPeriodoStesso') && (document.getElementById('eventoPeriodoStesso').checked = true);
+                    loadSpeciali();
+                    loadEventi();
+                } else {
+                    const t = await res.text().catch(() => '');
+                    alert('Errore creazione speciale' + (t ? ': ' + t : ''));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Errore creazione speciale');
+            }
+        });
+
+        async function toggleSpeciale(id, attivo) {
+            try {
+                const path = attivo ? 'disattiva' : 'attiva';
+                const res = await fetch(`/admin/speciali/${id}/${path}`, { method: 'PUT' });
+                if (res.ok) loadSpeciali();
+                else alert('Errore aggiornamento speciale');
+            } catch (err) {
+                console.error(err);
+                alert('Errore aggiornamento speciale');
+            }
+        }
+
+        function openEditSpecialeModal(id) {
+            fillWeekdayPickers();
+            const s = cachedSpeciali.find(item => Number(item.id) === Number(id));
+            if (!s) {
+                alert('Speciale non trovato');
+                return;
+            }
+            document.getElementById('editSpecialeId').value = s.id;
+            document.getElementById('editSpecialeTitolo').value = s.titolo || '';
+            document.getElementById('editSpecialeKicker').value = s.kicker || '';
+            document.getElementById('editSpecialeDescrizione').value = s.descrizione || '';
+            document.getElementById('editSpecialeInizio').value = isoDateOnly(s.dataInizio);
+            const forever = !s.dataFine;
+            const foreverCb = document.getElementById('editSpecialePerSempre');
+            const fine = document.getElementById('editSpecialeFine');
+            if (foreverCb) foreverCb.checked = forever;
+            if (fine) {
+                fine.value = forever ? '' : isoDateOnly(s.dataFine);
+                fine.disabled = forever;
+            }
+            setWeekdays('editSpeciale', s.giorniSettimana);
+            document.getElementById('editSpecialeCtaTesto').value = s.ctaTesto || '';
+            document.getElementById('editSpecialeCtaCategoria').value = s.ctaCategoria || '';
+            document.getElementById('editSpecialeCtaUrl').value = s.ctaUrl || '';
+            document.getElementById('editSpecialeAttivo').value = s.attivo ? 'true' : 'false';
+            const mostra = document.getElementById('editMostraPrenotati');
+            if (mostra) {
+                mostra.checked = Boolean(s.eventoId) && s.mostraPrenotati !== false;
+                mostra.disabled = !s.eventoId;
+            }
+            const preview = document.getElementById('editSpecialePreview');
+            if (preview) {
+                const src = s.immagineUrl || '/images/about-img.png';
+                preview.innerHTML = `<img src="${src}" class="img-thumbnail" style="max-height:150px;" onerror="this.onerror=null;this.src='/images/about-img.png'">`;
+            }
+            const imgInput = document.getElementById('editSpecialeImmagine');
+            if (imgInput) imgInput.value = '';
+            $('#editSpecialeModal').modal('show');
+        }
+
+        async function updateSpeciale() {
+            const id = document.getElementById('editSpecialeId').value;
+            if (!id) return;
+            const titolo = document.getElementById('editSpecialeTitolo').value.trim();
+            if (!titolo) {
+                alert('Inserisci il titolo');
+                return;
+            }
+            const fd = new FormData();
+            fd.set('titolo', titolo);
+            fd.set('kicker', document.getElementById('editSpecialeKicker').value.trim());
+            fd.set('descrizione', document.getElementById('editSpecialeDescrizione').value.trim());
+            fd.set('dataInizio', document.getElementById('editSpecialeInizio').value);
+            const forever = document.getElementById('editSpecialePerSempre')?.checked;
+            const fine = document.getElementById('editSpecialeFine')?.value;
+            if (!forever && fine) fd.set('dataFine', fine);
+            const giorni = selectedWeekdays('editSpeciale');
+            if (giorni) fd.set('giorniSettimana', giorni);
+            fd.set('ctaTesto', document.getElementById('editSpecialeCtaTesto').value.trim());
+            fd.set('ctaCategoria', document.getElementById('editSpecialeCtaCategoria').value.trim());
+            fd.set('ctaUrl', document.getElementById('editSpecialeCtaUrl').value.trim());
+            fd.set('attivo', document.getElementById('editSpecialeAttivo').value);
+            fd.set('mostraPrenotati', document.getElementById('editMostraPrenotati')?.checked ? 'true' : 'false');
+            const img = document.getElementById('editSpecialeImmagine');
+            if (img && img.files && img.files[0]) fd.set('immagine', img.files[0]);
+            try {
+                const res = await fetch(`/admin/speciali/${id}`, { method: 'PUT', body: fd });
+                if (!res.ok) {
+                    const t = await res.text().catch(() => '');
+                    alert('Errore aggiornamento speciale' + (t ? ': ' + t : ''));
+                    return;
+                }
+                alert('Speciale aggiornato');
+                $('#editSpecialeModal').modal('hide');
+                loadSpeciali();
+            } catch (err) {
+                console.error(err);
+                alert('Errore aggiornamento speciale');
+            }
+        }
+
+        async function eliminaSpecialeFromModal() {
+            const id = document.getElementById('editSpecialeId').value;
+            if (!id) return;
+            const ok = await eliminaSpeciale(id);
+            if (ok) $('#editSpecialeModal').modal('hide');
+        }
+
+        async function eliminaSpeciale(id) {
+            const s = cachedSpeciali.find(item => Number(item.id) === Number(id));
+            if (!confirm('Eliminare questo speciale?')) return false;
+            try {
+                if (s && s.eventoId) {
+                    const alsoEvent = confirm('C\'è un evento prenotabile collegato. Vuoi eliminare anche quello?');
+                    if (alsoEvent) {
+                        const ev = await fetch(`/admin/events/${s.eventoId}`, { method: 'DELETE' });
+                        if (!ev.ok) {
+                            alert('Speciale non cancellato: errore sull\'evento collegato');
+                            return false;
+                        }
+                    }
+                }
+                const res = await fetch(`/admin/speciali/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadSpeciali();
+                    loadEventi();
+                    return true;
+                }
+                alert('Errore eliminazione speciale');
+                return false;
+            } catch (err) {
+                console.error(err);
+                alert('Errore eliminazione speciale');
+                return false;
+            }
+        }
+
         // Utenti functions
         async function loadUtenti() {
             try {
@@ -2204,7 +2992,7 @@
                 if (eventi.length === 0) {
                     tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="text-center py-4">
+                    <td colspan="6" class="text-center py-4">
                         <i class="fas fa-calendar-times fa-2x mb-3 text-muted"></i>
                         <p class="mb-0">Nessun evento programmato</p>
                     </td>
@@ -2213,18 +3001,7 @@
                     return;
                 }
 
-                const giorni = ['', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
                 eventi.forEach(evento => {
-                    const tipoBits = [];
-                    if (evento.speciale) tipoBits.push('<span class="badge badge-warning">Speciale</span>');
-                    if (evento.parentEventId) tipoBits.push('<span class="badge badge-info">Normale · subordinato #' + evento.parentEventId + '</span>');
-                    if (!evento.speciale && !evento.parentEventId) tipoBits.push('<span class="badge badge-secondary">Normale</span>');
-                    if (evento.ricorrente) {
-                        const g = giorni[evento.giornoSettimana] || '?';
-                        tipoBits.push('<span class="badge badge-dark">Ogni ' + g + (evento.dataFine ? ' fino ' + evento.dataFine : ' · per sempre') + '</span>');
-                    }
-                    if (evento.figliCount > 0) tipoBits.push('<span class="badge badge-success">' + evento.figliCount + ' date prenotabili</span>');
-
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
         <td>
@@ -2239,9 +3016,8 @@
             </div>
         </td>
         <td><strong>${escape(evento.titolo)}</strong></td>
-        <td>${tipoBits.join('<br>')}</td>
         <td>${escape(evento.descrizione || '-')}</td>
-        <td>${formatDateTime(evento.data)}</td>
+        <td>${evento.ricorrente && evento.periodoLabel ? escape(evento.periodoLabel) : formatDateTime(evento.data)}</td>
         <td>
             ${evento.postiTotali ?
                             `${evento.postiOccupati}/${evento.postiTotali} (${evento.postiDisponibili} disponibili)` :
@@ -2268,7 +3044,7 @@
                 console.error('Error loading events:', error);
                 document.getElementById('eventiTableBody').innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-4 text-danger">
+                <td colspan="6" class="text-center py-4 text-danger">
                     <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
                     <p>Errore durante il caricamento degli eventi</p>
                 </td>
@@ -2314,37 +3090,28 @@
         async function viewIscritti(eventId) {
             try {
                 const res = await fetch(`/admin/events/${eventId}/attendees`);
-                const iscritti = await res.json();
-
-                const modalBody = document.getElementById('iscrittiModalBody');
-                modalBody.innerHTML = '';
-
-                if (iscritti.length === 0) {
-                    modalBody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <i class="fas fa-user-slash fa-2x mb-3 text-muted"></i>
-                        <p class="mb-0">Nessun iscritto a questo evento</p>
-                    </td>
-                </tr>
-            `;
-                } else {
-                    iscritti.forEach(iscritto => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                    <td>${escape(iscritto.name || '-')} ${escape(iscritto.surname || '')}</td>
-                    <td>${escape(iscritto.phone || '-')}</td>
-                    <td>${formatDateTime(iscritto.createdAt)}</td>
-                    <td>${iscritto.partecipanti || 1}</td>
-                    <td><span class="badge badge-info">${iscritto.privacyPolicyVersion || '-'}</span></td>
-                    <td>${iscritto.allergensNote ? `<span class="badge badge-warning">${iscritto.allergensNote}</span>` : '-'}</td>
-                    <td>${escape(iscritto.note || '-')}</td>
-                    <td>${attendanceBadge(iscritto.attending)}</td>
-                `;
-                        modalBody.appendChild(tr);
-                    });
+                cachedIscritti = await res.json();
+                cachedIscrittiEventId = eventId;
+                const evento = cachedEventi.find(item => Number(item.id) === Number(eventId));
+                const dates = new Set();
+                cachedIscritti.forEach(i => {
+                    const d = isoDateOnly(i.occurrenceDate);
+                    if (d) dates.add(d);
+                });
+                (evento && evento.prossimeDate ? evento.prossimeDate : []).forEach(d => dates.add(d));
+                const sorted = [...dates].sort().reverse();
+                const wrap = document.getElementById('iscrittiDateWrap');
+                const select = document.getElementById('iscrittiDateFilter');
+                const recurring = Boolean(evento && evento.ricorrente);
+                if (wrap) wrap.style.display = recurring || sorted.length > 1 ? '' : 'none';
+                if (select) {
+                    const next = (evento && evento.prossimeDate && evento.prossimeDate[0]) || '';
+                    select.innerHTML = `<option value="">Tutte le date</option>` +
+                        sorted.map(d => `<option value="${d}">${formatDate(d)}</option>`).join('');
+                    select.value = recurring && next ? next : '';
+                    select.onchange = () => renderIscrittiRows(select.value, evento);
                 }
-
+                renderIscrittiRows(select ? select.value : '', evento);
                 $('#iscrittiModal').modal('show');
             } catch (error) {
                 console.error('Error loading registrations:', error);
@@ -2352,87 +3119,99 @@
             }
         }
 
+        function renderIscrittiRows(dateFilter, evento) {
+            const modalBody = document.getElementById('iscrittiModalBody');
+            const hint = document.getElementById('iscrittiSeatsHint');
+            if (!modalBody) return;
+            const list = dateFilter
+                ? cachedIscritti.filter(i => isoDateOnly(i.occurrenceDate) === dateFilter)
+                : cachedIscritti;
+            const persone = list.reduce((sum, i) => sum + (Number(i.partecipanti) || 1), 0);
+            if (hint) {
+                if (evento && evento.postiTotali && dateFilter) {
+                    hint.textContent = `Questa data: ${persone}/${evento.postiTotali} posti. La prossima data riparte da zero. Gli utenti restano in anagrafica.`;
+                } else {
+                    hint.textContent = list.length
+                        ? `${list.length} iscrizioni, ${persone} persone. Ogni data ha posti propri.`
+                        : '';
+                }
+            }
+            if (list.length === 0) {
+                modalBody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center py-4">
+                        <i class="fas fa-user-slash fa-2x mb-3 text-muted"></i>
+                        <p class="mb-0">${dateFilter ? 'Nessun iscritto per questa data. I posti sono liberi.' : 'Nessun iscritto a questo evento'}</p>
+                    </td>
+                </tr>`;
+                return;
+            }
+            modalBody.innerHTML = list.map(iscritto => `
+                    <tr>
+                    <td>${escape(iscritto.name || '-')} ${escape(iscritto.surname || '')}</td>
+                    <td>${escape(iscritto.phone || '-')}</td>
+                    <td>${iscritto.occurrenceDate ? formatDate(iscritto.occurrenceDate) : (iscritto.event && iscritto.event.data ? formatDateTime(iscritto.event.data) : '-')}${iscritto.occurrenceTime ? ' · ' + String(iscritto.occurrenceTime).slice(0, 5) : ''}</td>
+                    <td>${formatDateTime(iscritto.createdAt)}</td>
+                    <td>${iscritto.partecipanti || 1}</td>
+                    <td><span class="badge badge-info">${iscritto.privacyPolicyVersion || '-'}</span></td>
+                    <td>${iscritto.allergensNote ? `<span class="badge badge-warning">${iscritto.allergensNote}</span>` : '-'}</td>
+                    <td>${escape(iscritto.note || '-')}</td>
+                    <td>${attendanceBadge(iscritto.attending)}</td>
+                    </tr>`).join('');
+        }
+
+
+        async function deleteEventoFromModal() {
+            const id = document.getElementById('editEventoId').value;
+            if (!id) return;
+            const ok = await deleteEvento(id);
+            if (ok) $('#editEventoModal').modal('hide');
+        }
 
         async function deleteEvento(id) {
-            if (!confirm('Sei sicuro di voler eliminare questo evento? Se è uno speciale, verranno cancellate anche tutte le date prenotabili subordinate e la locandina.')) return;
+            const evento = cachedEventi.find(item => Number(item.id) === Number(id));
+            const extra = evento && evento.specialeId
+                ? '\nÈ collegato a uno speciale: lo speciale resta, senza bottone Prenotati.'
+                : '';
+            if (!confirm('Eliminare questo evento? Verranno cancellate anche iscrizioni e locandina.' + extra)) return false;
 
             try {
                 const res = await fetch(`/admin/events/${id}`, { method: 'DELETE' });
                 if (res.ok) {
                     loadEventi();
-                } else {
-                    alert('Errore durante l\'eliminazione dell\'evento');
+                    loadSpeciali();
+                    return true;
                 }
+                alert('Errore durante l\'eliminazione dell\'evento');
+                return false;
             } catch (error) {
                 console.error('Error deleting event:', error);
                 alert('Errore durante l\'eliminazione dell\'evento');
+                return false;
             }
         }
-
-        function syncAddEventoFormUi() {
-            const speciale = document.getElementById('addEventoSpeciale')?.checked;
-            const ricorrente = document.getElementById('addEventoRicorrente')?.checked;
-            const creaNormale = document.getElementById('addCreaEventoNormale')?.checked;
-            const periodo = document.getElementById('addPeriodoNormale')?.value;
-            const giornoWrap = document.getElementById('addEventoGiornoWrap');
-            const fineWrap = document.getElementById('addEventoFineWrap');
-            const normaleBox = document.getElementById('addEventoNormaleBox');
-            const periodoWrap = document.getElementById('addPeriodoNormaleWrap');
-            const normaleRic = document.getElementById('addNormaleRicorrenteFields');
-            if (giornoWrap) giornoWrap.style.display = ricorrente ? '' : 'none';
-            if (fineWrap) fineWrap.style.display = ricorrente ? '' : 'none';
-            if (normaleBox) normaleBox.style.display = speciale ? '' : 'none';
-            if (periodoWrap) periodoWrap.style.display = (speciale && creaNormale) ? '' : 'none';
-            if (normaleRic) normaleRic.style.display = (speciale && creaNormale && periodo === 'RICORRENTE') ? '' : 'none';
-            const giorno = document.getElementById('addEventoGiorno');
-            if (giorno) giorno.required = !!ricorrente;
-        }
-        ['addEventoSpeciale', 'addEventoRicorrente', 'addCreaEventoNormale', 'addPeriodoNormale'].forEach(id => {
-            document.getElementById(id)?.addEventListener('change', syncAddEventoFormUi);
-        });
-        syncAddEventoFormUi();
 
         document.getElementById('formAddEvento').addEventListener('submit', async e => {
             e.preventDefault();
             const form = e.target;
-            const speciale = document.getElementById('addEventoSpeciale').checked;
-            const ricorrente = document.getElementById('addEventoRicorrente').checked;
-            const creaNormale = document.getElementById('addCreaEventoNormale').checked;
 
-            if (ricorrente && !form.giornoSettimana.value) {
-                alert('Seleziona il giorno della settimana per la ricorrenza');
-                return;
-            }
-            if (speciale && creaNormale && form.periodoNormale.value === 'RICORRENTE' && !form.giornoSettimanaNormale.value) {
-                alert('Seleziona il giorno per l\'evento normale ricorrente');
-                return;
-            }
-
+            // Costruisci FormData per invio multipart (no Content-Type esplicito)
             const formData = new FormData();
             formData.append('titolo', form.titolo.value);
             formData.append('descrizione', form.descrizione.value);
             formData.append('data', form.data.value);
-            if (form.postiTotali.value) formData.append('postiTotali', form.postiTotali.value);
-            formData.append('speciale', speciale ? 'true' : 'false');
+            const ricorrente = document.getElementById('eventoRicorrente')?.checked;
             formData.append('ricorrente', ricorrente ? 'true' : 'false');
-            if (ricorrente && form.giornoSettimana.value) {
-                formData.append('giornoSettimana', form.giornoSettimana.value);
-            }
-            if (ricorrente && form.dataFine.value) {
-                formData.append('dataFine', form.dataFine.value);
-            }
-            formData.append('creaEventoNormale', (speciale && creaNormale) ? 'true' : 'false');
-            if (speciale && creaNormale) {
-                formData.append('periodoNormale', form.periodoNormale.value || 'STESSO');
-                if (form.periodoNormale.value === 'RICORRENTE') {
-                    if (form.giornoSettimanaNormale.value) {
-                        formData.append('giornoSettimanaNormale', form.giornoSettimanaNormale.value);
-                    }
-                    if (form.dataFineNormale.value) {
-                        formData.append('dataFineNormale', form.dataFineNormale.value);
-                    }
+            if (ricorrente) {
+                const giorni = selectedWeekdays('evento');
+                if (!giorni) {
+                    alert('Per un evento ricorrente scegli almeno un giorno della settimana');
+                    return;
                 }
+                formData.append('giorniSettimana', giorni);
+                if (form.dataFine && form.dataFine.value) formData.append('dataFine', form.dataFine.value);
             }
+            if (form.postiTotali.value) formData.append('postiTotali', form.postiTotali.value);
             if (form.poster && form.poster.files && form.poster.files[0]) {
                 formData.append('poster', form.poster.files[0]);
             }
@@ -2444,21 +3223,11 @@
                 });
 
                 if (res.ok) {
-                    const created = await res.json().catch(() => ({}));
-                    const extra = created.figliCount
-                        ? ` Create anche ${created.figliCount} date prenotabili subordinate.`
-                        : '';
-                    alert('✅ Evento creato con successo!' + extra);
+                    alert('✅ Evento creato con successo!');
                     form.reset();
-                    syncAddEventoFormUi();
                     loadEventi();
                 } else {
-                    let msg = 'Errore durante la creazione dell\'evento';
-                    try {
-                        const err = await res.json();
-                        msg = err.message || err.error || Object.values(err).join(', ') || msg;
-                    } catch (_) {}
-                    alert('❌ ' + msg);
+                    alert('❌ Errore durante la creazione dell\'evento');
                 }
             } catch (error) {
                 console.error('Error creating event:', error);
@@ -2921,6 +3690,7 @@
         }
 
         function openEditEventoModal(id) {
+            fillWeekdayPickers();
             const evento = cachedEventi.find(item => Number(item.id) === Number(id));
             if (!evento) {
                 alert('Evento non trovato');
@@ -2929,8 +3699,15 @@
             document.getElementById('editEventoId').value = evento.id;
             document.getElementById('editEventoTitolo').value = evento.titolo || '';
             document.getElementById('editEventoDescrizione').value = evento.descrizione || '';
-            document.getElementById('editEventoData').value = String(evento.data || '').slice(0, 16);
+            document.getElementById('editEventoData').value = toDateTimeLocal(evento.data);
             document.getElementById('editEventoPosti').value = evento.postiTotali || '';
+            const ricorrente = Boolean(evento.ricorrente);
+            const recCb = document.getElementById('editEventoRicorrente');
+            if (recCb) recCb.checked = ricorrente;
+            document.getElementById('editEventoGiorniWrap')?.classList.toggle('d-none', !ricorrente);
+            document.getElementById('editEventoFineWrap')?.classList.toggle('d-none', !ricorrente);
+            document.getElementById('editEventoDataFine').value = isoDateOnly(evento.dataFine);
+            setWeekdays('editEvento', evento.giorniSettimana);
             const posterInput = document.getElementById('editEventoPoster');
             if (posterInput) posterInput.value = '';
             refreshEventPosterPreview(evento.posterUrl);
@@ -2999,6 +3776,18 @@
             formData.append('titolo', titolo);
             formData.append('descrizione', descrizione);
             formData.append('data', data);
+            const ricorrente = document.getElementById('editEventoRicorrente')?.checked;
+            formData.append('ricorrente', ricorrente ? 'true' : 'false');
+            if (ricorrente) {
+                const giorni = selectedWeekdays('editEvento');
+                if (!giorni) {
+                    alert('Per un evento ricorrente scegli almeno un giorno della settimana');
+                    return;
+                }
+                formData.append('giorniSettimana', giorni);
+                const fine = document.getElementById('editEventoDataFine')?.value;
+                if (fine) formData.append('dataFine', fine);
+            }
             if (postiTotali) formData.append('postiTotali', postiTotali);
             if (posterInput && posterInput.files.length > 0) {
                 formData.append('poster', posterInput.files[0]);
@@ -3028,38 +3817,53 @@
         // --- Categorie Management Functions ---
         async function loadCategories() {
             try {
-                const res = await fetch('/admin/categories');
-                const categories = await res.json();
-                const tbody = document.getElementById('categoriesTableBody');
-                tbody.innerHTML = '';
+                const [resCat, resMenu] = await Promise.all([
+                    fetch('/admin/categories'),
+                    fetch('/admin/menu')
+                ]);
+                const categories = await resCat.json();
+                const menu = resMenu.ok ? await resMenu.json() : [];
+                const counts = {};
+                (menu || []).forEach(item => {
+                    const name = item.categoryName || 'Altro';
+                    counts[name] = (counts[name] || 0) + 1;
+                });
 
-                if (categories.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" class="text-center">Nessuna categoria trovata. Aggiungine una per iniziare.</td></tr>`;
+                const grid = document.getElementById('categoriesCards');
+                const tbody = document.getElementById('categoriesTableBody');
+                if (tbody) tbody.innerHTML = '';
+
+                if (!categories.length) {
+                    if (grid) grid.innerHTML = '<div class="bo-empty"><h4>Nessuna categoria</h4><p>Creane una per organizzare il menu.</p></div>';
                     return;
                 }
 
-                categories.sort((a, b) => a.id - b.id);
-
-                categories.forEach(cat => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${cat.id}</td>
-                        <td>${cat.name}</td>
-                        <td>
-                            <button class="btn btn-sm btn-warning btn-action" onclick="openEditCategoryModal(${cat.id}, '${cat.name.replace(/'/g, "\\'")}')">
-                                <i class="fas fa-edit"></i> Modifica titolo
-                            </button>
-                            <button class="btn btn-sm btn-danger btn-action" onclick="deleteCategory(${cat.id})">
-                                <i class="fas fa-trash-alt"></i> Elimina
-                            </button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
+                categories.sort((a, b) => String(a.name).localeCompare(String(b.name), 'it'));
+                if (grid) {
+                    grid.innerHTML = categories.map(cat => {
+                        const n = counts[cat.name] || 0;
+                        const safeName = String(cat.name).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                        return `
+          <article class="bo-cat-card">
+            <div>
+              <h3>${escape(cat.name)}</h3>
+              <p>${n === 1 ? '1 piatto' : n + ' piatti'}</p>
+            </div>
+            <div class="bo-cat-actions">
+              <button type="button" class="btn btn-sm btn-warning" onclick="openEditCategoryModal(${cat.id}, '${safeName}')">
+                <i class="fas fa-edit"></i> Rinomina
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteCategory(${cat.id}, '${safeName}', ${n})">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </article>`;
+                    }).join('');
+                }
             } catch (error) {
                 console.error('Error loading categories:', error);
-                const tbody = document.getElementById('categoriesTableBody');
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center text-danger">Errore caricamento categorie</td></tr>`;
+                const grid = document.getElementById('categoriesCards');
+                if (grid) grid.innerHTML = '<div class="alert alert-danger">Errore caricamento categorie</div>';
             }
         }
 
@@ -3075,29 +3879,38 @@
                 });
 
                 if (res.ok) {
-                    alert('Categoria aggiunta!');
+                    toast('Categoria aggiunta');
                     this.reset();
                     loadCategories();
+                    if (typeof loadMenuItems === 'function') loadMenuItems();
                 } else {
-                    alert('Errore nell\'aggiunta della categoria (forse esiste già?)');
+                    toast('Categoria non aggiunta (forse esiste già?)', 'err');
                 }
             } catch (error) {
                 console.error('Error adding category:', error);
-                alert('Errore di connessione');
+                toast('Errore di connessione', 'err');
             }
         });
 
-        async function deleteCategory(id) {
-            if (!confirm('ATTENZIONE: Eliminando questa categoria verranno eliminati anche TUTTI i piatti appartenenti ad essa.\nQuesta operazione è irreversibile.\n\nSei sicuro di voler procedere?')) return;
+        async function deleteCategory(id, name, count) {
+            const label = name || 'questa categoria';
+            const dishes = Number(count) || 0;
+            const msg = dishes > 0
+                ? `Eliminare “${label}”? Verranno cancellati anche ${dishes === 1 ? '1 piatto' : dishes + ' piatti'}. Operazione irreversibile.`
+                : `Eliminare “${label}”?`;
+            if (!confirm(msg)) return;
             try {
                 const res = await fetch(`/admin/categories/${id}`, { method: 'DELETE' });
                 if (res.ok) {
+                    toast('Categoria eliminata');
                     loadCategories();
+                    if (typeof loadMenuItems === 'function') loadMenuItems();
                 } else {
-                    alert('Errore eliminazione');
+                    toast('Errore eliminazione', 'err');
                 }
             } catch (error) {
                 console.error('Error deleting category:', error);
+                toast('Errore eliminazione', 'err');
             }
         }
 
@@ -3119,25 +3932,27 @@
                 });
 
                 if (res.ok) {
-                    alert('Categoria aggiornata! Anche i prodotti associati sono stati aggiornati.');
+                    toast('Categoria rinominata · i piatti sono aggiornati');
                     $('#editCategoryModal').modal('hide');
                     loadCategories();
+                    if (typeof loadMenuItems === 'function') loadMenuItems();
                 } else {
-                    alert('Errore aggiornamento (forse il nome esiste già?)');
+                    toast('Errore aggiornamento (nome già usato?)', 'err');
                 }
             } catch (error) {
                 console.error('Error updating category:', error);
-                alert('Errore di connessione');
+                toast('Errore di connessione', 'err');
             }
         }
+
     </script>
-    <script src="js/admin-ux.js?v=4"></script>
+    <script src="js/admin-ux.js?v=6"></script>
     <!-- MODALE MODIFICA PIATTO -->
     <div class="modal fade" id="editMenuItemModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-edit"></i> Modifica Piatto</h5>
+                    <h5 class="modal-title"><i class="fas fa-edit"></i> Modifica piatto</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -3152,9 +3967,9 @@
                                 <div id="editItemImagePreview" class="mb-2"></div>
                                 <label for="editItemImage">Sostituisci foto</label>
                                 <input type="file" id="editItemImage" class="form-control-file" accept="image/*" onchange="previewSelectedFile(this, 'editItemImagePreview')">
-                                <small class="form-text text-muted">La foto precedente viene cancellata dal server Aruba.</small>
+                                <small class="form-text text-muted">Se carichi una nuova foto, la precedente viene sostituita.</small>
                                 <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="deleteMenuPhoto(document.getElementById('editItemId').value)">
-                                    <i class="fas fa-trash-alt"></i> Elimina foto dal server
+                                    <i class="fas fa-trash-alt"></i> Elimina foto
                                 </button>
                             </div>
 
@@ -3165,7 +3980,7 @@
                                         <input type="text" id="editItemTitolo" class="form-control" required>
                                     </div>
                                     <div class="form-group col-md-12">
-                                        <label>Categoria</label>
+                                        <label>Categoria <span class="text-muted small">(anche dalla lista menu)</span></label>
                                         <select id="editItemCategory" class="form-control" required></select>
                                     </div>
                                 </div>
@@ -3183,10 +3998,10 @@
                                 <input type="number" id="editItemPrezzo" class="form-control" step="0.01" required>
                             </div>
                             <div class="form-group col-md-6">
-                                <label>Visibile</label>
+                                <label>Visibile sul sito</label>
                                 <select id="editItemVisibile" class="form-control">
-                                    <option value="true">✅ Sì</option>
-                                    <option value="false">❌ No</option>
+                                    <option value="true">Sì, mostralo</option>
+                                    <option value="false">No, nascondilo</option>
                                 </select>
                             </div>
                         </div>
