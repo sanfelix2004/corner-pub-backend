@@ -5,6 +5,7 @@
     menu: 'Menu',
     evidenza: 'In evidenza',
     promozioni: 'Promozioni',
+    speciali: 'Speciali',
     utenti: 'Utenti',
     eventi: 'Eventi',
     categorie: 'Categorie'
@@ -12,7 +13,7 @@
 
   const origFetch = window.fetch.bind(window);
   const cache = new Map();
-  const TTL = 20000;
+  const TTL = 8000;
 
   window.fetch = async function (input, init = {}) {
     const url = String(input);
@@ -109,7 +110,7 @@
     try { history.replaceState(null, '', '#' + section); } catch (e) {}
     sessionStorage.setItem('bo.section', section);
     if (section === 'home') {
-      ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'utenti', 'eventi', 'categorie'].forEach((s) => {
+      ['prenotazioni', 'menu', 'evidenza', 'promozioni', 'speciali', 'utenti', 'eventi', 'categorie'].forEach((s) => {
         const el = document.getElementById('section' + s.charAt(0).toUpperCase() + s.slice(1));
         if (el) el.classList.add('hidden');
       });
@@ -129,8 +130,12 @@
 
   function filterPage(q) {
     const query = q.trim().toLowerCase();
-    document.querySelectorAll('.custom-table tbody tr, .event-registration-card').forEach((row) => {
+    document.querySelectorAll('.custom-table tbody tr, .event-registration-card, .bo-dish-card, .bo-cat-card, .promo-card').forEach((row) => {
       row.style.display = !query || row.textContent.toLowerCase().includes(query) ? '' : 'none';
+    });
+    document.querySelectorAll('.bo-menu-group').forEach((group) => {
+      const any = [...group.querySelectorAll('.bo-dish-card')].some((card) => card.style.display !== 'none' && !card.hidden);
+      group.style.display = any || !query ? '' : 'none';
     });
   }
 
