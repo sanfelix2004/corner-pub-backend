@@ -855,11 +855,41 @@ h3 {
 }
 
 .dish-qty {
-  display: block;
-  margin-top: 0.35rem;
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: calc(var(--radius) - 4px);
+  background: rgba(212, 175, 55, 0.1);
+}
+
+.dish-qty-title {
+  margin: 0;
   color: var(--gold-hi);
-  font-size: 0.8rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dish-qty-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.15rem;
+  color: var(--text);
+  font-size: 0.82rem;
   font-weight: 600;
+  line-height: 1.35;
+}
+
+.dish-qty-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
 .qty-pricing {
@@ -868,9 +898,9 @@ h3 {
   width: 100%;
   margin-top: 0.35rem;
   padding: 0.85rem 1rem;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(212, 175, 55, 0.4);
   border-radius: var(--radius);
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(212, 175, 55, 0.1);
 }
 
 .qty-pricing-title {
@@ -887,9 +917,21 @@ h3 {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.25rem;
+  gap: 0.3rem;
   color: var(--text);
-  font-size: 0.92rem;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.qty-pricing-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.dish-sheet-qty:not([hidden]) {
+  display: block;
+  width: 100%;
 }
 
 @media (hover: hover) {
@@ -970,6 +1012,18 @@ h3 {
     padding: 0.8rem 0.9rem;
   }
 
+  .dish-desc {
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+  }
+
+  .dish-qty {
+    padding: 0.45rem 0.55rem;
+  }
+
+  .dish-qty-list {
+    font-size: 0.78rem;
+  }
   .dish-title {
     font-size: 1.05rem;
   }

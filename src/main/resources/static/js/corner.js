@@ -410,13 +410,21 @@ function quantityPricingLines(item) {
 function quantityPricingHtml(item, { compact = false } = {}) {
   const lines = quantityPricingLines(item);
   if (!lines.length) return '';
+  const unit = quantityUnitLabel(item);
+  const extra = money(item.extraUnitPrice);
   if (compact) {
-    const unit = quantityUnitLabel(item);
-    return `<span class="dish-qty">Dal 2° ${esc(unit)} +${esc(money(item.extraUnitPrice))} cad.</span>`;
+    // Lista prezzi completa anche in card: 1 / 2 / 3 smash
+    return `<div class="dish-qty" aria-label="Prezzi per quantità">
+      <p class="dish-qty-title">1 · 2 · 3 ${esc(unit)}</p>
+      <ul class="dish-qty-list">${lines.map(line => `<li>${esc(line)}</li>`).join('')}</ul>
+      <p class="dish-qty-note">Dal 2° ${esc(unit)} +${esc(extra)} cad.</p>
+    </div>`;
   }
-  return `<div class="qty-pricing"><p class="qty-pricing-title">Prezzo per quantità</p><ul>${
-    lines.map(line => `<li>${esc(line)}</li>`).join('')
-  }</ul></div>`;
+  return `<div class="qty-pricing">
+    <p class="qty-pricing-title">Prezzo per quantità</p>
+    <ul>${lines.map(line => `<li>${esc(line)}</li>`).join('')}</ul>
+    <p class="qty-pricing-note">1 ${esc(unit)} = prezzo base · ogni ${esc(unit)} in più +${esc(extra)}</p>
+  </div>`;
 }
 
 function renderFilters(categories) {
