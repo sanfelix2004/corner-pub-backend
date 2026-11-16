@@ -29,7 +29,7 @@ public class Category {
      * (1 = prezzo base, ogni unità in più = +extraUnitPrice).
      * Pensato per categorie smash, ma attivabile su qualsiasi categoria.
      */
-    @Column(name = "quantity_pricing_enabled", nullable = false)
+    @Column(name = "quantity_pricing_enabled", nullable = false, columnDefinition = "boolean default false")
     private boolean quantityPricingEnabled = false;
 
     /** Supplemento per ogni unità oltre la prima (es. 2.00 €). */
