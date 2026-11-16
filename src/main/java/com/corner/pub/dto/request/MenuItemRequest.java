@@ -8,6 +8,10 @@ public class MenuItemRequest {
     private String titolo;
     private String descrizione;
     private double prezzo;
+    private Boolean quantityPricingEnabled;
+    private Double extraUnitPrice;
+    private String quantityUnitLabel;
+    private Integer maxQuantity;
     private java.util.List<AllergenSelection> allergens;
 
     public Long getCategoryId() {
@@ -52,6 +56,38 @@ public class MenuItemRequest {
 
     public void setPrezzo(double prezzo) {
         this.prezzo = prezzo;
+    }
+
+    public Boolean getQuantityPricingEnabled() {
+        return quantityPricingEnabled;
+    }
+
+    public void setQuantityPricingEnabled(Boolean quantityPricingEnabled) {
+        this.quantityPricingEnabled = quantityPricingEnabled;
+    }
+
+    public Double getExtraUnitPrice() {
+        return extraUnitPrice;
+    }
+
+    public void setExtraUnitPrice(Double extraUnitPrice) {
+        this.extraUnitPrice = extraUnitPrice;
+    }
+
+    public String getQuantityUnitLabel() {
+        return quantityUnitLabel;
+    }
+
+    public void setQuantityUnitLabel(String quantityUnitLabel) {
+        this.quantityUnitLabel = quantityUnitLabel;
+    }
+
+    public Integer getMaxQuantity() {
+        return maxQuantity;
+    }
+
+    public void setMaxQuantity(Integer maxQuantity) {
+        this.maxQuantity = maxQuantity;
     }
 
     public void setAllergens(List<AllergenSelection> allergens) {

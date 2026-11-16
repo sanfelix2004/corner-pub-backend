@@ -10,4 +10,9 @@ import lombok.NoArgsConstructor;
 public class CategoryDTO {
     private Long id;
     private String name;
+    private Integer sortOrder;
+    private Boolean quantityPricingEnabled;
+    private Double extraUnitPrice;
+    private String quantityUnitLabel;
+    private Integer maxQuantity;
 }
