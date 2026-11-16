@@ -258,6 +258,18 @@ public class MenuItemService {
         response.setVisibile(item.isVisibile());
         response.setImageUrl(storageService.publicThumbUrl(item.getImageUrl()));
 
+        Category category = item.getCategory();
+        if (category == null && item.getCategoria() != null) {
+            category = categoryRepository.findByName(item.getCategoria()).orElse(null);
+        }
+        if (category != null) {
+            response.setCategorySortOrder(category.getSortOrder());
+            response.setQuantityPricingEnabled(category.isQuantityPricingEnabled());
+            response.setExtraUnitPrice(category.getExtraUnitPrice());
+            response.setQuantityUnitLabel(category.getQuantityUnitLabel());
+            response.setMaxQuantity(category.getMaxQuantity());
+        }
+
         // Carica i link da repository (no lazy su item) e costruisci DTO in modo
         // null-safe
         List<MenuItemAllergen> links = (item.getId() == null)

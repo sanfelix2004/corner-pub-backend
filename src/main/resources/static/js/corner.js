@@ -10,6 +10,7 @@ const API = {
   events: '/api/events',
   reservations: '/api/reservations',
   bookingSettings: '/api/booking-settings',
+  categories: '/api/categories',
 };
 
 const STORAGE = {
@@ -353,6 +354,7 @@ const state = {
 const menu = {
   items: [],
   featured: new Set(),
+  categoryMeta: new Map(),
   filter: FEATURED,
   query: '',
   pendingCategory: null,
@@ -367,6 +369,11 @@ const menuEls = {
 
 function categoryRank(name) {
   const value = String(name ?? '').toLowerCase();
+  const fromApi = menu.categoryMeta.get(value);
+  if (fromApi && fromApi.sortOrder != null) return Number(fromApi.sortOrder);
+  // Fallback: se il piatto porta categorySortOrder
+  const sample = menu.items.find(item => String(item.categoryName || '').toLowerCase() === value);
+  if (sample && sample.categorySortOrder != null) return Number(sample.categorySortOrder);
   const index = MENU_CATEGORY_ORDER.findIndex(key => value.includes(key));
   return index === -1 ? 999 : index;
 }
@@ -374,6 +381,42 @@ function categoryRank(name) {
 function sortCategories(names) {
   return [...new Set(names.filter(Boolean))].sort((a, b) =>
     categoryRank(a) - categoryRank(b) || String(a).localeCompare(String(b), 'it'));
+}
+
+function quantityUnitLabel(item) {
+  const label = String(item?.quantityUnitLabel || '').trim();
+  if (label) return label;
+  const name = String(item?.categoryName || '').toLowerCase();
+  return name.includes('smash') ? 'smash' : 'pz';
+}
+
+function hasQuantityPricing(item) {
+  return Boolean(item?.quantityPricingEnabled) && Number(item?.extraUnitPrice) > 0;
+}
+
+function quantityPricingLines(item) {
+  if (!hasQuantityPricing(item)) return [];
+  const unit = quantityUnitLabel(item);
+  const extra = Number(item.extraUnitPrice);
+  const max = Math.max(2, Math.min(10, Number(item.maxQuantity) || 3));
+  const base = Number(item.prezzo) || 0;
+  const lines = [`1 ${unit}: ${money(base)}`];
+  for (let q = 2; q <= max; q++) {
+    lines.push(`${q} ${unit}: ${money(base + extra * (q - 1))}`);
+  }
+  return lines;
+}
+
+function quantityPricingHtml(item, { compact = false } = {}) {
+  const lines = quantityPricingLines(item);
+  if (!lines.length) return '';
+  if (compact) {
+    const unit = quantityUnitLabel(item);
+    return `<span class="dish-qty">Dal 2° ${esc(unit)} +${esc(money(item.extraUnitPrice))} cad.</span>`;
+  }
+  return `<div class="qty-pricing"><p class="qty-pricing-title">Prezzo per quantità</p><ul>${
+    lines.map(line => `<li>${esc(line)}</li>`).join('')
+  }</ul></div>`;
 }
 
 function renderFilters(categories) {
@@ -432,6 +475,7 @@ function dishHtml(item, index, searching) {
           </span>
           ${searching && item.categoryName ? `<span class="dish-cat">${esc(item.categoryName)}</span>` : ''}
           ${item.descrizione ? `<span class="dish-desc">${esc(item.descrizione)}</span>` : ''}
+          ${quantityPricingHtml(item, { compact: true })}
           ${allergens ? `<span class="dish-foot">${allergens === 1 ? '1 allergene segnalato' : `${allergens} allergeni segnalati`}</span>` : ''}
         </span>
       </button>
@@ -494,6 +538,15 @@ function openDish(item) {
   const desc = $('#dishSheetDesc');
   desc.textContent = item.descrizione || '';
   desc.hidden = !item.descrizione;
+  const qtyBox = $('#dishSheetQty');
+  if (qtyBox) {
+    qtyBox.innerHTML = quantityPricingHtml(item);
+    qtyBox.hidden = !hasQuantityPricing(item);
+  }
+  const priceEl = $('#dishSheetPrice');
+  if (priceEl && hasQuantityPricing(item)) {
+    priceEl.textContent = `${money(item.prezzo)} · base`;
+  }
   $('#dishSheetAllergens').innerHTML = allergensHtml(item.allergens);
   openDialog($('#dishDialog'));
 }
@@ -501,10 +554,29 @@ function openDish(item) {
 async function loadMenu() {
   if (!menuEls.grid) return;
   try {
-    const [items, highlights] = await (window.__cornerBoot
-      || Promise.all([getJson(API.menu), getJson(API.highlights)]));
+    const boot = window.__cornerBoot
+      || Promise.all([getJson(API.menu), getJson(API.highlights)]);
+    const [items, highlights, categoriesApi] = await Promise.all([
+      boot.then(pair => pair[0]),
+      boot.then(pair => pair[1]),
+      getJson(API.categories).catch(() => []),
+    ]);
     menu.items = Array.isArray(items) ? items : [];
     menu.featured = new Set((Array.isArray(highlights) ? highlights : []).map(entry => entry.itemId));
+    menu.categoryMeta = new Map();
+    (Array.isArray(categoriesApi) ? categoriesApi : []).forEach(cat => {
+      if (!cat?.name) return;
+      menu.categoryMeta.set(String(cat.name).toLowerCase(), cat);
+      // Allinea i piatti se l'API menù non ha ancora i campi nuovi
+      menu.items.forEach(item => {
+        if (String(item.categoryName || '').toLowerCase() !== String(cat.name).toLowerCase()) return;
+        if (item.categorySortOrder == null) item.categorySortOrder = cat.sortOrder;
+        if (item.quantityPricingEnabled == null) item.quantityPricingEnabled = cat.quantityPricingEnabled;
+        if (item.extraUnitPrice == null) item.extraUnitPrice = cat.extraUnitPrice;
+        if (item.quantityUnitLabel == null) item.quantityUnitLabel = cat.quantityUnitLabel;
+        if (item.maxQuantity == null) item.maxQuantity = cat.maxQuantity;
+      });
+    });
 
     const categories = sortCategories(menu.items.map(item => item.categoryName));
     renderFilters(categories);

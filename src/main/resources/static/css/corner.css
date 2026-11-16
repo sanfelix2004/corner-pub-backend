@@ -854,6 +854,44 @@ h3 {
   font-size: 0.78rem;
 }
 
+.dish-qty {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--gold-hi);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.qty-pricing {
+  display: grid;
+  gap: 0.45rem;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.qty-pricing-title {
+  margin: 0;
+  color: var(--gold-hi);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.qty-pricing ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.25rem;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
 @media (hover: hover) {
   .dish:hover {
     border-color: rgba(212, 175, 55, 0.5);
