@@ -609,6 +609,29 @@
                             <small class="text-muted d-block mt-1">Seleziona e imposta “Contiene” o “Tracce”.</small>
                         </div>
                     </div>
+                    <div class="form-group mb-2">
+                        <label class="bo-check-inline">
+                            <input type="checkbox" id="addItemQtyPricing" name="quantityPricingEnabled" />
+                            Prezzo multiplo 1 / 2 / 3 (es. smash)
+                        </label>
+                        <small class="form-text text-muted d-block">Attivalo solo se vuoi mostrare i prezzi a quantità su questo piatto.</small>
+                    </div>
+                    <div id="addItemQtyFields" class="bo-qty-fields mb-3" hidden>
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label>Supplemento (€)</label>
+                                <input type="number" id="addItemExtraPrice" class="form-control" min="0" step="0.5" value="2">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Fino a quanti</label>
+                                <input type="number" id="addItemMaxQty" class="form-control" min="2" max="10" value="3">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Nome unità</label>
+                                <input type="text" id="addItemUnitLabel" class="form-control" placeholder="smash" value="smash">
+                            </div>
+                        </div>
+                    </div>
                     <div class="d-flex flex-wrap align-items-center" style="gap:12px">
                         <label class="bo-check-inline mb-0">
                             <input type="checkbox" name="visibile" value="true" checked />
@@ -1223,7 +1246,7 @@
             <div class="bo-section-head">
                 <div>
                     <h4 class="mb-1"><i class="fas fa-layer-group"></i> Categorie</h4>
-                    <p class="bo-help mb-0">Usa le frecce per decidere l’ordine sul sito. Su Smash (o qualsiasi categoria) attiva il prezzo multiplo: 1 = prezzo base, 2 = base + supplemento, 3 = base + 2× supplemento.</p>
+                    <p class="bo-help mb-0">Usa le frecce per l’ordine sul sito. Qui imposti solo le regole default (es. +2 €). Il prezzo 1/2/3 si attiva piatto per piatto in Menù → Modifica.</p>
                 </div>
             </div>
 
@@ -1272,9 +1295,9 @@
                                 <div class="form-group">
                                     <label class="bo-check-inline">
                                         <input type="checkbox" id="editCategoryQtyPricing">
-                                        Prezzo multiplo (es. smash)
+                                        Regole default prezzo multiplo
                                     </label>
-                                    <small class="form-text text-muted d-block">1 pezzo = prezzo base del piatto. Ogni pezzo in più aggiunge il supplemento.</small>
+                                    <small class="form-text text-muted d-block">Non applica a tutti i piatti: sono solo i valori precompilati quando attivi 1/2/3 sul singolo smash in Menù.</small>
                                 </div>
                                 <div id="editCategoryQtyFields" class="bo-qty-fields" hidden>
                                     <div class="form-row">
@@ -1833,6 +1856,7 @@
                 <strong class="bo-price">€${Number(item.prezzo || 0).toFixed(2)}</strong>
               </div>
               <p class="bo-dish-desc">${escape(item.descrizione || 'Nessuna descrizione')}</p>
+              ${item.quantityPricingEnabled ? `<p class="bo-dish-qtybadge">Prezzo 1/2/3 attivo · +€${Number(item.extraUnitPrice || 2).toFixed(2)}</p>` : ''}
               ${allergensText ? `<p class="bo-dish-allergens"><strong>Allergeni:</strong> ${escape(allergensText)}</p>` : ''}
               <div class="bo-dish-actions">
                 <label class="bo-inline-field">
@@ -1915,11 +1939,16 @@
             const allergens = readAllergenSelect('allergenSelectAdd');
             const showOnSite = !(form.visibile && form.visibile.type === 'checkbox') || form.visibile.checked;
 
+            const quantityPricingEnabled = !!document.getElementById('addItemQtyPricing')?.checked;
             const data = {
                 titolo: form.titolo.value,
                 categoryName: form.categoria.value,
                 descrizione: form.descrizione.value,
                 prezzo: parseFloat(form.prezzo.value),
+                quantityPricingEnabled,
+                extraUnitPrice: Number(document.getElementById('addItemExtraPrice')?.value || 0),
+                maxQuantity: Number(document.getElementById('addItemMaxQty')?.value || 3),
+                quantityUnitLabel: (document.getElementById('addItemUnitLabel')?.value || '').trim(),
                 allergens
             };
 
@@ -1939,9 +1968,12 @@
                 if (!showOnSite && created && created.id) {
                     await fetch(`/admin/menu/${created.id}/toggle`, { method: 'PATCH' });
                 }
-                toast('Piatto aggiunto');
+                toast(quantityPricingEnabled ? 'Piatto aggiunto con prezzo 1/2/3' : 'Piatto aggiunto');
                 form.reset();
                 if (form.visibile) form.visibile.checked = true;
+                const addQty = document.getElementById('addItemQtyPricing');
+                if (addQty) addQty.checked = false;
+                syncItemQtyFields('add');
                 renderAllergenSelect('allergenSelectAdd');
                 const panel = document.getElementById('addDishPanel');
                 if (panel) panel.open = false;
@@ -2067,6 +2099,16 @@
                 document.getElementById('editItemVisibile').dataset.original = String(item.visibile);
                 catSelect.value = item.categoryName || '';
 
+                const smashHint = String(item.categoryName || '').toLowerCase().includes('smash');
+                const qtyOn = !!item.quantityPricingEnabled;
+                document.getElementById('editItemQtyPricing').checked = qtyOn;
+                document.getElementById('editItemExtraPrice').value =
+                    item.extraUnitPrice != null ? item.extraUnitPrice : 2;
+                document.getElementById('editItemMaxQty').value = item.maxQuantity || 3;
+                document.getElementById('editItemUnitLabel').value =
+                    item.quantityUnitLabel || (smashHint ? 'smash' : '');
+                syncItemQtyFields('edit');
+
                 refreshEditPhotoPreview(item.imageUrl);
                 document.getElementById('editItemImage').value = '';
 
@@ -2093,11 +2135,16 @@
             const allergens = readAllergenSelect('allergenSelectEditModal');
             const imageInput = document.getElementById('editItemImage');
 
+            const quantityPricingEnabled = document.getElementById('editItemQtyPricing').checked;
             const data = {
                 titolo,
                 categoryName,
                 descrizione,
                 prezzo,
+                quantityPricingEnabled,
+                extraUnitPrice: Number(document.getElementById('editItemExtraPrice').value || 0),
+                maxQuantity: Number(document.getElementById('editItemMaxQty').value || 3),
+                quantityUnitLabel: document.getElementById('editItemUnitLabel').value.trim(),
                 allergens
             };
 
@@ -2115,7 +2162,7 @@
                     await fetch(`/admin/menu/${id}/toggle`, { method: 'PATCH' });
                 }
                 $('#editMenuItemModal').modal('hide');
-                toast('Piatto aggiornato');
+                toast(quantityPricingEnabled ? 'Piatto aggiornato (prezzo 1/2/3 attivo)' : 'Piatto aggiornato');
                 loadMenuItems();
             } catch (error) {
                 console.error('Error updating menu item:', error);
@@ -3843,6 +3890,36 @@
             return Number(value || 0).toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
         }
 
+        function syncItemQtyFields(scope) {
+            const prefix = scope === 'add' ? 'addItem' : 'editItem';
+            const enabled = document.getElementById(prefix + 'QtyPricing')?.checked;
+            const box = document.getElementById(prefix + 'QtyFields');
+            if (box) box.hidden = !enabled;
+            const preview = document.getElementById(prefix + 'QtyPreview');
+            if (!preview) return;
+            preview.textContent = enabled
+                ? qtyPreviewText(
+                    document.getElementById(prefix + 'ExtraPrice')?.value,
+                    document.getElementById(prefix + 'MaxQty')?.value,
+                    document.getElementById(prefix + 'UnitLabel')?.value
+                )
+                : '';
+        }
+
+        function bindItemQtyEditors() {
+            ['add', 'edit'].forEach(scope => {
+                const prefix = scope === 'add' ? 'addItem' : 'editItem';
+                ['QtyPricing', 'ExtraPrice', 'MaxQty', 'UnitLabel'].forEach(suffix => {
+                    const el = document.getElementById(prefix + suffix);
+                    if (!el || el.dataset.boundQty) return;
+                    el.dataset.boundQty = '1';
+                    el.addEventListener('input', () => syncItemQtyFields(scope));
+                    el.addEventListener('change', () => syncItemQtyFields(scope));
+                });
+            });
+        }
+        document.addEventListener('DOMContentLoaded', bindItemQtyEditors);
+
         function qtyPreviewText(extra, max, unit) {
             const price = Number(extra);
             const n = Math.max(2, Math.min(10, Number(max) || 3));
@@ -3917,8 +3994,8 @@
                             || (String(cat.name || '').toLowerCase().includes('smash') ? 'smash' : 'pz');
                         const maxQ = cat.maxQuantity || cat.max_quantity || 3;
                         const pricingLabel = pricingOn
-                            ? `Multiplo: +${formatEuroAdmin(extra)} / ${unit}`
-                            : 'Prezzo singolo';
+                            ? `Default 1/2/3: +${formatEuroAdmin(extra)} / ${unit}`
+                            : 'Nessun default 1/2/3';
                         return `
           <article class="bo-cat-card" data-id="${cat.id}">
             <div class="bo-cat-ord">
@@ -3994,7 +4071,7 @@
                 if (res.ok) {
                     const created = await res.json().catch(() => null);
                     toast(created && created.quantityPricingEnabled
-                        ? 'Categoria aggiunta (prezzo smash già attivo)'
+                        ? 'Categoria aggiunta (regole smash default pronte: attiva i piatti in Menù)'
                         : 'Categoria aggiunta');
                     this.reset();
                     loadCategories();
@@ -4081,7 +4158,7 @@
         }
 
     </script>
-    <script src="js/admin-ux.js?v=8"></script>
+    <script src="js/admin-ux.js?v=9"></script>
     <!-- MODALE MODIFICA PIATTO -->
     <div class="modal fade" id="editMenuItemModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
@@ -4139,6 +4216,31 @@
                                     <option value="false">No, nascondilo</option>
                                 </select>
                             </div>
+                        </div>
+
+                        <div class="form-group mb-2">
+                            <label class="bo-check-inline">
+                                <input type="checkbox" id="editItemQtyPricing">
+                                Prezzo multiplo 1 / 2 / 3 (es. smash)
+                            </label>
+                            <small class="form-text text-muted d-block">Solo su questo piatto: 1 = prezzo base, ogni pezzo in più aggiunge il supplemento.</small>
+                        </div>
+                        <div id="editItemQtyFields" class="bo-qty-fields mb-3" hidden>
+                            <div class="form-row">
+                                <div class="form-group col-md-4">
+                                    <label>Supplemento (€)</label>
+                                    <input type="number" id="editItemExtraPrice" class="form-control" min="0" step="0.5" value="2">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Fino a quanti</label>
+                                    <input type="number" id="editItemMaxQty" class="form-control" min="2" max="10" value="3">
+                                </div>
+                                <div class="form-group col-md-4">
+                                    <label>Nome unità</label>
+                                    <input type="text" id="editItemUnitLabel" class="form-control" placeholder="smash">
+                                </div>
+                            </div>
+                            <p class="bo-qty-preview small text-muted mb-0" id="editItemQtyPreview"></p>
                         </div>
 
                         <div class="form-group">

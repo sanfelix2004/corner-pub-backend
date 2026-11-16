@@ -121,6 +121,7 @@ public class MenuItemService {
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
         item.setVisibile(true);
+        applyQuantityPricing(item, request, cat);
 
         // salvo per ottenere l'ID
         MenuItem saved = menuItemRepository.save(item);
@@ -167,6 +168,7 @@ public class MenuItemService {
         item.setTitolo(request.getTitolo().trim());
         item.setDescrizione(request.getDescrizione());
         item.setPrezzo(request.getPrezzo());
+        applyQuantityPricing(item, request, cat);
 
         // Allergeni (replace completo in base alla richiesta)
         applyAllergens(item, request.getAllergens());
@@ -264,10 +266,40 @@ public class MenuItemService {
         }
         if (category != null) {
             response.setCategorySortOrder(category.getSortOrder());
-            response.setQuantityPricingEnabled(category.isQuantityPricingEnabled());
-            response.setExtraUnitPrice(category.getExtraUnitPrice());
-            response.setQuantityUnitLabel(category.getQuantityUnitLabel());
-            response.setMaxQuantity(category.getMaxQuantity());
+        }
+
+        // Prezzo multiplo: solo se attivato sul SINGOLO piatto.
+        // Extra/label/max dal piatto, con fallback alle regole della categoria.
+        boolean qtyOn = item.isQuantityPricingEnabled();
+        response.setQuantityPricingEnabled(qtyOn);
+        if (qtyOn) {
+            Double extra = item.getExtraUnitPrice();
+            if (extra == null || extra <= 0) {
+                extra = category != null ? category.getExtraUnitPrice() : null;
+            }
+            if (extra == null || extra <= 0) {
+                extra = 2.0;
+            }
+            response.setExtraUnitPrice(extra);
+
+            String unit = item.getQuantityUnitLabel();
+            if (unit == null || unit.isBlank()) {
+                unit = category != null ? category.getQuantityUnitLabel() : null;
+            }
+            if ((unit == null || unit.isBlank()) && item.getCategoria() != null
+                    && item.getCategoria().toLowerCase(Locale.ITALY).contains("smash")) {
+                unit = "smash";
+            }
+            response.setQuantityUnitLabel(unit);
+
+            Integer max = item.getMaxQuantity();
+            if (max == null || max < 2) {
+                max = category != null ? category.getMaxQuantity() : null;
+            }
+            if (max == null || max < 2) {
+                max = 3;
+            }
+            response.setMaxQuantity(max);
         }
 
         // Carica i link da repository (no lazy su item) e costruisci DTO in modo
@@ -313,6 +345,58 @@ public class MenuItemService {
                 .trim()
                 .toLowerCase()
                 .replace(" ", "_");
+    }
+
+    /** Applica (o spegne) il prezzo multiplo sul singolo piatto. */
+    private void applyQuantityPricing(MenuItem item, MenuItemRequest request, Category category) {
+        if (request.getQuantityPricingEnabled() == null) {
+            return;
+        }
+        boolean enabled = Boolean.TRUE.equals(request.getQuantityPricingEnabled());
+        item.setQuantityPricingEnabled(enabled);
+        if (!enabled) {
+            item.setExtraUnitPrice(null);
+            item.setQuantityUnitLabel(null);
+            item.setMaxQuantity(null);
+            return;
+        }
+
+        Double extra = request.getExtraUnitPrice();
+        if (extra == null || extra <= 0) {
+            extra = category != null ? category.getExtraUnitPrice() : null;
+        }
+        if (extra == null || extra <= 0) {
+            extra = 2.0;
+        }
+        if (extra < 0) {
+            throw new IllegalArgumentException("Il supplemento non può essere negativo");
+        }
+        item.setExtraUnitPrice(extra);
+
+        String unit = request.getQuantityUnitLabel();
+        if (unit != null) {
+            unit = unit.trim();
+        }
+        if (unit == null || unit.isBlank()) {
+            unit = category != null ? category.getQuantityUnitLabel() : null;
+        }
+        if ((unit == null || unit.isBlank()) && category != null && category.getName() != null
+                && category.getName().toLowerCase(Locale.ITALY).contains("smash")) {
+            unit = "smash";
+        }
+        item.setQuantityUnitLabel(unit == null || unit.isBlank() ? null : unit);
+
+        Integer max = request.getMaxQuantity();
+        if (max == null || max < 2) {
+            max = category != null ? category.getMaxQuantity() : null;
+        }
+        if (max == null || max < 2) {
+            max = 3;
+        }
+        if (max > 10) {
+            throw new IllegalArgumentException("Le unità massime devono essere tra 2 e 10");
+        }
+        item.setMaxQuantity(max);
     }
 
     /** Applica selezioni allergeni al piatto (replace completo). */

@@ -679,6 +679,13 @@ body.bo-app .btn-warning {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.bo-dish-qtybadge {
+  margin: 0;
+  color: #b8860b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 .bo-dish-allergens {
   margin: 6px 0 0;
   color: #7a7468;

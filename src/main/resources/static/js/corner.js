@@ -579,10 +579,11 @@ async function loadMenu() {
       menu.items.forEach(item => {
         if (String(item.categoryName || '').toLowerCase() !== String(cat.name).toLowerCase()) return;
         if (item.categorySortOrder == null) item.categorySortOrder = cat.sortOrder;
-        if (item.quantityPricingEnabled == null) item.quantityPricingEnabled = cat.quantityPricingEnabled;
-        if (item.extraUnitPrice == null) item.extraUnitPrice = cat.extraUnitPrice;
-        if (item.quantityUnitLabel == null) item.quantityUnitLabel = cat.quantityUnitLabel;
-        if (item.maxQuantity == null) item.maxQuantity = cat.maxQuantity;
+        // Prezzo multiplo solo se attivo sul piatto: la categoria dà solo i default
+        if (!item.quantityPricingEnabled) return;
+        if (item.extraUnitPrice == null && cat.extraUnitPrice != null) item.extraUnitPrice = cat.extraUnitPrice;
+        if (!item.quantityUnitLabel && cat.quantityUnitLabel) item.quantityUnitLabel = cat.quantityUnitLabel;
+        if (item.maxQuantity == null && cat.maxQuantity != null) item.maxQuantity = cat.maxQuantity;
       });
     });
 

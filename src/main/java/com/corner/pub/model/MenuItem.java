@@ -30,6 +30,22 @@ public class MenuItem {
     @Column(columnDefinition = "boolean default true")
     private Boolean available = true;
 
+    /**
+     * Prezzo multiplo per questo piatto (es. 1/2/3 smash).
+     * Si attiva piatto per piatto dal back office.
+     */
+    @Column(name = "quantity_pricing_enabled", nullable = false, columnDefinition = "boolean default false")
+    private boolean quantityPricingEnabled = false;
+
+    @Column(name = "extra_unit_price")
+    private Double extraUnitPrice;
+
+    @Column(name = "quantity_unit_label", length = 40)
+    private String quantityUnitLabel;
+
+    @Column(name = "max_quantity")
+    private Integer maxQuantity;
+
     // ... esistente ...
     @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.Set<MenuItemAllergen> allergens = new java.util.HashSet<>();
@@ -123,5 +139,37 @@ public class MenuItem {
 
     public void setVisibile(boolean visibile) {
         this.visibile = visibile;
+    }
+
+    public boolean isQuantityPricingEnabled() {
+        return quantityPricingEnabled;
+    }
+
+    public void setQuantityPricingEnabled(boolean quantityPricingEnabled) {
+        this.quantityPricingEnabled = quantityPricingEnabled;
+    }
+
+    public Double getExtraUnitPrice() {
+        return extraUnitPrice;
+    }
+
+    public void setExtraUnitPrice(Double extraUnitPrice) {
+        this.extraUnitPrice = extraUnitPrice;
+    }
+
+    public String getQuantityUnitLabel() {
+        return quantityUnitLabel;
+    }
+
+    public void setQuantityUnitLabel(String quantityUnitLabel) {
+        this.quantityUnitLabel = quantityUnitLabel;
+    }
+
+    public Integer getMaxQuantity() {
+        return maxQuantity;
+    }
+
+    public void setMaxQuantity(Integer maxQuantity) {
+        this.maxQuantity = maxQuantity;
     }
 }
