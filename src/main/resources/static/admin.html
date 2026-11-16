@@ -1223,7 +1223,7 @@
             <div class="bo-section-head">
                 <div>
                     <h4 class="mb-1"><i class="fas fa-layer-group"></i> Categorie</h4>
-                    <p class="bo-help mb-0">Ordina come le vede il cliente. Per Smash (o altre) puoi attivare il prezzo multiplo: 1 = base, ogni pezzo in più = supplemento.</p>
+                    <p class="bo-help mb-0">Usa le frecce per decidere l’ordine sul sito. Su Smash (o qualsiasi categoria) attiva il prezzo multiplo: 1 = prezzo base, 2 = base + supplemento, 3 = base + 2× supplemento.</p>
                 </div>
             </div>
 
@@ -3008,9 +3008,12 @@
         async function loadEventi() {
             try {
                 const res = await fetch('/admin/events');
-                const eventi = await res.json();
-                cachedEventi = Array.isArray(eventi) ? eventi : [];
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const eventiRaw = await res.json();
+                const eventi = Array.isArray(eventiRaw) ? eventiRaw : [];
+                cachedEventi = eventi;
                 const tbody = document.getElementById('eventiTableBody');
+                if (!tbody) return;
                 tbody.innerHTML = '';
 
                 if (eventi.length === 0) {
@@ -3273,20 +3276,21 @@
             });
         });
 
-        // Carica gli eventi per il form di registrazione
-        // Carica gli eventi per il form di registrazione
+        // Carica gli eventi per il form di registrazione (tab Prenotazioni)
         async function loadEventsForRegistration() {
+            const select = document.getElementById('eventRegEvent');
+            if (!select) return;
             try {
                 const res = await fetch('/admin/events');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
                 const eventi = await res.json();
-                const select = document.getElementById('eventRegEvent');
+                const list = Array.isArray(eventi) ? eventi : [];
 
-                select.innerHTML = eventi.length > 0
-                    ? '<option value="">Seleziona Evento</option>'
+                select.innerHTML = list.length > 0
+                    ? '<option value="">Seleziona evento</option>'
                     : '<option value="">Nessun evento disponibile</option>';
 
-                eventi.forEach(evento => {
-                    // Calcola posti disponibili
+                list.forEach(evento => {
                     const postiDisponibili = evento.postiTotali
                         ? evento.postiTotali - (evento.postiOccupati || 0)
                         : null;
@@ -3298,28 +3302,22 @@
                     select.appendChild(opt);
                 });
 
-                // Aggiorna posti disponibili quando cambia evento
-                select.addEventListener('change', function () {
-                    const selected = this.options[this.selectedIndex];
-                    const available = selected.dataset.available;
-
-                    const availableInput = document.getElementById('eventRegAvailable');
-                    availableInput.value = available;
-
-                    // Aggiungi classe CSS in base alla disponibilità
-                    if (available === '0') {
-                        availableInput.classList.add('text-danger');
-                        availableInput.classList.remove('text-success');
-                    } else if (available === 'Illimitati') {
-                        availableInput.classList.remove('text-danger', 'text-success');
-                    } else {
-                        availableInput.classList.add('text-success');
-                        availableInput.classList.remove('text-danger');
-                    }
-                });
+                if (!select.dataset.boundChange) {
+                    select.dataset.boundChange = '1';
+                    select.addEventListener('change', function () {
+                        const selected = this.options[this.selectedIndex];
+                        const available = selected ? selected.dataset.available : '';
+                        const availableInput = document.getElementById('eventRegAvailable');
+                        if (!availableInput) return;
+                        availableInput.value = available || '';
+                        availableInput.classList.toggle('text-danger', available === '0');
+                        availableInput.classList.toggle('text-success', available && available !== '0' && available !== 'Illimitati');
+                    });
+                }
             } catch (error) {
-                console.error('Error loading events:', error);
-                alert('Errore nel caricamento degli eventi');
+                console.error('Error loading events for registration:', error);
+                select.innerHTML = '<option value="">Eventi non disponibili</option>';
+                // Niente alert: questo gira in background anche fuori dalla sezione Eventi
             }
         }
 
@@ -3885,11 +3883,13 @@
 
         async function loadCategories() {
             bindCategoryQtyEditors();
+            const grid = document.getElementById('categoriesCards');
             try {
                 const [resCat, resMenu] = await Promise.all([
                     fetch('/admin/categories'),
                     fetch('/admin/menu')
                 ]);
+                if (!resCat.ok) throw new Error('HTTP ' + resCat.status);
                 const categories = await resCat.json();
                 const menu = resMenu.ok ? await resMenu.json() : [];
                 CATEGORY_CACHE = Array.isArray(categories) ? categories : [];
@@ -3899,7 +3899,6 @@
                     counts[name] = (counts[name] || 0) + 1;
                 });
 
-                const grid = document.getElementById('categoriesCards');
                 const tbody = document.getElementById('categoriesTableBody');
                 if (tbody) tbody.innerHTML = '';
 
@@ -3911,9 +3910,12 @@
                 if (grid) {
                     grid.innerHTML = CATEGORY_CACHE.map((cat, index) => {
                         const n = counts[cat.name] || 0;
-                        const pricingOn = !!cat.quantityPricingEnabled;
-                        const extra = cat.extraUnitPrice != null ? Number(cat.extraUnitPrice) : 2;
-                        const unit = cat.quantityUnitLabel || (String(cat.name || '').toLowerCase().includes('smash') ? 'smash' : 'pz');
+                        const pricingOn = !!(cat.quantityPricingEnabled ?? cat.quantity_pricing_enabled);
+                        const extra = cat.extraUnitPrice != null ? Number(cat.extraUnitPrice)
+                            : (cat.extra_unit_price != null ? Number(cat.extra_unit_price) : 2);
+                        const unit = cat.quantityUnitLabel || cat.quantity_unit_label
+                            || (String(cat.name || '').toLowerCase().includes('smash') ? 'smash' : 'pz');
+                        const maxQ = cat.maxQuantity || cat.max_quantity || 3;
                         const pricingLabel = pricingOn
                             ? `Multiplo: +${formatEuroAdmin(extra)} / ${unit}`
                             : 'Prezzo singolo';
@@ -3931,7 +3933,7 @@
             <div class="bo-cat-main">
               <h3>${escape(cat.name)}</h3>
               <p>${n === 1 ? '1 piatto' : n + ' piatti'} · ${escape(pricingLabel)}</p>
-              ${pricingOn ? `<p class="bo-cat-pricing">${escape(qtyPreviewText(extra, cat.maxQuantity || 3, unit))}</p>` : ''}
+              ${pricingOn ? `<p class="bo-cat-pricing">${escape(qtyPreviewText(extra, maxQ, unit))}</p>` : ''}
             </div>
             <div class="bo-cat-actions">
               <button type="button" class="btn btn-sm btn-warning" onclick="openEditCategoryModal(${cat.id})">
@@ -3946,8 +3948,14 @@
                 }
             } catch (error) {
                 console.error('Error loading categories:', error);
-                const grid = document.getElementById('categoriesCards');
-                if (grid) grid.innerHTML = '<div class="alert alert-danger">Errore caricamento categorie</div>';
+                if (grid) {
+                    grid.innerHTML = `
+          <div class="alert alert-danger">
+            <strong>Errore nel caricamento delle categorie</strong>
+            <p class="mb-0 mt-1">Riprova tra poco. Se continua, controlla la connessione al server.</p>
+          </div>`;
+                }
+                toast('Errore nel caricamento delle categorie', 'err');
             }
         }
 
@@ -4073,7 +4081,7 @@
         }
 
     </script>
-    <script src="js/admin-ux.js?v=7"></script>
+    <script src="js/admin-ux.js?v=8"></script>
     <!-- MODALE MODIFICA PIATTO -->
     <div class="modal fade" id="editMenuItemModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
