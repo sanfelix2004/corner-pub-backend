@@ -50,6 +50,25 @@ public class EventRegistration {
     @Column(name = "privacy_policy_version")
     private String privacyPolicyVersion;
 
+    /** Codice del pass Run Club, stampato nel QR. */
+    @Column(name = "ticket_code", unique = true, length = 16)
+    private String ticketCode;
+
+    @Column(name = "checked_in_at")
+    private LocalDateTime checkedInAt;
+
+    @Column(name = "rules_accepted")
+    private Boolean rulesAccepted;
+
+    @Column(name = "rules_version", length = 32)
+    private String rulesVersion;
+
+    @Column(name = "fitness_declared")
+    private Boolean fitnessDeclared;
+
+    @Column(name = "photo_consent")
+    private Boolean photoConsent;
+
     public String getNote() {
         return note;
     }
@@ -152,5 +171,53 @@ public class EventRegistration {
 
     public void setPrivacyPolicyVersion(String privacyPolicyVersion) {
         this.privacyPolicyVersion = privacyPolicyVersion;
+    }
+
+    public String getTicketCode() {
+        return ticketCode;
+    }
+
+    public void setTicketCode(String ticketCode) {
+        this.ticketCode = ticketCode;
+    }
+
+    public LocalDateTime getCheckedInAt() {
+        return checkedInAt;
+    }
+
+    public void setCheckedInAt(LocalDateTime checkedInAt) {
+        this.checkedInAt = checkedInAt;
+    }
+
+    public Boolean getRulesAccepted() {
+        return rulesAccepted;
+    }
+
+    public void setRulesAccepted(Boolean rulesAccepted) {
+        this.rulesAccepted = rulesAccepted;
+    }
+
+    public String getRulesVersion() {
+        return rulesVersion;
+    }
+
+    public void setRulesVersion(String rulesVersion) {
+        this.rulesVersion = rulesVersion;
+    }
+
+    public Boolean getFitnessDeclared() {
+        return fitnessDeclared;
+    }
+
+    public void setFitnessDeclared(Boolean fitnessDeclared) {
+        this.fitnessDeclared = fitnessDeclared;
+    }
+
+    public Boolean getPhotoConsent() {
+        return photoConsent;
+    }
+
+    public void setPhotoConsent(Boolean photoConsent) {
+        this.photoConsent = photoConsent;
     }
 }

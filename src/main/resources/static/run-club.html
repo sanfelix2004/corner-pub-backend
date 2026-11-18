@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#7c1c2d" />
+  <meta name="description" content="Corner Run Club a Giovinazzo: iscriviti alle uscite del Corner Pub, accetta il regolamento e scarica il pass PDF con QR code." />
+  <title>Corner Run Club · Giovinazzo</title>
+  <link rel="icon" href="images/corner-run-club-logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/run-club.css?v=1" />
+</head>
+<body>
+  <header class="wrap topbar">
+    <a class="brand" href="run-club.html">CORNER<small>RUN CLUB · EST. 2026</small></a>
+    <nav class="top-links" aria-label="Collegamenti">
+      <a href="index.html">Corner Pub</a>
+      <a href="regolamento-run-club.html">Regolamento</a>
+      <a href="privacy.html">Privacy</a>
+      <a href="run-club-admin.html">Staff</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="wrap hero">
+      <img src="images/corner-run-club-logo.jpg" alt="Logo Corner Run Club: un boccale di birra e un hamburger corrono insieme" />
+      <div>
+        <p class="kicker">Dal Corner Pub di Giovinazzo</p>
+        <h1>SI CORRE, POI SI STA INSIEME.</h1>
+        <p class="lede">Il Run Club parte da Piazza Duomo. Scegli l'uscita, leggi il regolamento e porta al ritrovo il pass con il QR: lo staff lo legge dal back office del pub.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#uscite">Vedi le uscite</a>
+          <a class="btn secondary" href="index.html">Corner Pub</a>
+        </div>
+      </div>
+    </section>
+    <div class="checker" aria-hidden="true"></div>
+
+    <section class="wrap section">
+      <h2>Come ci si iscrive</h2>
+      <div class="steps">
+        <article class="card"><strong>1. L'uscita</strong><p class="meta">Data, ritrovo, distanza e posti sono quelli pubblicati dallo staff.</p></article>
+        <article class="card"><strong>2. Le regole</strong><p class="meta">Senza informativa privacy, regolamento e dichiarazione di idoneità la prenotazione non parte.</p></article>
+        <article class="card"><strong>3. Il pass</strong><p class="meta">Scarichi un PDF con il QR personale. Un pass, un runner, non si cede.</p></article>
+      </div>
+    </section>
+
+    <section class="wrap section" id="uscite">
+      <h2>Prossime uscite</h2>
+      <div id="events" class="event-list"></div>
+
+      <div id="formPanel" class="panel" hidden>
+        <form id="joinForm">
+          <h2 id="formTitle">Iscrizione</h2>
+          <p id="formStatus" class="status" role="status"></p>
+          <div class="form-grid">
+            <div>
+              <label for="name">Nome</label>
+              <input id="name" name="name" autocomplete="given-name" required maxlength="60" />
+            </div>
+            <div>
+              <label for="surname">Cognome</label>
+              <input id="surname" name="surname" autocomplete="family-name" required maxlength="60" />
+            </div>
+            <div class="span-2">
+              <label for="phone">Telefono</label>
+              <input id="phone" name="phone" inputmode="numeric" autocomplete="tel" required placeholder="3331234567" />
+            </div>
+            <div class="span-2">
+              <label for="note">Note (facoltative)</label>
+              <textarea id="note" name="note" maxlength="250" placeholder="Per esempio: arrivo accompagnato, prima volta"></textarea>
+            </div>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" name="privacy" required />
+            <span>Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa privacy</a> e acconsento al trattamento di nome, cognome e telefono per gestire l'iscrizione, il pass con QR e l'ingresso al ritrovo.</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" name="rules" required />
+            <span>Ho letto e accetto il <a href="regolamento-run-club.html" target="_blank" rel="noopener">regolamento del Corner Run Club</a>: ho almeno 18 anni oppure un genitore o tutore accetta per me; il pass è personale e non cedibile; l'uscita può essere modificata o annullata.</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" name="fitness" required />
+            <span>Dichiaro di essere in condizioni fisiche idonee alla corsa e di partecipare a mio rischio. Il Corner Run Club non fa controlli medici.</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" name="photo" />
+            <span>Acconsento alla pubblicazione di foto di gruppo dell'uscita. È facoltativo: senza questo consenso l'iscrizione resta valida.</span>
+          </label>
+          <button class="btn" type="submit">Conferma iscrizione</button>
+        </form>
+
+        <div id="passPanel" hidden>
+          <div class="pass">
+            <img src="images/corner-run-club-logo.jpg" alt="" />
+            <div>
+              <p class="kicker">Pass pronto</p>
+              <h2 id="passName"></h2>
+              <p id="passEvent"></p>
+              <p class="meta" id="passWhen"></p>
+              <p class="code" id="passCode"></p>
+              <div class="row-actions">
+                <a class="btn" id="passPdf" href="#">Scarica il PDF con QR</a>
+                <button class="btn secondary" id="cancelPass" type="button">Annulla iscrizione</button>
+              </div>
+              <p class="note">Conserva il PDF. Al ritrovo lo staff legge il QR dal back office. Se chiudi la pagina, puoi recuperare il pass più sotto con lo stesso numero.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="recupera">
+      <div class="panel">
+        <h2>Recupera il pass</h2>
+        <p class="meta">Se hai già prenotato, scegli l'uscita e il numero usato in iscrizione.</p>
+        <form id="recoverForm" class="form-grid">
+          <div class="span-2">
+            <label for="recoverEvent">Uscita</label>
+            <select id="recoverEvent" name="eventId" required></select>
+          </div>
+          <div class="span-2">
+            <label for="recoverPhone">Telefono</label>
+            <input id="recoverPhone" name="phone" inputmode="numeric" required />
+          </div>
+          <div class="span-2">
+            <button class="btn" type="submit">Mostra il pass</button>
+            <p id="recoverStatus" class="status" role="status"></p>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap site-footer">
+    <p>Corner Run Club è del Corner S.n.c., Piazza Duomo 58, 70054 Giovinazzo (BA). Le uscite si gestiscono insieme al sito <a href="https://cornerpubgiovinazzo.com">cornerpubgiovinazzo.com</a>.</p>
+    <p><a href="regolamento-run-club.html">Regolamento</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:cornersnc@gmail.com">cornersnc@gmail.com</a></p>
+  </footer>
+  <script src="js/run-club.js?v=1"></script>
+</body>
+</html>

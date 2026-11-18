@@ -21,6 +21,11 @@ public class EventResponse {
     private Integer giornoSettimana;
     private String dataFine;
     private int figliCount;
+    private boolean runClub;
+    private String luogo;
+    private String distanza;
+    private String ritmo;
+    private boolean annullata;
 
     public EventResponse(Event event, long totalePartecipanti) {
         this.id = event.getId();
@@ -44,6 +49,11 @@ public class EventResponse {
         this.giornoSettimana = event.getGiornoSettimana();
         this.dataFine = event.getDataFine() != null ? event.getDataFine().toString() : null;
         this.figliCount = 0;
+        this.runClub = event.isRunClub();
+        this.luogo = event.getLuogo();
+        this.distanza = event.getDistanza();
+        this.ritmo = event.getRitmo();
+        this.annullata = event.isAnnullata();
     }
 
     public EventResponse(Event event, List<EventRegistration> registrations) {
@@ -82,4 +92,14 @@ public class EventResponse {
     public void setDataFine(String dataFine) { this.dataFine = dataFine; }
     public int getFigliCount() { return figliCount; }
     public void setFigliCount(int figliCount) { this.figliCount = figliCount; }
+    public boolean isRunClub() { return runClub; }
+    public void setRunClub(boolean runClub) { this.runClub = runClub; }
+    public String getLuogo() { return luogo; }
+    public void setLuogo(String luogo) { this.luogo = luogo; }
+    public String getDistanza() { return distanza; }
+    public void setDistanza(String distanza) { this.distanza = distanza; }
+    public String getRitmo() { return ritmo; }
+    public void setRitmo(String ritmo) { this.ritmo = ritmo; }
+    public boolean isAnnullata() { return annullata; }
+    public void setAnnullata(boolean annullata) { this.annullata = annullata; }
 }

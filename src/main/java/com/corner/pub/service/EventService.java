@@ -58,6 +58,11 @@ public class EventService {
         event.setRicorrente(ricorrente);
         event.setGiornoSettimana(ricorrente ? request.getGiornoSettimana() : null);
         event.setDataFine(ricorrente ? request.getDataFine() : null);
+        event.setRunClub(Boolean.TRUE.equals(request.getRunClub()));
+        event.setLuogo(trimToNull(request.getLuogo()));
+        event.setDistanza(trimToNull(request.getDistanza()));
+        event.setRitmo(trimToNull(request.getRitmo()));
+        event.setAnnullata(false);
 
         Event saved = eventRepository.save(event);
 
@@ -109,6 +114,18 @@ public class EventService {
         event.setRicorrente(ricorrente);
         event.setGiornoSettimana(ricorrente ? request.getGiornoSettimana() : null);
         event.setDataFine(ricorrente ? request.getDataFine() : null);
+        if (request.getRunClub() != null) {
+            event.setRunClub(request.getRunClub());
+        }
+        if (request.getLuogo() != null) {
+            event.setLuogo(trimToNull(request.getLuogo()));
+        }
+        if (request.getDistanza() != null) {
+            event.setDistanza(trimToNull(request.getDistanza()));
+        }
+        if (request.getRitmo() != null) {
+            event.setRitmo(trimToNull(request.getRitmo()));
+        }
 
         if (poster != null && !poster.isEmpty()) {
             replaceStoredPoster(event, poster);
@@ -204,6 +221,7 @@ public class EventService {
     @Transactional(readOnly = true)
     public List<EventResponse> listAllAdmin() {
         return eventRepository.findAllByOrderByDataAsc().stream()
+                .filter(event -> !event.isRunClub())
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -241,6 +259,9 @@ public class EventService {
 
         List<EventResponse> out = new ArrayList<>();
         for (Event event : candidates) {
+            if (event.isRunClub()) {
+                continue; // le uscite del Run Club hanno il proprio sito
+            }
             if (event.isSpeciale() && parentsWithChildren.contains(event.getId())) {
                 continue; // si prenota tramite le date subordinate
             }
@@ -362,6 +383,11 @@ public class EventService {
         child.setParentEvent(parent);
         child.setGiornoSettimana(null);
         child.setDataFine(null);
+        child.setRunClub(parent.isRunClub());
+        child.setLuogo(parent.getLuogo());
+        child.setDistanza(parent.getDistanza());
+        child.setRitmo(parent.getRitmo());
+        child.setAnnullata(false);
         // locandina ereditata in EventResponse dal parent
         eventRepository.save(child);
     }
@@ -372,6 +398,10 @@ public class EventService {
             child.setTitolo(parent.getTitolo());
             child.setDescrizione(parent.getDescrizione());
             child.setPostiTotali(parent.getPostiTotali());
+            child.setRunClub(parent.isRunClub());
+            child.setLuogo(parent.getLuogo());
+            child.setDistanza(parent.getDistanza());
+            child.setRitmo(parent.getRitmo());
             eventRepository.save(child);
         }
     }
@@ -396,6 +426,14 @@ public class EventService {
             candidate = candidate.plusWeeks(1);
         }
         return candidate;
+    }
+
+    private static String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private EventResponse toResponse(Event event) {

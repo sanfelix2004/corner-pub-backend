@@ -54,6 +54,23 @@ public class Event {
     @Column(name = "data_fine")
     private LocalDate dataFine;
 
+    /** Uscita del Corner Run Club, separata dagli eventi del pub. */
+    @Column(name = "run_club", nullable = false, columnDefinition = "boolean default false")
+    private boolean runClub = false;
+
+    @Column(length = 180)
+    private String luogo;
+
+    @Column(length = 40)
+    private String distanza;
+
+    @Column(length = 40)
+    private String ritmo;
+
+    /** Chiusa al pubblico (meteo, organizzazione) ma ancora visibile allo staff. */
+    @Column(name = "annullata", nullable = false, columnDefinition = "boolean default false")
+    private boolean annullata = false;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -178,5 +195,45 @@ public class Event {
 
     public void setDataFine(LocalDate dataFine) {
         this.dataFine = dataFine;
+    }
+
+    public boolean isRunClub() {
+        return runClub;
+    }
+
+    public void setRunClub(boolean runClub) {
+        this.runClub = runClub;
+    }
+
+    public String getLuogo() {
+        return luogo;
+    }
+
+    public void setLuogo(String luogo) {
+        this.luogo = luogo;
+    }
+
+    public String getDistanza() {
+        return distanza;
+    }
+
+    public void setDistanza(String distanza) {
+        this.distanza = distanza;
+    }
+
+    public String getRitmo() {
+        return ritmo;
+    }
+
+    public void setRitmo(String ritmo) {
+        this.ritmo = ritmo;
+    }
+
+    public boolean isAnnullata() {
+        return annullata;
+    }
+
+    public void setAnnullata(boolean annullata) {
+        this.annullata = annullata;
     }
 }

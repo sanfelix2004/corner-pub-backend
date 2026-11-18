@@ -33,9 +33,15 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN TRUE ELSE FALSE END " +
             "FROM EventRegistration r " +
             "WHERE r.user.phone = :phone " +
-            "AND DATE(r.event.data) = :date")
-    boolean existsByPhoneAndEventDate(@Param("phone") String phone,
-                                      @Param("date") LocalDate date);
+            "AND DATE(r.event.data) = :date " +
+            "AND r.event.runClub = :runClub")
+    boolean existsByPhoneAndEventDateAndRunClub(@Param("phone") String phone,
+                                                @Param("date") LocalDate date,
+                                                @Param("runClub") boolean runClub);
+
+    boolean existsByTicketCode(String ticketCode);
+
+    Optional<EventRegistration> findByTicketCode(String ticketCode);
 
     List<EventRegistration> findByUser_Phone(String phone);
 

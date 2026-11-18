@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#4c1019" />
+  <title>Back office · Corner Run Club</title>
+  <link rel="icon" href="images/corner-run-club-logo.jpg" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/run-club-admin.css?v=1" />
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p style="margin:0; letter-spacing:.14em; font-size:.75rem;">CORNER PUB · GIOVINAZZO</p>
+      <h1>RUN CLUB · BACK OFFICE</h1>
+    </div>
+    <nav>
+      <a href="admin.html">Back office pub</a>
+      ·
+      <a href="run-club.html">Sito Run Club</a>
+      ·
+      <a href="logout">Esci</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2 id="formHeading">Nuova uscita</h2>
+      <form id="eventForm">
+        <label for="titolo">Titolo</label>
+        <input id="titolo" name="titolo" required maxlength="100" placeholder="Easy run del giovedì" />
+        <label for="data">Ritrovo</label>
+        <input id="data" name="data" type="datetime-local" required />
+        <label for="luogo">Luogo</label>
+        <input id="luogo" name="luogo" required maxlength="180" value="Corner Pub, Piazza Duomo 58, Giovinazzo" />
+        <label for="distanza">Distanza</label>
+        <input id="distanza" name="distanza" required maxlength="40" placeholder="5 km" />
+        <label for="ritmo">Ritmo (facoltativo)</label>
+        <input id="ritmo" name="ritmo" maxlength="40" placeholder="facile, sui 6:30" />
+        <label for="postiTotali">Posti</label>
+        <input id="postiTotali" name="postiTotali" type="number" min="1" required value="20" />
+        <label for="descrizione">Note per i runner</label>
+        <textarea id="descrizione" name="descrizione" maxlength="240" placeholder="Percorso sul lungomare, si torna al pub."></textarea>
+        <div id="recurringWrap">
+          <label class="check"><input id="ricorrente" name="ricorrente" type="checkbox" /> Ripeti ogni settimana (prossime 16, o fino alla data di fine)</label>
+          <label for="giornoSettimana">Giorno</label>
+          <select id="giornoSettimana" name="giornoSettimana">
+            <option value="1">Lunedì</option>
+            <option value="2">Martedì</option>
+            <option value="3">Mercoledì</option>
+            <option value="4" selected>Giovedì</option>
+            <option value="5">Venerdì</option>
+            <option value="6">Sabato</option>
+            <option value="7">Domenica</option>
+          </select>
+          <label for="dataFine">Fine serie (facoltativa)</label>
+          <input id="dataFine" name="dataFine" type="date" />
+        </div>
+        <div id="seriesWrap" class="hidden">
+          <label class="check"><input id="applicaATuttaLaSerie" name="applicaATuttaLaSerie" type="checkbox" /> Applica titolo, ritrovo, distanza, ritmo e posti a tutte le date della serie. L'orario di questa data resta solo qui.</label>
+        </div>
+        <p id="formStatus" class="status" role="status"></p>
+        <div class="row">
+          <button class="btn" id="saveEvent" type="submit">Pubblica uscita</button>
+          <button class="btn secondary" id="newEvent" type="button">Nuova</button>
+        </div>
+      </form>
+    </section>
+
+    <div>
+      <section class="panel">
+        <h2>Ingresso con QR</h2>
+        <p>Inquadra il pass oppure scrivi il codice CRC.</p>
+        <form id="checkinForm">
+          <label for="checkinCode">Codice</label>
+          <input id="checkinCode" name="code" autocomplete="off" placeholder="CRC-XXXXXXXX" required />
+          <div class="row">
+            <button class="btn" type="submit">Registra ingresso</button>
+            <button class="btn secondary" id="undoCheckin" type="button">Annulla ingresso</button>
+            <button class="btn secondary" id="startScan" type="button">Fotocamera</button>
+            <button class="btn secondary" id="stopScan" type="button">Stop</button>
+          </div>
+        </form>
+        <video id="scanVideo" class="hidden" playsinline muted></video>
+        <p id="checkinStatus" class="status" role="status"></p>
+      </section>
+
+      <section class="panel" style="margin-top:18px;">
+        <h2>Uscite</h2>
+        <div id="events">Carico…</div>
+      </section>
+
+      <section class="panel" style="margin-top:18px;">
+        <h2 id="detailTitle">Iscritti</h2>
+        <div id="attendees"><p>Apri un'uscita per vedere chi ha accettato il regolamento e chi è già dentro.</p></div>
+        <h2 style="margin-top:22px;">Iscrivi al banco</h2>
+        <p>Solo se la persona ha accettato privacy, regolamento e dichiarazione di idoneità. Parte un pass con QR.</p>
+        <form id="walkForm">
+          <label for="walkEvent">Uscita</label>
+          <select id="walkEvent" name="eventId" required></select>
+          <label for="walkName">Nome</label>
+          <input id="walkName" name="name" required />
+          <label for="walkSurname">Cognome</label>
+          <input id="walkSurname" name="surname" required />
+          <label for="walkPhone">Telefono</label>
+          <input id="walkPhone" name="phone" inputmode="numeric" required />
+          <label for="walkNote">Note</label>
+          <input id="walkNote" name="note" maxlength="250" />
+          <label class="check"><input id="walkConsent" type="checkbox" /> Confermo che la persona ha accettato informativa privacy, regolamento del Run Club e dichiarazione di idoneità fisica.</label>
+          <label class="check"><input id="walkPhoto" type="checkbox" /> Ha dato anche il consenso foto, facoltativo.</label>
+          <p id="walkStatus" class="status" role="status"></p>
+          <button class="btn" type="submit">Crea pass</button>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="js/run-club-admin.js?v=1"></script>
+</body>
+</html>

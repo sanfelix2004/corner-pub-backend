@@ -66,6 +66,10 @@ body.bo-app .container.bo-container {
   overflow: auto;
 }
 
+a.bo-nav-btn {
+  text-decoration: none;
+}
+
 .bo-nav-btn {
   appearance: none;
   border: 0;

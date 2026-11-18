@@ -28,6 +28,10 @@ public interface EventRepository extends JpaRepository<Event, Long> {
 
     long countByParentEventId(Long parentEventId);
 
+    List<Event> findByRunClubTrueOrderByDataAsc();
+
+    List<Event> findByRunClubTrueAndDataAfterOrderByDataAsc(LocalDateTime date);
+
     @Query("""
             SELECT e FROM Event e
             LEFT JOIN FETCH e.parentEvent p
