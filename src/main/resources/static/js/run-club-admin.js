@@ -30,11 +30,11 @@ async function api(url, options = {}) {
     ...options
   });
   if (res.redirected || (res.url && res.url.includes("login.html"))) {
-    window.location.href = "login.html";
+    window.location.href = "run-club-login.html";
     throw new Error("Sessione scaduta");
   }
   if (res.status === 401) {
-    window.location.href = "login.html";
+    window.location.href = "run-club-login.html";
     throw new Error("Sessione scaduta");
   }
   const text = await res.text();
@@ -81,10 +81,6 @@ function fillForm(event) {
   form.distanza.value = event ? (event.distanza || "") : "";
   form.ritmo.value = event ? (event.ritmo || "") : "";
   form.quotaEuro.value = event ? (event.quotaEuro == null ? 0 : event.quotaEuro) : 5;
-  if (!event) {
-    form.luogo.value = "Piazzale dell'Aeronautica, Giovinazzo";
-    form.distanza.value = "3,5 km";
-  }
   form.ricorrente.checked = false;
   form.ricorrente.disabled = Boolean(event);
   form.giornoSettimana.disabled = Boolean(event);

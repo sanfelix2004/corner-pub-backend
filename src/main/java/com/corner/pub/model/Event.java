@@ -31,7 +31,7 @@ public class Event {
     private String posterPublicId;
 
     /** Formula / locandina speciale (es. All You Can Eat). */
-    @Column(name = "speciale", nullable = false)
+    @Column(name = "speciale", nullable = false, columnDefinition = "boolean default false")
     private boolean speciale = false;
 
     /** Evento normale subordinato a uno speciale. */

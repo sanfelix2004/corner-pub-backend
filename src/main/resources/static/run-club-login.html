@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#7c1c2d" />
+  <title>Gestione · Corner Run Club</title>
+  <link rel="icon" href="images/corner-run-club-logo.jpg" />
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/run-club.css?v=3" />
+  <style>
+    body { min-height: 100vh; }
+    .login-card {
+      width: min(420px, 100%);
+      margin: 48px auto;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+    }
+    .login-card h1 { font-family: Oswald, Impact, sans-serif; letter-spacing: .04em; margin: 0 0 8px; }
+    .login-card label { display: block; font-weight: 700; margin: 14px 0 6px; }
+    .login-card input { width: 100%; }
+  </style>
+</head>
+<body>
+  <header class="wrap topbar">
+    <a class="brand" href="run-club.html">CORNER<small>RUN CLUB · EST. 2026</small></a>
+    <nav class="top-links" aria-label="Collegamenti">
+      <a href="run-club.html">Uscite</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <form class="login-card" method="post" action="/login" autocomplete="off">
+      <p class="kicker">Solo per chi organizza</p>
+      <h1>GESTIONE USCITE</h1>
+      <p class="meta">Da qui si pubblicano le corse, si leggono i pass e si segna chi ha pagato.</p>
+      <p id="loginError" class="status error" hidden>Utente o password non validi.</p>
+      <label for="username">Utente</label>
+      <input id="username" name="username" autocomplete="username" required />
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required />
+      <button class="btn" type="submit" style="margin-top:18px; width:100%;">Entra</button>
+    </form>
+  </main>
+  <script>
+    if (new URLSearchParams(location.search).has("error")) {
+      document.getElementById("loginError").hidden = false;
+    }
+  </script>
+</body>
+</html>

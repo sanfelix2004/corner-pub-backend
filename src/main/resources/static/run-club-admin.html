@@ -7,17 +7,15 @@
   <title>Back office · Corner Run Club</title>
   <link rel="icon" href="images/corner-run-club-logo.jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/run-club-admin.css?v=2" />
+  <link rel="stylesheet" href="css/run-club-admin.css?v=3" />
 </head>
 <body>
   <header class="top">
     <div>
-      <p style="margin:0; letter-spacing:.14em; font-size:.75rem;">CORNER PUB · GIOVINAZZO</p>
-      <h1>RUN CLUB · BACK OFFICE</h1>
+      <p style="margin:0; letter-spacing:.14em; font-size:.75rem;">CORNER RUN CLUB · GIOVINAZZO</p>
+      <h1>GESTIONE USCITE</h1>
     </div>
     <nav>
-      <a href="admin.html">Back office pub</a>
-      ·
       <a href="run-club.html">Sito Run Club</a>
       ·
       <a href="logout">Esci</a>
@@ -29,13 +27,13 @@
       <h2 id="formHeading">Nuova uscita</h2>
       <form id="eventForm">
         <label for="titolo">Titolo</label>
-        <input id="titolo" name="titolo" required maxlength="100" placeholder="Sunset Run" />
+        <input id="titolo" name="titolo" required maxlength="100" placeholder="Easy run" />
         <label for="data">Ritrovo</label>
         <input id="data" name="data" type="datetime-local" required />
         <label for="luogo">Luogo</label>
-        <input id="luogo" name="luogo" required maxlength="180" value="Piazzale dell'Aeronautica, Giovinazzo" />
+        <input id="luogo" name="luogo" required maxlength="180" value="Corner Pub, Piazza Duomo 58, Giovinazzo" />
         <label for="distanza">Distanza</label>
-        <input id="distanza" name="distanza" required maxlength="40" value="3,5 km" />
+        <input id="distanza" name="distanza" required maxlength="40" placeholder="5 km" />
         <label for="ritmo">Ritmo (facoltativo)</label>
         <input id="ritmo" name="ritmo" maxlength="40" placeholder="tutti i livelli" />
         <label for="quotaEuro">Quota in euro, da pagare al ritrovo (0 = gratis)</label>
@@ -129,6 +127,6 @@
       </section>
     </div>
   </main>
-  <script src="js/run-club-admin.js?v=2"></script>
+  <script src="js/run-club-admin.js?v=3"></script>
 </body>
 </html>
