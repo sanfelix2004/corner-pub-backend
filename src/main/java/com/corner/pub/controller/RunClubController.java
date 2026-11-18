@@ -5,6 +5,7 @@ import com.corner.pub.dto.response.EventResponse;
 import com.corner.pub.exception.CornerPubException;
 import com.corner.pub.service.EventRegistrationService;
 import com.corner.pub.service.RunClubService;
+import com.corner.pub.service.RunClubSponsorService;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -25,10 +26,19 @@ public class RunClubController {
 
     private final RunClubService runClubService;
     private final EventRegistrationService registrationService;
+    private final RunClubSponsorService sponsorService;
 
-    public RunClubController(RunClubService runClubService, EventRegistrationService registrationService) {
+    public RunClubController(RunClubService runClubService,
+                             EventRegistrationService registrationService,
+                             RunClubSponsorService sponsorService) {
         this.runClubService = runClubService;
         this.registrationService = registrationService;
+        this.sponsorService = sponsorService;
+    }
+
+    @GetMapping("/sponsors")
+    public ResponseEntity<?> sponsors() {
+        return ResponseEntity.ok(sponsorService.list());
     }
 
     @GetMapping("/events")

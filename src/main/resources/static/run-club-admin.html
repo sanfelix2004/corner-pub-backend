@@ -7,7 +7,7 @@
   <title>Back office · Corner Run Club</title>
   <link rel="icon" href="images/corner-run-club-logo.jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/run-club-admin.css?v=3" />
+  <link rel="stylesheet" href="css/run-club-admin.css?v=4" />
 </head>
 <body>
   <header class="top">
@@ -127,6 +127,25 @@
       </section>
     </div>
   </main>
-  <script src="js/run-club-admin.js?v=3"></script>
+  <section class="sponsor-board panel">
+    <h2>Sponsor sul sito</h2>
+    <p>Nome, immagine e link del profilo. Compaiono nella pagina del Run Club. Un @nome diventa il profilo Instagram.</p>
+    <form id="sponsorForm">
+      <input type="hidden" id="sponsorId" name="id" />
+      <label for="sponsorName">Nome</label>
+      <input id="sponsorName" name="name" required maxlength="80" />
+      <label for="sponsorSocial">Profilo social</label>
+      <input id="sponsorSocial" name="socialUrl" required maxlength="300" placeholder="https://instagram.com/nome oppure @nome" />
+      <label for="sponsorImage">Immagine</label>
+      <input id="sponsorImage" name="image" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
+      <p id="sponsorStatus" class="status" role="status"></p>
+      <div class="row">
+        <button class="btn" type="submit" id="sponsorSave">Aggiungi sponsor</button>
+        <button class="btn secondary" type="button" id="sponsorReset">Annulla</button>
+      </div>
+    </form>
+    <div id="sponsorList"></div>
+  </section>
+  <script src="js/run-club-admin.js?v=4"></script>
 </body>
 </html>

@@ -164,6 +164,11 @@ h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); }
   gap: 14px;
 }
 
+.partners {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 220px));
+  justify-content: start;
+}
+
 .about-grid {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
@@ -178,6 +183,12 @@ h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); }
   max-height: 460px;
 }
 
+a.partner {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .partner {
   background: var(--paper);
   border: 1px solid var(--line);
@@ -186,10 +197,12 @@ h2 { font-size: clamp(1.8rem, 3vw, 2.4rem); }
 }
 
 .partner img {
-  height: 64px;
-  width: auto;
+  height: 72px;
+  width: 100%;
   object-fit: contain;
   margin-bottom: 8px;
+  background: white;
+  border-radius: 10px;
 }
 
 .card, .event-card, .panel {
