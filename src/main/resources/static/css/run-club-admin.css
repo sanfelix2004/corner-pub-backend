@@ -35,6 +35,10 @@ a { color: #7c1c2d; }
   align-items: start;
 }
 
+.sponsor-board { width: min(1180px, calc(100% - 28px)); margin: 0 auto 48px; }
+.sponsor-row { display: grid; grid-template-columns: 72px 1fr auto; gap: 12px; align-items: center; margin-top: 12px; }
+.sponsor-row img { width: 72px; height: 56px; object-fit: contain; background: white; border-radius: 8px; }
+
 .panel {
   background: #fffaf3;
   border: 1px solid rgba(76, 16, 25, 0.14);

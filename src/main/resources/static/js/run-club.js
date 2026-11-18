@@ -232,3 +232,26 @@ if (saved) {
   try { showPass(JSON.parse(saved)); } catch (e) { sessionStorage.removeItem("crc-pass"); }
 }
 loadEvents();
+loadSponsors();
+
+async function loadSponsors() {
+  const section = document.getElementById("sponsors");
+  const list = document.getElementById("sponsorList");
+  try {
+    const res = await fetch("/api/run-club/sponsors", { headers: { "Accept": "application/json" } });
+    if (!res.ok) throw new Error("sponsor");
+    const rows = await res.json();
+    if (!rows.length) {
+      section.hidden = true;
+      return;
+    }
+    list.innerHTML = rows.map((row) => `<a class="partner" href="${esc(row.socialUrl)}" target="_blank" rel="noopener">
+      <img src="${esc(row.imageUrl)}" alt="" />
+      <strong>${esc(row.name)}</strong>
+      <p class="meta">Profilo social</p>
+    </a>`).join("");
+    section.hidden = false;
+  } catch (err) {
+    section.hidden = true;
+  }
+}

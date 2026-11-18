@@ -360,3 +360,109 @@ if (incoming) {
   document.getElementById("checkinCode").value = incoming;
   submitCheckin("presente-incassa");
 }
+
+const sponsorForm = document.getElementById("sponsorForm");
+const sponsorStatus = document.getElementById("sponsorStatus");
+const sponsorList = document.getElementById("sponsorList");
+let sponsors = [];
+
+function resetSponsorForm() {
+  sponsorForm.reset();
+  document.getElementById("sponsorId").value = "";
+  document.getElementById("sponsorSave").textContent = "Aggiungi sponsor";
+  document.getElementById("sponsorImage").required = true;
+}
+
+async function loadSponsors() {
+  sponsors = await api("/admin/run-club/sponsors");
+  if (!sponsors.length) {
+    sponsorList.innerHTML = "<p>Nessuno sponsor sul sito.</p>";
+    return;
+  }
+  sponsorList.innerHTML = sponsors.map((row) => `<article class="sponsor-row">
+    <img src="${esc(row.imageUrl)}" alt="" />
+    <div><strong>${esc(row.name)}</strong><br><a href="${esc(row.socialUrl)}" target="_blank" rel="noopener">${esc(row.socialUrl)}</a></div>
+    <div>
+      <button class="btn small secondary" type="button" data-sponsor-edit="${row.id}">Modifica</button>
+      <button class="btn small secondary" type="button" data-sponsor-delete="${row.id}">Togli</button>
+    </div>
+  </article>`).join("");
+}
+
+async function sendForm(url, method, formData) {
+  const res = await fetch(url, { method, body: formData, credentials: "same-origin" });
+  if (res.redirected || (res.url && res.url.includes("login.html"))) {
+    window.location.href = "run-club-login.html";
+    throw new Error("Sessione scaduta");
+  }
+  const text = await res.text();
+  let body = {};
+  if (text) {
+    try { body = JSON.parse(text); } catch (e) { body = { error: text.slice(0, 180) }; }
+  }
+  if (!res.ok) throw new Error(body.error || "Operazione non riuscita");
+  return body;
+}
+
+sponsorForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const id = document.getElementById("sponsorId").value;
+  const file = document.getElementById("sponsorImage").files[0];
+  if (!id && !file) {
+    sponsorStatus.textContent = "Carica l'immagine dello sponsor.";
+    sponsorStatus.className = "status error";
+    return;
+  }
+  const data = new FormData();
+  data.append("name", document.getElementById("sponsorName").value.trim());
+  data.append("socialUrl", document.getElementById("sponsorSocial").value.trim());
+  if (file) data.append("image", file);
+  sponsorStatus.textContent = "Salvataggio…";
+  sponsorStatus.className = "status";
+  try {
+    await sendForm(id ? "/admin/run-club/sponsors/" + id : "/admin/run-club/sponsors", id ? "PUT" : "POST", data);
+    sponsorStatus.textContent = id ? "Sponsor aggiornato." : "Sponsor pubblicato sul sito.";
+    sponsorStatus.className = "status ok";
+    resetSponsorForm();
+    await loadSponsors();
+  } catch (err) {
+    sponsorStatus.textContent = err.message;
+    sponsorStatus.className = "status error";
+  }
+});
+
+document.getElementById("sponsorReset").addEventListener("click", () => {
+  resetSponsorForm();
+  sponsorStatus.textContent = "";
+});
+
+sponsorList.addEventListener("click", async (event) => {
+  const edit = event.target.closest("[data-sponsor-edit]");
+  const remove = event.target.closest("[data-sponsor-delete]");
+  if (edit) {
+    const found = sponsors.find((row) => String(row.id) === edit.dataset.sponsorEdit);
+    if (!found) return;
+    document.getElementById("sponsorId").value = found.id;
+    document.getElementById("sponsorName").value = found.name;
+    document.getElementById("sponsorSocial").value = found.socialUrl;
+    document.getElementById("sponsorImage").required = false;
+    document.getElementById("sponsorSave").textContent = "Salva modifiche";
+    sponsorStatus.textContent = "Immagine attuale tenuta se non ne carichi un'altra.";
+    sponsorStatus.className = "status";
+  }
+  if (remove) {
+    if (!window.confirm("Togliere questo sponsor dal sito?")) return;
+    try {
+      await api("/admin/run-club/sponsors/" + remove.dataset.sponsorDelete, { method: "DELETE" });
+      await loadSponsors();
+    } catch (err) {
+      sponsorStatus.textContent = err.message;
+      sponsorStatus.className = "status error";
+    }
+  }
+});
+
+resetSponsorForm();
+loadSponsors().catch((err) => {
+  sponsorList.innerHTML = "<p>" + esc(err.message) + "</p>";
+});

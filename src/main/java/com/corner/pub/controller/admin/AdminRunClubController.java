@@ -7,8 +7,12 @@ import com.corner.pub.dto.response.EventResponse;
 import com.corner.pub.exception.CornerPubException;
 import com.corner.pub.service.EventRegistrationService;
 import com.corner.pub.service.RunClubService;
+import com.corner.pub.service.RunClubSponsorService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,10 +31,52 @@ public class AdminRunClubController {
 
     private final RunClubService runClubService;
     private final EventRegistrationService registrationService;
+    private final RunClubSponsorService sponsorService;
 
-    public AdminRunClubController(RunClubService runClubService, EventRegistrationService registrationService) {
+    public AdminRunClubController(RunClubService runClubService,
+                                  EventRegistrationService registrationService,
+                                  RunClubSponsorService sponsorService) {
         this.runClubService = runClubService;
         this.registrationService = registrationService;
+        this.sponsorService = sponsorService;
+    }
+
+    @GetMapping("/sponsors")
+    public ResponseEntity<?> sponsors() {
+        return ResponseEntity.ok(sponsorService.list());
+    }
+
+    @PostMapping(value = "/sponsors", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createSponsor(@RequestParam String name,
+                                           @RequestParam String socialUrl,
+                                           @RequestParam(required = false) MultipartFile image) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(sponsorService.create(name, socialUrl, image));
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping(value = "/sponsors/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> updateSponsor(@PathVariable Long id,
+                                           @RequestParam String name,
+                                           @RequestParam String socialUrl,
+                                           @RequestParam(required = false) MultipartFile image) {
+        try {
+            return ResponseEntity.ok(sponsorService.update(id, name, socialUrl, image));
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/sponsors/{id}")
+    public ResponseEntity<?> deleteSponsor(@PathVariable Long id) {
+        try {
+            sponsorService.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/events")
