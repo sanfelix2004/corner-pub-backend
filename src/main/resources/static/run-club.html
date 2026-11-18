@@ -12,21 +12,24 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/run-club.css?v=4" />
+  <link rel="stylesheet" href="css/run-club.css?v=5" />
 </head>
 <body>
-  <header class="wrap topbar">
-    <a class="brand" href="run-club.html">CORNER<small>RUN CLUB · EST. 2026</small></a>
-    <nav class="top-links" aria-label="Collegamenti">
-      <a href="index.html">Corner Pub</a>
-      <a href="regolamento-run-club.html">Regolamento</a>
-      <a href="privacy.html">Privacy</a>
-      <a href="run-club-admin.html">Gestione</a>
-    </nav>
-  </header>
-
-  <main>
-    <section class="wrap hero">
+  <section class="film">
+    <video class="film-video" muted loop autoplay playsinline poster="images/hero-sfondo.jpg">
+      <source src="images/hero-sfondo.mp4" type="video/mp4">
+    </video>
+    <div class="film-shade" aria-hidden="true"></div>
+    <header class="wrap topbar">
+      <a class="brand" href="run-club.html">CORNER<small>RUN CLUB · EST. 2026</small></a>
+      <nav class="top-links" aria-label="Collegamenti">
+        <a href="index.html">Corner Pub</a>
+        <a href="regolamento-run-club.html">Regolamento</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="run-club-admin.html">Gestione</a>
+      </nav>
+    </header>
+    <div class="wrap hero">
       <img src="images/corner-run-club-logo.jpg" alt="Logo Corner Run Club: un boccale di birra e un hamburger corrono insieme" />
       <div>
         <p class="kicker">Corner Pub · Giovinazzo</p>
@@ -37,7 +40,10 @@
           <a class="btn secondary" href="index.html">Corner Pub</a>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
+
+  <main>
     <div class="checker" aria-hidden="true"></div>
 
     <section class="wrap section">
