@@ -12,6 +12,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.web.filter.CommonsRequestLoggingFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -22,6 +25,10 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import java.io.IOException;
 import java.util.Arrays;
 
 @Configuration
@@ -79,21 +86,28 @@ public class SecurityConfig {
                                                                 "/cookie.html",
                                                                 "/conferma-evento.html",
                                                                 "/run-club.html",
+                                                                "/run-club-login.html",
                                                                 "/regolamento-run-club.html",
                                                                 "/menu/**",
                                                                 "/events/**")
                                                 .permitAll()
-                                                .requestMatchers("/admin/**", "/admin.html").authenticated()
+                                                .requestMatchers("/run-club-admin.html", "/admin/run-club/**")
+                                                .hasAnyRole("ADMIN", "RUNCLUB")
+                                                .requestMatchers("/admin/**", "/admin.html").hasRole("ADMIN")
                                                 .anyRequest().authenticated())
                                 .formLogin(form -> form
                                                 .loginPage("/login.html")
                                                 .loginProcessingUrl("/login")
-                                                .defaultSuccessUrl("/admin.html", true)
+                                                .successHandler(loginSuccessHandler())
+                                                .failureHandler(loginFailureHandler())
                                                 .permitAll())
                                 .logout(logout -> logout
-                                                .logoutUrl("/logout")
-                                                .logoutSuccessUrl("/login.html")
-                                                .permitAll());
+                                                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                                                .logoutSuccessHandler(logoutSuccessHandler())
+                                                .permitAll())
+                                .exceptionHandling(ex -> ex
+                                                .authenticationEntryPoint((request, response, authException) -> response
+                                                                .sendRedirect(loginPageFor(request))));
 
                 return http.build();
         }
@@ -137,7 +151,59 @@ public class SecurityConfig {
                                 .password(passwordEncoder().encode("corner123"))
                                 .roles("ADMIN")
                                 .build();
-                return new InMemoryUserDetailsManager(admin);
+                UserDetails runClub = User.withUsername("runclub")
+                                .password(passwordEncoder().encode("runclub123"))
+                                .roles("RUNCLUB")
+                                .build();
+                return new InMemoryUserDetailsManager(admin, runClub);
+        }
+
+        @Bean
+        public SavedRequestAwareAuthenticationSuccessHandler loginSuccessHandler() {
+                SavedRequestAwareAuthenticationSuccessHandler handler = new SavedRequestAwareAuthenticationSuccessHandler() {
+                        @Override
+                        public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                        org.springframework.security.core.Authentication authentication)
+                                        throws IOException, jakarta.servlet.ServletException {
+                                boolean admin = authentication.getAuthorities().stream()
+                                                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+                                if (!admin) {
+                                        clearAuthenticationAttributes(request);
+                                        getRedirectStrategy().sendRedirect(request, response, "/run-club-admin.html");
+                                        return;
+                                }
+                                super.onAuthenticationSuccess(request, response, authentication);
+                        }
+                };
+                handler.setDefaultTargetUrl("/admin.html");
+                handler.setAlwaysUseDefaultTargetUrl(false);
+                return handler;
+        }
+
+        private AuthenticationFailureHandler loginFailureHandler() {
+                return (request, response, exception) -> response.sendRedirect(failurePageFor(request));
+        }
+
+        private LogoutSuccessHandler logoutSuccessHandler() {
+                return (request, response, authentication) -> response.sendRedirect(loginPageFor(request));
+        }
+
+        private static String loginPageFor(HttpServletRequest request) {
+                String uri = request.getRequestURI() == null ? "" : request.getRequestURI();
+                String referer = request.getHeader("Referer");
+                if (uri.startsWith("/run-club") || uri.startsWith("/admin/run-club")
+                                || (referer != null && referer.contains("run-club"))) {
+                        return "/run-club-login.html";
+                }
+                return "/login.html";
+        }
+
+        private static String failurePageFor(HttpServletRequest request) {
+                String referer = request.getHeader("Referer");
+                if (referer != null && referer.contains("run-club-login")) {
+                        return "/run-club-login.html?error";
+                }
+                return "/login.html?error";
         }
 
         @Bean
