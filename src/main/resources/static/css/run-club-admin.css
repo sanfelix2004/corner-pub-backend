@@ -1,0 +1,110 @@
+body {
+  margin: 0;
+  background: #f3ecdf;
+  color: #1c1412;
+  font-family: "Source Sans 3", "Segoe UI", sans-serif;
+}
+
+a { color: #7c1c2d; }
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 18px 20px;
+  background: #4c1019;
+  color: white;
+}
+
+.top a { color: #f3ecdf; font-weight: 700; text-decoration: none; }
+
+.top h1 {
+  margin: 0;
+  font-family: Oswald, Impact, sans-serif;
+  letter-spacing: 0.06em;
+  font-size: 1.6rem;
+}
+
+.layout {
+  width: min(1180px, calc(100% - 28px));
+  margin: 22px auto 48px;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  background: #fffaf3;
+  border: 1px solid rgba(76, 16, 25, 0.14);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+h2 {
+  font-family: Oswald, sans-serif;
+  margin: 0 0 8px;
+  letter-spacing: 0.03em;
+}
+
+label { display: block; font-weight: 700; margin: 10px 0 4px; }
+
+input, textarea, select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(76, 16, 25, 0.16);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  background: white;
+}
+
+textarea { min-height: 72px; }
+
+.check { display: flex; gap: 8px; align-items: flex-start; margin: 10px 0; font-weight: 650; }
+.check input { width: auto; margin-top: 4px; }
+
+.btn, button.btn {
+  min-height: 42px;
+  border-radius: 999px;
+  border: 2px solid #7c1c2d;
+  background: #7c1c2d;
+  color: white;
+  font-weight: 700;
+  padding: 0 14px;
+  cursor: pointer;
+}
+
+.btn.secondary { background: transparent; color: #4c1019; }
+.btn.small { min-height: 34px; font-size: 0.9rem; }
+
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+.status { min-height: 1.2em; font-weight: 700; }
+.status.error { color: #8d1d2a; }
+.status.ok { color: #17693a; }
+
+.event {
+  border-top: 1px solid rgba(76, 16, 25, 0.12);
+  padding: 12px 0;
+}
+
+.event button { margin: 4px 4px 0 0; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(76, 16, 25, 0.1); vertical-align: top; }
+.table-wrap { overflow-x: auto; }
+
+video {
+  width: 100%;
+  border-radius: 12px;
+  background: #1c1412;
+  max-height: 220px;
+}
+
+.hidden { display: none; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+}

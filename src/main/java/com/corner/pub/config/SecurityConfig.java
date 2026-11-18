@@ -44,6 +44,7 @@ public class SecurityConfig {
                                                                 "/api/promotions", "/api/promotions/**",
                                                                 "/api/reservations", "/api/reservations/**",
                                                                 "/api/events", "/api/events/**",
+                                                                "/api/run-club", "/api/run-club/**",
                                                                 "/api/booking-settings", "/api/booking-settings/**",
                                                                 "/api/users", "/api/users/**")
                                                 .permitAll()
@@ -77,6 +78,8 @@ public class SecurityConfig {
                                                                 "/privacy.html",
                                                                 "/cookie.html",
                                                                 "/conferma-evento.html",
+                                                                "/run-club.html",
+                                                                "/regolamento-run-club.html",
                                                                 "/menu/**",
                                                                 "/events/**")
                                                 .permitAll()

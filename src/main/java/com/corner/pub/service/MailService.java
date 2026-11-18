@@ -205,9 +205,18 @@ public class MailService {
         String phone = user != null ? safe(user.getPhone()) : "-";
         String eventTitle = safe(reg.getEvent().getTitolo());
         String when = dt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-        String waMsg = "Ciao " + firstName
-                + ", siamo il Corner Pub. Ti confermiamo l'iscrizione all'evento \"" + eventTitle
-                + "\" del " + when + ". Ti aspettiamo in Piazza Duomo 58, Giovinazzo. A presto!";
+        boolean runClub = reg.getEvent().isRunClub();
+        String place = reg.getEvent().getLuogo() == null || reg.getEvent().getLuogo().isBlank()
+                ? "Piazza Duomo 58, Giovinazzo"
+                : reg.getEvent().getLuogo();
+        String waMsg = runClub
+                ? "Ciao " + firstName
+                        + ", siamo il Corner Run Club. Iscrizione confermata per \"" + eventTitle
+                        + "\" del " + when + ". Scarica il pass con QR dalla pagina Run Club usando il tuo numero. Ritrovo: "
+                        + place + "."
+                : "Ciao " + firstName
+                        + ", siamo il Corner Pub. Ti confermiamo l'iscrizione all'evento \"" + eventTitle
+                        + "\" del " + when + ". Ti aspettiamo in Piazza Duomo 58, Giovinazzo. A presto!";
 
         String rows = row("Evento", eventTitle)
                 + row("Quando", when)
@@ -215,11 +224,20 @@ public class MailService {
                 + row("Telefono", phone)
                 + row("Partecipanti", String.valueOf(reg.getPartecipanti()))
                 + row("Note", reg.getNote())
-                + row("Allergeni", reg.getAllergensNote());
+                + row("Allergeni", reg.getAllergensNote())
+                + (runClub
+                        ? row("Pass", reg.getTicketCode())
+                                + row("Ritrovo", place)
+                                + row("Email", reg.getEmail())
+                                + row("Passo", reg.getPaceCategory())
+                                + row("Quota", quotaMail(reg))
+                        : "");
 
-        sendHtml("Nuova iscrizione evento · " + eventTitle + " · " + fullName,
-                staffEmail("Nuova iscrizione evento",
-                        "Qualcuno si è iscritto a un evento.",
+        String subject = (runClub ? "Nuova iscrizione Run Club · " : "Nuova iscrizione evento · ")
+                + eventTitle + " · " + fullName;
+        sendHtml(subject,
+                staffEmail(runClub ? "Nuova iscrizione Run Club" : "Nuova iscrizione evento",
+                        runClub ? "Qualcuno si è iscritto a un'uscita del Run Club." : "Qualcuno si è iscritto a un evento.",
                         rows, whatsAppLink(phone, waMsg),
                         "Apri WhatsApp e conferma al cliente"));
     }
@@ -239,6 +257,17 @@ public class MailService {
                         "Se leggi questa mail, gli avvisi arrivano. Per il test vero fai una prenotazione dal sito.",
                         row("Destinazione", FALLBACK_ADMIN),
                         null, null));
+    }
+
+    private static String quotaMail(EventRegistration reg) {
+        int quota = reg.getEvent().getQuotaEuro() == null ? 0 : reg.getEvent().getQuotaEuro();
+        if (quota <= 0) {
+            return "Gratis";
+        }
+        if ("PAID".equals(reg.getPaymentStatus())) {
+            return quota + " euro, già pagati";
+        }
+        return quota + " euro da pagare al ritrovo";
     }
 
     private static String staffEmail(String title, String intro, String rows, String waLink, String waLabel) {

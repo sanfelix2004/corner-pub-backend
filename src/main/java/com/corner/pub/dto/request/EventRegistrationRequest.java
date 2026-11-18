@@ -13,6 +13,11 @@ public class EventRegistrationRequest {
     private String phone;
     private String note; // <-- aggiunto
     private Boolean privacyAccepted; // Aggiunto per GDPR
+    private Boolean rulesAccepted;
+    private Boolean fitnessDeclared;
+    private Boolean photoConsent;
+    private String email;
+    private String paceCategory;
 
     // Allergeni
     private String allergensNote;
@@ -93,4 +98,33 @@ public class EventRegistrationRequest {
     public void setPrivacyAccepted(Boolean privacyAccepted) {
         this.privacyAccepted = privacyAccepted;
     }
+
+    public Boolean getRulesAccepted() {
+        return rulesAccepted;
+    }
+
+    public void setRulesAccepted(Boolean rulesAccepted) {
+        this.rulesAccepted = rulesAccepted;
+    }
+
+    public Boolean getFitnessDeclared() {
+        return fitnessDeclared;
+    }
+
+    public void setFitnessDeclared(Boolean fitnessDeclared) {
+        this.fitnessDeclared = fitnessDeclared;
+    }
+
+    public Boolean getPhotoConsent() {
+        return photoConsent;
+    }
+
+    public void setPhotoConsent(Boolean photoConsent) {
+        this.photoConsent = photoConsent;
+    }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPaceCategory() { return paceCategory; }
+    public void setPaceCategory(String paceCategory) { this.paceCategory = paceCategory; }
 }

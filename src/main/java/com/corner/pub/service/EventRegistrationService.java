@@ -20,7 +20,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.beans.factory.annotation.Value; // aggiunto
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -37,7 +39,10 @@ public class EventRegistrationService {
     private final MailService mailService;
     private final BookingSettingsService bookingSettingsService;
     private final String privacyPolicyVersion;
+    private final String rulesVersion;
     private final String publicBaseUrl;
+    private static final ZoneId ROME = ZoneId.of("Europe/Rome");
+    private static final String TICKET_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     public EventRegistrationService(UserRepository userRepository,
             EventRepository eventRepository,
@@ -45,6 +50,7 @@ public class EventRegistrationService {
             MailService mailService,
             BookingSettingsService bookingSettingsService,
             @Value("${privacy.policy.version}") String privacyPolicyVersion,
+            @Value("${runclub.rules.version:v1.0}") String rulesVersion,
             @Value("${app.public-base-url:https://cornerpubgiovinazzo.com}") String publicBaseUrl) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
@@ -52,6 +58,7 @@ public class EventRegistrationService {
         this.mailService = mailService;
         this.bookingSettingsService = bookingSettingsService;
         this.privacyPolicyVersion = privacyPolicyVersion;
+        this.rulesVersion = rulesVersion;
         this.publicBaseUrl = publicBaseUrl.endsWith("/")
                 ? publicBaseUrl.substring(0, publicBaseUrl.length() - 1)
                 : publicBaseUrl;
@@ -71,14 +78,24 @@ public class EventRegistrationService {
      */
     @Transactional
     public EventRegistrationResponse register(Long eventId, EventRegistrationRequest request, boolean enforcePublicGate) {
-        if (enforcePublicGate) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new CornerPubException("Evento non trovato"));
+
+        if (event.isRunClub()) {
+            prepareRunClubRequest(request);
+        }
+
+        if (enforcePublicGate && !event.isRunClub()) {
             bookingSettingsService.assertEventBookingsOpen();
         }
 
         User user = userRepository.findByPhone(request.getPhone())
                 .map(existingUser -> {
+                    if (request.getName() != null && !request.getName().isBlank()) {
+                        existingUser.setName(request.getName().trim());
+                    }
                     if (request.getSurname() != null && !request.getSurname().isBlank()) {
-                        existingUser.setSurname(request.getSurname());
+                        existingUser.setSurname(request.getSurname().trim());
                     }
                     if (existingUser.getPrivacyPolicyVersion() == null) {
                         existingUser.setPrivacyPolicyVersion(privacyPolicyVersion);
@@ -87,30 +104,42 @@ public class EventRegistrationService {
                 })
                 .orElseGet(() -> {
                     User newUser = new User();
-                    newUser.setName(request.getName());
-                    newUser.setSurname(request.getSurname());
+                    newUser.setName(request.getName() == null ? null : request.getName().trim());
+                    newUser.setSurname(request.getSurname() == null ? null : request.getSurname().trim());
                     newUser.setPhone(request.getPhone());
                     newUser.setPrivacyPolicyVersion(privacyPolicyVersion); // Imposta versione
                     return userRepository.save(newUser);
                 });
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new CornerPubException("Evento non trovato"));
-
         // GDPR Strict Compliance
         if (!Boolean.TRUE.equals(request.getPrivacyAccepted())) {
             throw new com.corner.pub.exception.badrequest.PrivacyException(
-                    "Per iscriverti all'evento devi accettare il trattamento dei dati personali.");
-        }
-
-        // 🔒 controllo: stesso giorno
-        LocalDate eventDate = event.getData().toLocalDate();
-        if (hasEventSameDay(user.getPhone(), eventDate)) {
-            throw new CornerPubException("Non puoi registrarti: sei già iscritto a un evento nello stesso giorno.");
+                    event.isRunClub()
+                            ? "Per iscriverti al Run Club devi accettare l'informativa privacy."
+                            : "Per iscriverti all'evento devi accettare il trattamento dei dati personali.");
         }
 
         if (registrationRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
-            throw new CornerPubException("Sei già iscritto a questo evento");
+            throw new CornerPubException(event.isRunClub()
+                    ? "Sei già iscritto a questa uscita."
+                    : "Sei già iscritto a questo evento");
+        }
+
+        LocalDate eventDate = event.getData().toLocalDate();
+        if (event.isRunClub()) {
+            if (event.isAnnullata()) {
+                throw new CornerPubException(enforcePublicGate
+                        ? "Questa uscita è stata annullata."
+                        : "L'uscita è annullata. Riapri l'uscita prima di aggiungere iscritti.");
+            }
+            if (enforcePublicGate && !event.getData().isAfter(LocalDateTime.now(ROME))) {
+                throw new CornerPubException("Le iscrizioni per questa uscita sono chiuse.");
+            }
+            if (hasEventSameDay(user.getPhone(), eventDate, true)) {
+                throw new CornerPubException("Sei già iscritto a un'uscita del Run Club in questo giorno.");
+            }
+        } else if (hasEventSameDay(user.getPhone(), eventDate, false)) {
+            throw new CornerPubException("Non puoi registrarti: sei già iscritto a un evento nello stesso giorno.");
         }
 
         if (event.getPostiTotali() != null) {
@@ -134,6 +163,19 @@ public class EventRegistrationService {
         registration.setNote(request.getNote());
         registration.setPartecipanti(request.getPartecipanti());
         registration.setPrivacyPolicyVersion(privacyPolicyVersion); // Imposta versione
+        if (event.isRunClub()) {
+            registration.setPartecipanti(1);
+            registration.setTicketCode(newTicketCode());
+            registration.setRulesAccepted(true);
+            registration.setRulesVersion(rulesVersion);
+            registration.setFitnessDeclared(true);
+            registration.setPhotoConsent(Boolean.TRUE.equals(request.getPhotoConsent()));
+            registration.setEmail(request.getEmail());
+            registration.setPaceCategory(request.getPaceCategory());
+            int quota = event.getQuotaEuro() == null ? 0 : event.getQuotaEuro();
+            registration.setPaymentStatus(quota > 0 ? "PENDING_PAYMENT" : "FREE");
+            registration.setCreatedAt(LocalDateTime.now(ROME));
+        }
 
         if (request.getAllergensNote() != null && !request.getAllergensNote().trim().isEmpty()) {
             registration.setAllergensNote(request.getAllergensNote());
@@ -149,7 +191,10 @@ public class EventRegistrationService {
         if (saved.getEvent() != null) {
             saved.getEvent().getTitolo();
             saved.getEvent().getData();
+            saved.getEvent().isRunClub();
+            saved.getEvent().getLuogo();
         }
+        saved.getTicketCode();
         // notifica via email l'amministratore DOPO il commit della transazione
         if (TransactionSynchronizationManager.isActualTransactionActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
@@ -270,8 +315,8 @@ public class EventRegistrationService {
     }
 
     @Transactional(readOnly = true)
-    public boolean hasEventSameDay(String phone, LocalDate date) {
-        return registrationRepository.existsByPhoneAndEventDate(phone, date);
+    public boolean hasEventSameDay(String phone, LocalDate date, boolean runClub) {
+        return registrationRepository.existsByPhoneAndEventDateAndRunClub(phone, date, runClub);
     }
 
     // -----------------------------
@@ -306,6 +351,16 @@ public class EventRegistrationService {
         resp.setPrivacyPolicyVersion(reg.getPrivacyPolicyVersion()); // 🔹 Mappa privacy
         resp.setAttending(reg.getAttending());
         resp.setAttendanceRespondedAt(reg.getAttendanceRespondedAt());
+        resp.setTicketCode(reg.getTicketCode());
+        resp.setCheckedInAt(reg.getCheckedInAt());
+        resp.setRulesAccepted(reg.getRulesAccepted());
+        resp.setRulesVersion(reg.getRulesVersion());
+        resp.setFitnessDeclared(reg.getFitnessDeclared());
+        resp.setPhotoConsent(reg.getPhotoConsent());
+        resp.setEmail(reg.getEmail());
+        resp.setPaceCategory(reg.getPaceCategory());
+        resp.setPaymentStatus(reg.getPaymentStatus());
+        resp.setPaidAt(reg.getPaidAt());
 
         if (userResponse != null) {
             resp.setName(userResponse.getName());
@@ -423,5 +478,64 @@ public class EventRegistrationService {
 
     private String safe(String value) {
         return value == null || value.isBlank() ? "" : value.trim();
+    }
+
+    private void prepareRunClubRequest(EventRegistrationRequest request) {
+        String name = request.getName() == null ? "" : request.getName().trim();
+        String surname = request.getSurname() == null ? "" : request.getSurname().trim();
+        String phone = request.getPhone() == null ? "" : request.getPhone().replaceAll("\\D", "");
+        if (name.isBlank()) {
+            throw new CornerPubException("Il nome è obbligatorio.");
+        }
+        if (surname.isBlank()) {
+            throw new CornerPubException("Il cognome è obbligatorio.");
+        }
+        if (phone.length() < 8 || phone.length() > 15) {
+            throw new CornerPubException("Inserisci un numero di telefono valido, solo cifre.");
+        }
+        if (!Boolean.TRUE.equals(request.getRulesAccepted())) {
+            throw new CornerPubException("Per iscriverti devi accettare il regolamento del Corner Run Club.");
+        }
+        if (!Boolean.TRUE.equals(request.getFitnessDeclared())) {
+            throw new CornerPubException(
+                    "Per iscriverti devi dichiarare di essere in condizioni fisiche idonee alla corsa.");
+        }
+        String email = request.getEmail() == null ? "" : request.getEmail().trim().toLowerCase(java.util.Locale.ROOT);
+        if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$") || email.length() > 120) {
+            throw new CornerPubException("Inserisci un'email valida.");
+        }
+        String pace = request.getPaceCategory() == null ? "" : request.getPaceCategory().trim();
+        if (!java.util.List.of("Facile 6:00/km", "Medio 5:00/km", "Veloce 4:15/km").contains(pace)) {
+            throw new CornerPubException("Seleziona la fascia di passo.");
+        }
+        request.setEmail(email);
+        request.setPaceCategory(pace);
+        if (request.getPartecipanti() > 1) {
+            throw new CornerPubException(
+                    "L'iscrizione al Run Club è nominativa: un pass per persona. Ogni runner si iscrive con i propri dati.");
+        }
+        String note = request.getNote() == null ? null : request.getNote().trim();
+        if (note != null && note.length() > 250) {
+            note = note.substring(0, 250);
+        }
+        request.setName(name);
+        request.setSurname(surname);
+        request.setPhone(phone);
+        request.setNote(note == null || note.isEmpty() ? null : note);
+        request.setPartecipanti(1);
+    }
+
+    private String newTicketCode() {
+        for (int attempt = 0; attempt < 8; attempt++) {
+            StringBuilder code = new StringBuilder("CRC-");
+            for (int i = 0; i < 8; i++) {
+                code.append(TICKET_ALPHABET.charAt(ThreadLocalRandom.current().nextInt(TICKET_ALPHABET.length())));
+            }
+            String value = code.toString();
+            if (!registrationRepository.existsByTicketCode(value)) {
+                return value;
+            }
+        }
+        throw new CornerPubException("Impossibile generare il pass. Riprova tra poco.");
     }
 }

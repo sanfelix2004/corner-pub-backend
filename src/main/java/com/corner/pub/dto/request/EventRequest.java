@@ -53,6 +53,21 @@ public class EventRequest {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dataFineNormale;
 
+    /** true = uscita Corner Run Club. */
+    private Boolean runClub;
+
+    @Size(max = 180)
+    private String luogo;
+
+    @Size(max = 40)
+    private String distanza;
+
+    @Size(max = 40)
+    private String ritmo;
+
+    @Min(0)
+    private Integer quotaEuro;
+
     public String getTitolo() { return titolo; }
     public void setTitolo(String titolo) { this.titolo = titolo; }
     public String getDescrizione() { return descrizione; }
@@ -77,4 +92,14 @@ public class EventRequest {
     public void setGiornoSettimanaNormale(Integer giornoSettimanaNormale) { this.giornoSettimanaNormale = giornoSettimanaNormale; }
     public LocalDate getDataFineNormale() { return dataFineNormale; }
     public void setDataFineNormale(LocalDate dataFineNormale) { this.dataFineNormale = dataFineNormale; }
+    public Boolean getRunClub() { return runClub; }
+    public void setRunClub(Boolean runClub) { this.runClub = runClub; }
+    public String getLuogo() { return luogo; }
+    public void setLuogo(String luogo) { this.luogo = luogo; }
+    public String getDistanza() { return distanza; }
+    public void setDistanza(String distanza) { this.distanza = distanza; }
+    public String getRitmo() { return ritmo; }
+    public void setRitmo(String ritmo) { this.ritmo = ritmo; }
+    public Integer getQuotaEuro() { return quotaEuro; }
+    public void setQuotaEuro(Integer quotaEuro) { this.quotaEuro = quotaEuro; }
 }
