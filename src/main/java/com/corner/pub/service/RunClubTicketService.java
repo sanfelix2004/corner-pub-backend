@@ -64,7 +64,7 @@ public class RunClubTicketService {
                 fill(cs, new Color(124, 28, 45), 0, height - 78, width, 78);
                 checker(cs, 18, height - 96, width - 36);
 
-                float logoSize = 102;
+                float logoSize = 88;
                 float logoX = (width - logoSize) / 2f;
                 float logoY = height - 78 - 8 - logoSize;
                 if (logo != null) {
@@ -81,7 +81,9 @@ public class RunClubTicketService {
                 y = line(cs, 36, y - 16, width - 72, "Quando", when);
                 y = line(cs, 36, y - 6, width - 72, "Ritrovo", safe(event.getLuogo()));
                 String pace = join(safe(event.getDistanza()), safe(event.getRitmo()));
-                y = line(cs, 36, y - 6, width - 72, "Uscita", pace);
+                y = line(cs, 36, y - 4, width - 72, "Uscita", pace);
+                y = line(cs, 36, y - 2, width - 72, "Passo", safe(registration.getPaceCategory()));
+                y = line(cs, 36, y - 2, width - 72, "Quota", quotaLabel(event, registration));
 
                 if (event.isAnnullata()) {
                     y -= 16;
@@ -161,6 +163,17 @@ public class RunClubTicketService {
         float x = Math.max(16, (pageWidth - textWidth) / 2f);
         textAt(cs, font, size, x, y, color, value);
         return y - size;
+    }
+
+    private String quotaLabel(Event event, EventRegistration registration) {
+        int quota = event.getQuotaEuro() == null ? 0 : event.getQuotaEuro();
+        if (quota <= 0) {
+            return "Gratis";
+        }
+        if ("PAID".equals(registration.getPaymentStatus())) {
+            return quota + " euro, gia pagati";
+        }
+        return quota + " euro da pagare al ritrovo";
     }
 
     private float line(PDPageContentStream cs, float x, float y, float width, String label, String value) throws Exception {

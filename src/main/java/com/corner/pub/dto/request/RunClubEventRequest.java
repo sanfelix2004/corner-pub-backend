@@ -12,6 +12,7 @@ public class RunClubEventRequest {
     private String luogo;
     private String distanza;
     private String ritmo;
+    private Integer quotaEuro;
     private Boolean ricorrente;
     private Integer giornoSettimana;
     private LocalDate dataFine;
@@ -32,6 +33,8 @@ public class RunClubEventRequest {
     public void setDistanza(String distanza) { this.distanza = distanza; }
     public String getRitmo() { return ritmo; }
     public void setRitmo(String ritmo) { this.ritmo = ritmo; }
+    public Integer getQuotaEuro() { return quotaEuro; }
+    public void setQuotaEuro(Integer quotaEuro) { this.quotaEuro = quotaEuro; }
     public Boolean getRicorrente() { return ricorrente; }
     public void setRicorrente(Boolean ricorrente) { this.ricorrente = ricorrente; }
     public Integer getGiornoSettimana() { return giornoSettimana; }

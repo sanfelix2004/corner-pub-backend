@@ -106,7 +106,9 @@ public class AdminRunClubController {
     @PostMapping("/checkin")
     public ResponseEntity<?> checkIn(@RequestBody Map<String, String> body) {
         try {
-            return ResponseEntity.ok(runClubService.checkIn(body == null ? null : body.get("code")));
+            return ResponseEntity.ok(runClubService.checkIn(
+                    body == null ? null : body.get("code"),
+                    body == null ? null : body.get("action")));
         } catch (CornerPubException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -116,6 +118,15 @@ public class AdminRunClubController {
     public ResponseEntity<?> undo(@RequestBody Map<String, String> body) {
         try {
             return ResponseEntity.ok(runClubService.undoCheckIn(body == null ? null : body.get("code")));
+        } catch (CornerPubException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/checkin/undo-payment")
+    public ResponseEntity<?> undoPayment(@RequestBody Map<String, String> body) {
+        try {
+            return ResponseEntity.ok(runClubService.undoPayment(body == null ? null : body.get("code")));
         } catch (CornerPubException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#7c1c2d" />
-  <meta name="description" content="Corner Run Club a Giovinazzo: iscriviti alle uscite del Corner Pub, accetta il regolamento e scarica il pass PDF con QR code." />
+  <meta name="description" content="Corner Run Club, la Sunset Run di Giovinazzo: corsa al tramonto, quota in loco, pass PDF con QR. Organizzata dal Corner con Netium e Buonvento." />
   <title>Corner Run Club · Giovinazzo</title>
   <link rel="icon" href="images/corner-run-club-logo.jpg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/run-club.css?v=1" />
+  <link rel="stylesheet" href="css/run-club.css?v=2" />
 </head>
 <body>
   <header class="wrap topbar">
@@ -27,9 +27,9 @@
     <section class="wrap hero">
       <img src="images/corner-run-club-logo.jpg" alt="Logo Corner Run Club: un boccale di birra e un hamburger corrono insieme" />
       <div>
-        <p class="kicker">Dal Corner Pub di Giovinazzo</p>
-        <h1>SI CORRE, POI SI STA INSIEME.</h1>
-        <p class="lede">Il Run Club parte da Piazza Duomo. Scegli l'uscita, leggi il regolamento e porta al ritrovo il pass con il QR: lo staff lo legge dal back office del pub.</p>
+        <p class="kicker">Sunset Run · Giovinazzo</p>
+        <h1>CORRI AL TRAMONTO, INSIEME.</h1>
+        <p class="lede">Il Corner Run Club è la corsa del Corner Pub: ritrovo al Piazzale dell'Aeronautica, riscaldamento con Netium, arrivo da Buonvento. La quota si paga al ritrovo e il pass con QR è la tua conferma.</p>
         <div class="hero-actions">
           <a class="btn" href="#uscite">Vedi le uscite</a>
           <a class="btn secondary" href="index.html">Corner Pub</a>
@@ -37,6 +37,41 @@
       </div>
     </section>
     <div class="checker" aria-hidden="true"></div>
+
+    <section class="wrap section" id="evento">
+      <div class="about-grid">
+        <div>
+          <p class="kicker">L'evento</p>
+          <h2>Giovinazzo Sunset Run</h2>
+          <p>Lo organizza il <strong>Corner Giovinazzo</strong>, con <strong>Netium</strong> e <strong>Buonvento</strong>. Il ritrovo tipico è alle 18:30 al Piazzale dell'Aeronautica: Netium guida il riscaldamento, poi si corre al tramonto. Il traguardo è da Buonvento, con DJ set. Il Corner mette avocado toast e acqua. Tutti i livelli sono benvenuti.</p>
+          <ul>
+            <li>Ritrovo al Piazzale dell'Aeronautica</li>
+            <li>Riscaldamento a cura di Netium</li>
+            <li>Corsa al tramonto, in genere 3,5 km</li>
+            <li>Arrivo da Buonvento, quota da pagare in loco</li>
+          </ul>
+          <p class="note">Durante l'evento i partecipanti sono coperti da assicurazione per la manifestazione.</p>
+        </div>
+        <img src="images/giovinazzo-porto.jpg" alt="Il porto di Giovinazzo sul mare Adriatico" />
+      </div>
+      <div class="partners" style="margin-top:18px">
+        <article class="partner">
+          <img src="images/partners/corner.jpg" alt="" />
+          <strong>Corner Pub</strong>
+          <p class="meta">Organizza la corsa e offre avocado toast e acqua. <a href="https://www.instagram.com/corner_giovinazzo/" target="_blank" rel="noopener">Instagram</a></p>
+        </article>
+        <article class="partner">
+          <img src="images/partners/netium.png" alt="" />
+          <strong>Netium</strong>
+          <p class="meta">Guida il riscaldamento prima della partenza. <a href="https://www.instagram.com/netium.giovinazzo/" target="_blank" rel="noopener">Instagram</a></p>
+        </article>
+        <article class="partner">
+          <img src="images/partners/buonvento.jpg" alt="" />
+          <strong>Buonvento</strong>
+          <p class="meta">Accoglie i runner al traguardo con il DJ set. <a href="https://www.instagram.com/buonvento_giovinazzo/" target="_blank" rel="noopener">Instagram</a></p>
+        </article>
+      </div>
+    </section>
 
     <section class="wrap section">
       <h2>Come ci si iscrive</h2>
@@ -65,8 +100,21 @@
               <input id="surname" name="surname" autocomplete="family-name" required maxlength="60" />
             </div>
             <div class="span-2">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required maxlength="120" />
+            </div>
+            <div>
               <label for="phone">Telefono</label>
               <input id="phone" name="phone" inputmode="numeric" autocomplete="tel" required placeholder="3331234567" />
+            </div>
+            <div>
+              <label for="pace">Fascia di passo</label>
+              <select id="pace" name="paceCategory" required>
+                <option value="">Scegli</option>
+                <option>Facile 6:00/km</option>
+                <option>Medio 5:00/km</option>
+                <option>Veloce 4:15/km</option>
+              </select>
             </div>
             <div class="span-2">
               <label for="note">Note (facoltative)</label>
@@ -76,11 +124,11 @@
 
           <label class="check">
             <input type="checkbox" name="privacy" required />
-            <span>Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa privacy</a> e acconsento al trattamento di nome, cognome e telefono per gestire l'iscrizione, il pass con QR e l'ingresso al ritrovo.</span>
+            <span>Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa privacy</a> e acconsento al trattamento di nome, cognome, email, telefono e fascia di passo per gestire l'iscrizione, la quota, il pass con QR e l'ingresso al ritrovo.</span>
           </label>
           <label class="check">
             <input type="checkbox" name="rules" required />
-            <span>Ho letto e accetto il <a href="regolamento-run-club.html" target="_blank" rel="noopener">regolamento del Corner Run Club</a>: ho almeno 18 anni oppure un genitore o tutore accetta per me; il pass è personale e non cedibile; l'uscita può essere modificata o annullata.</span>
+            <span>Ho letto e accetto il <a href="regolamento-run-club.html" target="_blank" rel="noopener">regolamento del Corner Run Club</a>: ho almeno 16 anni oppure un genitore o tutore accetta per me; il pass è personale; la quota indicata si paga al ritrovo; l'uscita può essere modificata o annullata.</span>
           </label>
           <label class="check">
             <input type="checkbox" name="fitness" required />
@@ -136,9 +184,9 @@
   </main>
 
   <footer class="wrap site-footer">
-    <p>Corner Run Club è del Corner S.n.c., Piazza Duomo 58, 70054 Giovinazzo (BA). Le uscite si gestiscono insieme al sito <a href="https://cornerpubgiovinazzo.com">cornerpubgiovinazzo.com</a>.</p>
-    <p><a href="regolamento-run-club.html">Regolamento</a> · <a href="privacy.html">Privacy</a> · <a href="mailto:cornersnc@gmail.com">cornersnc@gmail.com</a></p>
+    <p>Corner Run Club · Sunset Run Giovinazzo, organizzata da Corner S.n.c., Piazza Duomo 58. Le iscrizioni stanno su <a href="https://cornerpubgiovinazzo.com">cornerpubgiovinazzo.com</a>.</p>
+    <p><a href="tel:+393669347250">+39 366 934 7250</a> · <a href="https://www.instagram.com/giovinazzo_sunset_run/" target="_blank" rel="noopener">@giovinazzo_sunset_run</a> · <a href="regolamento-run-club.html">Regolamento</a> · <a href="privacy.html">Privacy</a></p>
   </footer>
-  <script src="js/run-club.js?v=1"></script>
+  <script src="js/run-club.js?v=2"></script>
 </body>
 </html>

@@ -225,7 +225,13 @@ public class MailService {
                 + row("Partecipanti", String.valueOf(reg.getPartecipanti()))
                 + row("Note", reg.getNote())
                 + row("Allergeni", reg.getAllergensNote())
-                + (runClub ? row("Pass", reg.getTicketCode()) + row("Ritrovo", place) : "");
+                + (runClub
+                        ? row("Pass", reg.getTicketCode())
+                                + row("Ritrovo", place)
+                                + row("Email", reg.getEmail())
+                                + row("Passo", reg.getPaceCategory())
+                                + row("Quota", quotaMail(reg))
+                        : "");
 
         String subject = (runClub ? "Nuova iscrizione Run Club · " : "Nuova iscrizione evento · ")
                 + eventTitle + " · " + fullName;
@@ -251,6 +257,17 @@ public class MailService {
                         "Se leggi questa mail, gli avvisi arrivano. Per il test vero fai una prenotazione dal sito.",
                         row("Destinazione", FALLBACK_ADMIN),
                         null, null));
+    }
+
+    private static String quotaMail(EventRegistration reg) {
+        int quota = reg.getEvent().getQuotaEuro() == null ? 0 : reg.getEvent().getQuotaEuro();
+        if (quota <= 0) {
+            return "Gratis";
+        }
+        if ("PAID".equals(reg.getPaymentStatus())) {
+            return quota + " euro, già pagati";
+        }
+        return quota + " euro da pagare al ritrovo";
     }
 
     private static String staffEmail(String title, String intro, String rows, String waLink, String waLabel) {

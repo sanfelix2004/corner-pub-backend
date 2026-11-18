@@ -26,6 +26,7 @@ public class EventResponse {
     private String distanza;
     private String ritmo;
     private boolean annullata;
+    private Integer quotaEuro;
 
     public EventResponse(Event event, long totalePartecipanti) {
         this.id = event.getId();
@@ -54,6 +55,7 @@ public class EventResponse {
         this.distanza = event.getDistanza();
         this.ritmo = event.getRitmo();
         this.annullata = event.isAnnullata();
+        this.quotaEuro = event.getQuotaEuro() == null ? 0 : event.getQuotaEuro();
     }
 
     public EventResponse(Event event, List<EventRegistration> registrations) {
@@ -102,4 +104,6 @@ public class EventResponse {
     public void setRitmo(String ritmo) { this.ritmo = ritmo; }
     public boolean isAnnullata() { return annullata; }
     public void setAnnullata(boolean annullata) { this.annullata = annullata; }
+    public Integer getQuotaEuro() { return quotaEuro; }
+    public void setQuotaEuro(Integer quotaEuro) { this.quotaEuro = quotaEuro; }
 }

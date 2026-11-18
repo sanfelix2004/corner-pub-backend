@@ -71,6 +71,10 @@ public class Event {
     @Column(name = "annullata", nullable = false, columnDefinition = "boolean default false")
     private boolean annullata = false;
 
+    /** Quota in euro da pagare al ritrovo. 0 = gratis. */
+    @Column(name = "quota_euro")
+    private Integer quotaEuro;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -235,5 +239,13 @@ public class Event {
 
     public void setAnnullata(boolean annullata) {
         this.annullata = annullata;
+    }
+
+    public Integer getQuotaEuro() {
+        return quotaEuro;
+    }
+
+    public void setQuotaEuro(Integer quotaEuro) {
+        this.quotaEuro = quotaEuro;
     }
 }

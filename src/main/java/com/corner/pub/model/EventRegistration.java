@@ -69,6 +69,19 @@ public class EventRegistration {
     @Column(name = "photo_consent")
     private Boolean photoConsent;
 
+    @Column(length = 120)
+    private String email;
+
+    @Column(name = "pace_category", length = 40)
+    private String paceCategory;
+
+    /** PENDING_PAYMENT, PAID oppure FREE. */
+    @Column(name = "payment_status", length = 32)
+    private String paymentStatus;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     public String getNote() {
         return note;
     }
@@ -220,4 +233,13 @@ public class EventRegistration {
     public void setPhotoConsent(Boolean photoConsent) {
         this.photoConsent = photoConsent;
     }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPaceCategory() { return paceCategory; }
+    public void setPaceCategory(String paceCategory) { this.paceCategory = paceCategory; }
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+    public LocalDateTime getPaidAt() { return paidAt; }
+    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
 }

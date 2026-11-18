@@ -170,6 +170,10 @@ public class EventRegistrationService {
             registration.setRulesVersion(rulesVersion);
             registration.setFitnessDeclared(true);
             registration.setPhotoConsent(Boolean.TRUE.equals(request.getPhotoConsent()));
+            registration.setEmail(request.getEmail());
+            registration.setPaceCategory(request.getPaceCategory());
+            int quota = event.getQuotaEuro() == null ? 0 : event.getQuotaEuro();
+            registration.setPaymentStatus(quota > 0 ? "PENDING_PAYMENT" : "FREE");
             registration.setCreatedAt(LocalDateTime.now(ROME));
         }
 
@@ -353,6 +357,10 @@ public class EventRegistrationService {
         resp.setRulesVersion(reg.getRulesVersion());
         resp.setFitnessDeclared(reg.getFitnessDeclared());
         resp.setPhotoConsent(reg.getPhotoConsent());
+        resp.setEmail(reg.getEmail());
+        resp.setPaceCategory(reg.getPaceCategory());
+        resp.setPaymentStatus(reg.getPaymentStatus());
+        resp.setPaidAt(reg.getPaidAt());
 
         if (userResponse != null) {
             resp.setName(userResponse.getName());
@@ -492,6 +500,16 @@ public class EventRegistrationService {
             throw new CornerPubException(
                     "Per iscriverti devi dichiarare di essere in condizioni fisiche idonee alla corsa.");
         }
+        String email = request.getEmail() == null ? "" : request.getEmail().trim().toLowerCase(java.util.Locale.ROOT);
+        if (!email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$") || email.length() > 120) {
+            throw new CornerPubException("Inserisci un'email valida.");
+        }
+        String pace = request.getPaceCategory() == null ? "" : request.getPaceCategory().trim();
+        if (!java.util.List.of("Facile 6:00/km", "Medio 5:00/km", "Veloce 4:15/km").contains(pace)) {
+            throw new CornerPubException("Seleziona la fascia di passo.");
+        }
+        request.setEmail(email);
+        request.setPaceCategory(pace);
         if (request.getPartecipanti() > 1) {
             throw new CornerPubException(
                     "L'iscrizione al Run Club è nominativa: un pass per persona. Ogni runner si iscrive con i propri dati.");

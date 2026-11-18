@@ -53,7 +53,9 @@ function renderEvents() {
   eventsEl.innerHTML = state.events.map((event) => {
     const left = event.postiDisponibili;
     const full = left === 0;
-    const bits = [fmt(event.data), event.luogo, event.distanza, event.ritmo].filter(Boolean);
+    const quota = Number(event.quotaEuro || 0);
+    const quotaLabel = quota > 0 ? quota + " € al ritrovo" : "Gratis";
+    const bits = [fmt(event.data), event.luogo, event.distanza, event.ritmo, quotaLabel].filter(Boolean);
     return `<article class="event-card">
       <div>
         <h3>${esc(event.titolo)}</h3>
@@ -112,6 +114,8 @@ form.addEventListener("submit", async (event) => {
     name: String(data.get("name") || "").trim(),
     surname: String(data.get("surname") || "").trim(),
     phone,
+    email: String(data.get("email") || "").trim(),
+    paceCategory: String(data.get("paceCategory") || ""),
     note: String(data.get("note") || "").trim(),
     partecipanti: 1,
     privacyAccepted: form.privacy.checked,

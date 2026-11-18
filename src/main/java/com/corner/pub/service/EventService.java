@@ -62,6 +62,7 @@ public class EventService {
         event.setLuogo(trimToNull(request.getLuogo()));
         event.setDistanza(trimToNull(request.getDistanza()));
         event.setRitmo(trimToNull(request.getRitmo()));
+        event.setQuotaEuro(request.getQuotaEuro() == null ? 0 : request.getQuotaEuro());
         event.setAnnullata(false);
 
         Event saved = eventRepository.save(event);
@@ -125,6 +126,9 @@ public class EventService {
         }
         if (request.getRitmo() != null) {
             event.setRitmo(trimToNull(request.getRitmo()));
+        }
+        if (request.getQuotaEuro() != null) {
+            event.setQuotaEuro(request.getQuotaEuro());
         }
 
         if (poster != null && !poster.isEmpty()) {
@@ -387,6 +391,7 @@ public class EventService {
         child.setLuogo(parent.getLuogo());
         child.setDistanza(parent.getDistanza());
         child.setRitmo(parent.getRitmo());
+        child.setQuotaEuro(parent.getQuotaEuro());
         child.setAnnullata(false);
         // locandina ereditata in EventResponse dal parent
         eventRepository.save(child);
@@ -402,6 +407,7 @@ public class EventService {
             child.setLuogo(parent.getLuogo());
             child.setDistanza(parent.getDistanza());
             child.setRitmo(parent.getRitmo());
+            child.setQuotaEuro(parent.getQuotaEuro());
             eventRepository.save(child);
         }
     }

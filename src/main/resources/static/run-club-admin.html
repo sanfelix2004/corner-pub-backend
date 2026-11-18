@@ -7,7 +7,7 @@
   <title>Back office · Corner Run Club</title>
   <link rel="icon" href="images/corner-run-club-logo.jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/run-club-admin.css?v=1" />
+  <link rel="stylesheet" href="css/run-club-admin.css?v=2" />
 </head>
 <body>
   <header class="top">
@@ -29,15 +29,17 @@
       <h2 id="formHeading">Nuova uscita</h2>
       <form id="eventForm">
         <label for="titolo">Titolo</label>
-        <input id="titolo" name="titolo" required maxlength="100" placeholder="Easy run del giovedì" />
+        <input id="titolo" name="titolo" required maxlength="100" placeholder="Sunset Run" />
         <label for="data">Ritrovo</label>
         <input id="data" name="data" type="datetime-local" required />
         <label for="luogo">Luogo</label>
-        <input id="luogo" name="luogo" required maxlength="180" value="Corner Pub, Piazza Duomo 58, Giovinazzo" />
+        <input id="luogo" name="luogo" required maxlength="180" value="Piazzale dell'Aeronautica, Giovinazzo" />
         <label for="distanza">Distanza</label>
-        <input id="distanza" name="distanza" required maxlength="40" placeholder="5 km" />
+        <input id="distanza" name="distanza" required maxlength="40" value="3,5 km" />
         <label for="ritmo">Ritmo (facoltativo)</label>
-        <input id="ritmo" name="ritmo" maxlength="40" placeholder="facile, sui 6:30" />
+        <input id="ritmo" name="ritmo" maxlength="40" placeholder="tutti i livelli" />
+        <label for="quotaEuro">Quota in euro, da pagare al ritrovo (0 = gratis)</label>
+        <input id="quotaEuro" name="quotaEuro" type="number" min="0" required value="5" />
         <label for="postiTotali">Posti</label>
         <input id="postiTotali" name="postiTotali" type="number" min="1" required value="20" />
         <label for="descrizione">Note per i runner</label>
@@ -58,7 +60,7 @@
           <input id="dataFine" name="dataFine" type="date" />
         </div>
         <div id="seriesWrap" class="hidden">
-          <label class="check"><input id="applicaATuttaLaSerie" name="applicaATuttaLaSerie" type="checkbox" /> Applica titolo, ritrovo, distanza, ritmo e posti a tutte le date della serie. L'orario di questa data resta solo qui.</label>
+          <label class="check"><input id="applicaATuttaLaSerie" name="applicaATuttaLaSerie" type="checkbox" /> Applica titolo, ritrovo, distanza, ritmo, quota e posti a tutte le date della serie. L'orario di questa data resta solo qui.</label>
         </div>
         <p id="formStatus" class="status" role="status"></p>
         <div class="row">
@@ -76,8 +78,11 @@
           <label for="checkinCode">Codice</label>
           <input id="checkinCode" name="code" autocomplete="off" placeholder="CRC-XXXXXXXX" required />
           <div class="row">
-            <button class="btn" type="submit">Registra ingresso</button>
-            <button class="btn secondary" id="undoCheckin" type="button">Annulla ingresso</button>
+            <button class="btn" type="submit" data-action="presente-incassa">Presente e incassa</button>
+            <button class="btn secondary" type="submit" data-action="presente">Solo presente</button>
+            <button class="btn secondary" type="submit" data-action="incassa">Solo incassa</button>
+            <button class="btn secondary" id="undoCheckin" type="button">Annulla presenza</button>
+            <button class="btn secondary" id="undoPayment" type="button">Annulla incasso</button>
             <button class="btn secondary" id="startScan" type="button">Fotocamera</button>
             <button class="btn secondary" id="stopScan" type="button">Stop</button>
           </div>
@@ -105,6 +110,15 @@
           <input id="walkSurname" name="surname" required />
           <label for="walkPhone">Telefono</label>
           <input id="walkPhone" name="phone" inputmode="numeric" required />
+          <label for="walkEmail">Email</label>
+          <input id="walkEmail" name="email" type="email" required maxlength="120" />
+          <label for="walkPace">Fascia di passo</label>
+          <select id="walkPace" name="paceCategory" required>
+            <option value="">Scegli</option>
+            <option>Facile 6:00/km</option>
+            <option>Medio 5:00/km</option>
+            <option>Veloce 4:15/km</option>
+          </select>
           <label for="walkNote">Note</label>
           <input id="walkNote" name="note" maxlength="250" />
           <label class="check"><input id="walkConsent" type="checkbox" /> Confermo che la persona ha accettato informativa privacy, regolamento del Run Club e dichiarazione di idoneità fisica.</label>
@@ -115,6 +129,6 @@
       </section>
     </div>
   </main>
-  <script src="js/run-club-admin.js?v=1"></script>
+  <script src="js/run-club-admin.js?v=2"></script>
 </body>
 </html>

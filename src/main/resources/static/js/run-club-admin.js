@@ -59,7 +59,7 @@ function renderEvents() {
     const left = event.postiDisponibili == null ? "?" : event.postiDisponibili;
     return `<article class="event">
       <strong>${esc(event.titolo)}</strong>
-      <p>${esc(fmt(event.data))} · ${esc(event.luogo || "")}<br>${esc(event.distanza || "")} ${event.ritmo ? "· " + esc(event.ritmo) : ""} · ${esc(event.postiOccupati || 0)}/${esc(event.postiTotali || "∞")} · liberi ${esc(left)}</p>
+      <p>${esc(fmt(event.data))} · ${esc(event.luogo || "")}<br>${esc(event.distanza || "")} ${event.ritmo ? "· " + esc(event.ritmo) : ""} · ${esc(moneyLabel(event))} · ${esc(event.postiOccupati || 0)}/${esc(event.postiTotali || "∞")} · liberi ${esc(left)}</p>
       <span class="badge">${event.annullata ? "Annullata" : "Aperta"}</span>
       <div>
         <button class="btn small" type="button" data-open="${event.id}">Iscritti</button>
@@ -80,6 +80,11 @@ function fillForm(event) {
   form.luogo.value = event ? (event.luogo || "") : "Corner Pub, Piazza Duomo 58, Giovinazzo";
   form.distanza.value = event ? (event.distanza || "") : "";
   form.ritmo.value = event ? (event.ritmo || "") : "";
+  form.quotaEuro.value = event ? (event.quotaEuro == null ? 0 : event.quotaEuro) : 5;
+  if (!event) {
+    form.luogo.value = "Piazzale dell'Aeronautica, Giovinazzo";
+    form.distanza.value = "3,5 km";
+  }
   form.ricorrente.checked = false;
   form.ricorrente.disabled = Boolean(event);
   form.giornoSettimana.disabled = Boolean(event);
@@ -99,6 +104,7 @@ function payloadFromForm() {
     luogo: String(data.get("luogo") || "").trim(),
     distanza: String(data.get("distanza") || "").trim(),
     ritmo: String(data.get("ritmo") || "").trim(),
+    quotaEuro: Number(data.get("quotaEuro") || 0),
     ricorrente: form.ricorrente.checked,
     giornoSettimana: form.ricorrente.checked ? Number(data.get("giornoSettimana")) : null,
     dataFine: data.get("dataFine") || null,
@@ -120,22 +126,42 @@ async function loadAttendees(id) {
   const event = selectedEvent();
   detailTitle.textContent = event ? event.titolo + " · " + fmt(event.data) : "Iscritti";
   const rows = await api("/admin/run-club/events/" + id + "/attendees");
+  const quota = event ? Number(event.quotaEuro || 0) : 0;
+  const paidCount = rows.filter((row) => row.paymentStatus === "PAID").length;
+  const dueCount = rows.filter((row) => row.paymentStatus === "PENDING_PAYMENT").length;
+  const tally = quota > 0
+    ? `<p>Incassati ${paidCount * quota} € · ancora da incassare ${dueCount * quota} €.</p>`
+    : "<p>Uscita gratuita.</p>";
   if (!rows.length) {
-    attendeesEl.innerHTML = "<p>Nessun iscritto.</p>";
+    attendeesEl.innerHTML = tally + "<p>Nessun iscritto.</p>";
     return;
   }
-  attendeesEl.innerHTML = `<div class="table-wrap"><table>
-    <thead><tr><th>Runner</th><th>Telefono</th><th>Policy</th><th>Ingresso</th><th></th></tr></thead>
+  attendeesEl.innerHTML = tally + `<div class="table-wrap"><table>
+    <thead><tr><th>Runner</th><th>Contatti</th><th>Passo e quota</th><th>Ingresso</th><th></th></tr></thead>
     <tbody>${rows.map((row) => `<tr>
       <td>${esc(row.name)} ${esc(row.surname)}<br><code>${esc(row.ticketCode || "")}</code></td>
-      <td>${esc(row.phone)}</td>
-      <td>Privacy ${esc(row.privacyPolicyVersion || "-")}<br>Regolamento ${esc(row.rulesVersion || "-")}<br>Idoneità ${row.fitnessDeclared ? "sì" : "no"} · Foto ${row.photoConsent ? "sì" : "no"}</td>
+      <td>${esc(row.phone)}<br>${esc(row.email || "")}</td>
+      <td>${esc(row.paceCategory || "-")}<br>${esc(paymentLabel(row.paymentStatus))}</td>
       <td>${row.checkedInAt ? "Dentro alle " + esc(fmt(row.checkedInAt)) : "Non ancora"}</td>
       <td>
         ${row.ticketCode ? `<a href="/api/run-club/tickets/${encodeURIComponent(row.ticketCode)}/pdf">PDF</a>` : ""}
+        <button class="btn small" type="button" data-code="${esc(row.ticketCode || "")}" data-action="presente-incassa">Presente e incassa</button>
+        <button class="btn small secondary" type="button" data-code="${esc(row.ticketCode || "")}" data-action="presente">Presente</button>
+        <button class="btn small secondary" type="button" data-code="${esc(row.ticketCode || "")}" data-action="incassa">Incassa</button>
         <button class="btn small secondary" type="button" data-remove="${row.user && row.user.id}">Rimuovi</button>
       </td>
     </tr>`).join("")}</tbody></table></div>`;
+}
+
+function moneyLabel(event) {
+  const quota = Number(event.quotaEuro || 0);
+  return quota > 0 ? quota + " € al ritrovo" : "Gratis";
+}
+
+function paymentLabel(status) {
+  if (status === "PAID") return "Pagata";
+  if (status === "FREE") return "Gratis";
+  return "Da incassare";
 }
 
 eventsEl.addEventListener("click", async (event) => {
@@ -209,6 +235,8 @@ document.getElementById("walkForm").addEventListener("submit", async (event) => 
         name: data.get("name"),
         surname: data.get("surname"),
         phone: data.get("phone"),
+        email: data.get("email"),
+        paceCategory: data.get("paceCategory"),
         note: data.get("note"),
         partecipanti: 1,
         privacyAccepted: true,
@@ -229,19 +257,26 @@ document.getElementById("walkForm").addEventListener("submit", async (event) => 
   }
 });
 
-async function submitCheckin(undo) {
+async function submitCheckin(action) {
   const code = document.getElementById("checkinCode").value;
   checkinStatus.textContent = "Controllo…";
   checkinStatus.className = "status";
+  const path = action === "undo"
+    ? "/admin/run-club/checkin/undo"
+    : action === "undo-payment"
+      ? "/admin/run-club/checkin/undo-payment"
+      : "/admin/run-club/checkin";
   try {
-    const body = await api(undo ? "/admin/run-club/checkin/undo" : "/admin/run-club/checkin", {
+    const body = await api(path, {
       method: "POST",
-      body: JSON.stringify({ code })
+      body: JSON.stringify(action === "undo" || action === "undo-payment" ? { code } : { code, action })
     });
     const reg = body.registration || {};
     const event = reg.event || {};
+    const paid = reg.paymentStatus === "PAID" ? "quota incassata" : reg.paymentStatus === "FREE" ? "gratis" : "quota da incassare";
+    const presence = reg.checkedInAt ? "presente" : "non presente";
     checkinStatus.textContent = (reg.name || "") + " " + (reg.surname || "") + " · " + (event.titolo || "")
-      + (undo ? " · ingresso annullato" : body.alreadyCheckedIn ? " · era già dentro" : " · ingresso registrato");
+      + " · " + presence + " · " + paid;
     checkinStatus.className = "status ok";
     if (event.id) await loadAttendees(event.id);
   } catch (err) {
@@ -252,11 +287,19 @@ async function submitCheckin(undo) {
 
 document.getElementById("checkinForm").addEventListener("submit", (event) => {
   event.preventDefault();
-  submitCheckin(false);
+  const action = event.submitter && event.submitter.dataset.action ? event.submitter.dataset.action : "presente-incassa";
+  submitCheckin(action);
 });
-document.getElementById("undoCheckin").addEventListener("click", () => submitCheckin(true));
+document.getElementById("undoCheckin").addEventListener("click", () => submitCheckin("undo"));
+document.getElementById("undoPayment").addEventListener("click", () => submitCheckin("undo-payment"));
 
 attendeesEl.addEventListener("click", async (event) => {
+  const check = event.target.closest("[data-code][data-action]");
+  if (check && check.dataset.code) {
+    document.getElementById("checkinCode").value = check.dataset.code;
+    await submitCheckin(check.dataset.action);
+    return;
+  }
   const button = event.target.closest("[data-remove]");
   if (!button || !selectedId) return;
   if (!window.confirm("Rimuovere questa iscrizione? Il pass non sarà più valido.")) return;
@@ -289,7 +332,7 @@ async function startScan() {
       if (codes.length) {
         document.getElementById("checkinCode").value = codes[0].rawValue || "";
         stopScan();
-        submitCheckin(false);
+        submitCheckin("presente-incassa");
         return;
       }
     } catch (e) { /* frame vuoto */ }
@@ -319,5 +362,5 @@ loadEvents().catch((err) => {
 const incoming = new URLSearchParams(location.search).get("code");
 if (incoming) {
   document.getElementById("checkinCode").value = incoming;
-  submitCheckin(false);
+  submitCheckin("presente-incassa");
 }

@@ -74,6 +74,7 @@ public class RunClubService {
         eventRequest.setLuogo(request.getLuogo().trim());
         eventRequest.setDistanza(request.getDistanza().trim());
         eventRequest.setRitmo(blankToNull(request.getRitmo()));
+        eventRequest.setQuotaEuro(request.getQuotaEuro() == null ? 0 : request.getQuotaEuro());
         eventRequest.setRunClub(true);
         eventRequest.setSpeciale(false);
         eventRequest.setRicorrente(Boolean.TRUE.equals(request.getRicorrente()));
@@ -93,6 +94,7 @@ public class RunClubService {
         event.setLuogo(request.getLuogo().trim());
         event.setDistanza(request.getDistanza().trim());
         event.setRitmo(blankToNull(request.getRitmo()));
+        event.setQuotaEuro(request.getQuotaEuro() == null ? 0 : request.getQuotaEuro());
         eventRepository.save(event);
 
         if (Boolean.TRUE.equals(request.getApplicaATuttaLaSerie())) {
@@ -159,19 +161,35 @@ public class RunClubService {
         registration.getEvent().getData();
         registration.getEvent().getLuogo();
         registration.getEvent().isAnnullata();
+        registration.getEvent().getQuotaEuro();
+        registration.getPaceCategory();
+        registration.getPaymentStatus();
         return ticketService.render(registration);
     }
 
     @Transactional
-    public Map<String, Object> checkIn(String rawCode) {
+    public Map<String, Object> checkIn(String rawCode, String action) {
         EventRegistration registration = requireTicket(rawCode);
-        boolean already = registration.getCheckedInAt() != null;
-        if (!already) {
-            registration.setCheckedInAt(LocalDateTime.now(ROME));
-            registrationRepository.save(registration);
+        String mode = action == null || action.isBlank() ? "presente-incassa" : action.trim();
+        if (!java.util.List.of("presente", "incassa", "presente-incassa").contains(mode)) {
+            throw new CornerPubException("Azione di check-in non valida.");
         }
+        boolean alreadyPresent = registration.getCheckedInAt() != null;
+        boolean alreadyPaid = "PAID".equals(registration.getPaymentStatus()) || "FREE".equals(registration.getPaymentStatus());
+        int quota = registration.getEvent().getQuotaEuro() == null ? 0 : registration.getEvent().getQuotaEuro();
+        if ("incassa".equals(mode) || "presente-incassa".equals(mode)) {
+            if (quota > 0 && !"PAID".equals(registration.getPaymentStatus())) {
+                registration.setPaymentStatus("PAID");
+                registration.setPaidAt(LocalDateTime.now(ROME));
+            }
+        }
+        if (!"incassa".equals(mode) && !alreadyPresent) {
+            registration.setCheckedInAt(LocalDateTime.now(ROME));
+        }
+        registrationRepository.save(registration);
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("alreadyCheckedIn", already);
+        body.put("alreadyCheckedIn", alreadyPresent && !"incassa".equals(mode));
+        body.put("alreadyPaid", alreadyPaid);
         body.put("registration", registrationService.toResponse(registration));
         return body;
     }
@@ -183,6 +201,18 @@ public class RunClubService {
         registrationRepository.save(registration);
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("alreadyCheckedIn", false);
+        body.put("registration", registrationService.toResponse(registration));
+        return body;
+    }
+
+    @Transactional
+    public Map<String, Object> undoPayment(String rawCode) {
+        EventRegistration registration = requireTicket(rawCode);
+        int quota = registration.getEvent().getQuotaEuro() == null ? 0 : registration.getEvent().getQuotaEuro();
+        registration.setPaidAt(null);
+        registration.setPaymentStatus(quota > 0 ? "PENDING_PAYMENT" : "FREE");
+        registrationRepository.save(registration);
+        Map<String, Object> body = new LinkedHashMap<>();
         body.put("registration", registrationService.toResponse(registration));
         return body;
     }
@@ -220,6 +250,7 @@ public class RunClubService {
         target.setLuogo(source.getLuogo());
         target.setDistanza(source.getDistanza());
         target.setRitmo(source.getRitmo());
+        target.setQuotaEuro(source.getQuotaEuro());
         target.setRunClub(true);
     }
 
@@ -256,6 +287,9 @@ public class RunClubService {
         }
         if (request.getRitmo() != null && request.getRitmo().trim().length() > 40) {
             throw new CornerPubException("Il ritmo è troppo lungo.");
+        }
+        if (request.getQuotaEuro() != null && request.getQuotaEuro() < 0) {
+            throw new CornerPubException("La quota non può essere negativa.");
         }
         if (request.getDescrizione() != null && request.getDescrizione().trim().length() > 240) {
             throw new CornerPubException("La descrizione può avere al massimo 240 caratteri.");

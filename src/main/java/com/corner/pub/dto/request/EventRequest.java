@@ -65,6 +65,9 @@ public class EventRequest {
     @Size(max = 40)
     private String ritmo;
 
+    @Min(0)
+    private Integer quotaEuro;
+
     public String getTitolo() { return titolo; }
     public void setTitolo(String titolo) { this.titolo = titolo; }
     public String getDescrizione() { return descrizione; }
@@ -97,4 +100,6 @@ public class EventRequest {
     public void setDistanza(String distanza) { this.distanza = distanza; }
     public String getRitmo() { return ritmo; }
     public void setRitmo(String ritmo) { this.ritmo = ritmo; }
+    public Integer getQuotaEuro() { return quotaEuro; }
+    public void setQuotaEuro(Integer quotaEuro) { this.quotaEuro = quotaEuro; }
 }

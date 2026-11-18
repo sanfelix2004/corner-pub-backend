@@ -26,6 +26,10 @@ public class EventRegistrationResponse {
     private String rulesVersion;
     private Boolean fitnessDeclared;
     private Boolean photoConsent;
+    private String email;
+    private String paceCategory;
+    private String paymentStatus;
+    private java.time.LocalDateTime paidAt;
 
     public EventRegistrationResponse() {
     }
@@ -64,6 +68,10 @@ public class EventRegistrationResponse {
         this.rulesVersion = reg.getRulesVersion();
         this.fitnessDeclared = reg.getFitnessDeclared();
         this.photoConsent = reg.getPhotoConsent();
+        this.email = reg.getEmail();
+        this.paceCategory = reg.getPaceCategory();
+        this.paymentStatus = reg.getPaymentStatus();
+        this.paidAt = reg.getPaidAt();
     }
 
     public EventRegistrationResponse(Long id, LocalDateTime createdAt, EventResponse eventResponse,
@@ -200,4 +208,12 @@ public class EventRegistrationResponse {
     public void setFitnessDeclared(Boolean fitnessDeclared) { this.fitnessDeclared = fitnessDeclared; }
     public Boolean getPhotoConsent() { return photoConsent; }
     public void setPhotoConsent(Boolean photoConsent) { this.photoConsent = photoConsent; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPaceCategory() { return paceCategory; }
+    public void setPaceCategory(String paceCategory) { this.paceCategory = paceCategory; }
+    public String getPaymentStatus() { return paymentStatus; }
+    public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
+    public LocalDateTime getPaidAt() { return paidAt; }
+    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
 }
