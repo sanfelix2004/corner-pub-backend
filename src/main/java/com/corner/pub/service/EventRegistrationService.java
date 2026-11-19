@@ -20,6 +20,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.beans.factory.annotation.Value; // aggiunto
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ThreadLocalRandom;
@@ -119,14 +120,13 @@ public class EventRegistrationService {
                             : "Per iscriverti all'evento devi accettare il trattamento dei dati personali.");
         }
 
-        if (registrationRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
-            throw new CornerPubException(event.isRunClub()
-                    ? "Sei già iscritto a questa uscita."
-                    : "Sei già iscritto a questo evento");
-        }
-
-        LocalDate eventDate = event.getData().toLocalDate();
+        LocalDate eventDate;
+        LocalTime eventTime = null;
         if (event.isRunClub()) {
+            eventDate = event.getData().toLocalDate();
+            if (registrationRepository.existsByUserIdAndEventId(user.getId(), eventId)) {
+                throw new CornerPubException("Sei già iscritto a questa uscita.");
+            }
             if (event.isAnnullata()) {
                 throw new CornerPubException(enforcePublicGate
                         ? "Questa uscita è stata annullata."
@@ -138,12 +138,29 @@ public class EventRegistrationService {
             if (hasEventSameDay(user.getPhone(), eventDate, true)) {
                 throw new CornerPubException("Sei già iscritto a un'uscita del Run Club in questo giorno.");
             }
-        } else if (hasEventSameDay(user.getPhone(), eventDate, false)) {
-            throw new CornerPubException("Non puoi registrarti: sei già iscritto a un evento nello stesso giorno.");
+        } else {
+            eventDate = resolveOccurrence(event, request.getOccurrenceDate());
+            if (!RecurrenceSupport.isValidOccurrence(event, eventDate)) {
+                throw new CornerPubException("La data scelta non è valida per questo evento");
+            }
+            if (eventDate.isBefore(LocalDate.now(ROME))) {
+                throw new CornerPubException("Non puoi prenotarti per una data già passata");
+            }
+            eventTime = resolveTime(eventDate, request.getOccurrenceTime());
+            if (registrationRepository.existsByUserIdAndEventIdAndOccurrenceDate(user.getId(), eventId, eventDate)) {
+                throw new CornerPubException("Sei già iscritto a questo evento in quella data");
+            }
+            if (hasEventSameDay(user.getPhone(), eventDate, false)) {
+                throw new CornerPubException("Non puoi registrarti: sei già iscritto a un evento nello stesso giorno.");
+            }
         }
 
         if (event.getPostiTotali() != null) {
-            long iscritti = getTotalePartecipantiByEventId(eventId);
+            long iscritti = event.isRunClub()
+                    ? getTotalePartecipantiByEventId(eventId)
+                    : registrationRepository
+                            .sumPartecipantiByEventIdAndOccurrenceDate(eventId, eventDate)
+                            .orElse(0L);
             if (iscritti + request.getPartecipanti() > event.getPostiTotali()) {
                 throw new CornerPubException("Posti esauriti per questo evento");
             }
@@ -160,6 +177,8 @@ public class EventRegistrationService {
         EventRegistration registration = new EventRegistration();
         registration.setUser(user);
         registration.setEvent(event);
+        registration.setOccurrenceDate(eventDate);
+        registration.setOccurrenceTime(eventTime);
         registration.setNote(request.getNote());
         registration.setPartecipanti(request.getPartecipanti());
         registration.setPrivacyPolicyVersion(privacyPolicyVersion); // Imposta versione
@@ -478,6 +497,39 @@ public class EventRegistrationService {
 
     private String safe(String value) {
         return value == null || value.isBlank() ? "" : value.trim();
+    }
+
+    private LocalDate resolveOccurrence(Event event, LocalDate requested) {
+        if (requested != null) {
+            return requested;
+        }
+        if (event.isRicorrente()) {
+            List<LocalDate> upcoming = RecurrenceSupport.upcoming(event, 1);
+            if (upcoming.isEmpty()) {
+                throw new CornerPubException("Non ci sono date disponibili per questo evento");
+            }
+            return upcoming.get(0);
+        }
+        return event.getData().toLocalDate();
+    }
+
+    private LocalTime resolveTime(LocalDate occurrence, LocalTime requested) {
+        if (requested == null) {
+            throw new CornerPubException("Scegli l'orario in cui vuoi prenotarti");
+        }
+        LocalTime time = requested.withSecond(0).withNano(0);
+        boolean slot = !time.isBefore(LocalTime.of(20, 0))
+                && !time.isAfter(LocalTime.of(23, 0))
+                && time.getMinute() % 30 == 0;
+        if (!slot) {
+            throw new CornerPubException("Orario non valido. Scegli un orario tra le 20:00 e le 23:00");
+        }
+        LocalDate today = LocalDate.now(ROME);
+        LocalTime now = LocalTime.now(ROME);
+        if (occurrence != null && occurrence.equals(today) && !time.isAfter(now)) {
+            throw new CornerPubException("Quell'orario è già passato");
+        }
+        return time;
     }
 
     private void prepareRunClubRequest(EventRegistrationRequest request) {

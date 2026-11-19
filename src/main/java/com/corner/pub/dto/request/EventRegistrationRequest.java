@@ -26,6 +26,9 @@ public class EventRegistrationRequest {
     private int partecipanti = 1; // default 1
     private MultipartFile poster;
 
+    private java.time.LocalDate occurrenceDate;
+    private java.time.LocalTime occurrenceTime;
+
     // GETTER & SETTER
     public String getName() {
         return name;
@@ -127,4 +130,9 @@ public class EventRegistrationRequest {
     public void setEmail(String email) { this.email = email; }
     public String getPaceCategory() { return paceCategory; }
     public void setPaceCategory(String paceCategory) { this.paceCategory = paceCategory; }
+
+    public java.time.LocalDate getOccurrenceDate() { return occurrenceDate; }
+    public void setOccurrenceDate(java.time.LocalDate occurrenceDate) { this.occurrenceDate = occurrenceDate; }
+    public java.time.LocalTime getOccurrenceTime() { return occurrenceTime; }
+    public void setOccurrenceTime(java.time.LocalTime occurrenceTime) { this.occurrenceTime = occurrenceTime; }
 }

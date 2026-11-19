@@ -6,6 +6,7 @@ import com.corner.pub.exception.CornerPubException;
 import com.corner.pub.model.Event;
 import com.corner.pub.repository.EventRegistrationRepository;
 import com.corner.pub.repository.EventRepository;
+import com.corner.pub.repository.SpecialeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -29,25 +31,40 @@ import java.util.stream.Collectors;
 public class EventService {
 
     private static final int OCCURRENCE_HORIZON_WEEKS = 16;
+    private static final ZoneId ROME = ZoneId.of("Europe/Rome");
 
     private final EventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
     private final StorageService storageService;
+    private final SpecialeRepository specialeRepository;
 
     @Transactional
     public EventResponse createEvent(EventRequest request, MultipartFile poster) {
         boolean speciale = Boolean.TRUE.equals(request.getSpeciale());
         boolean ricorrente = Boolean.TRUE.equals(request.getRicorrente());
+        String giorni = resolveGiorni(request, null);
 
-        if (ricorrente && request.getGiornoSettimana() == null) {
-            throw new CornerPubException("Per un evento ricorrente seleziona il giorno della settimana");
+        if (ricorrente && (giorni == null || giorni.isBlank()) && request.getGiornoSettimana() == null) {
+            throw new CornerPubException("Per un evento ricorrente scegli almeno un giorno della settimana");
+        }
+        if (ricorrente && (giorni == null || giorni.isBlank()) && request.getGiornoSettimana() != null) {
+            giorni = String.valueOf(request.getGiornoSettimana());
         }
 
-        LocalDateTime firstDate = resolveFirstOccurrence(
-                request.getData(),
-                ricorrente,
-                request.getGiornoSettimana()
-        );
+        Integer singleDay = firstDay(giorni, request.getGiornoSettimana());
+        // Ricorrenza virtuale = Speciali (CSV giorni + eventuale specialeId). Run Club e
+        // l'admin "Eventi" con solo giornoSettimana restano sul modello a figli materializzati.
+        boolean csvGiorni = request.getGiorniSettimana() != null && !request.getGiorniSettimana().isBlank();
+        boolean virtualRecurrence = ricorrente
+                && !Boolean.TRUE.equals(request.getRunClub())
+                && (csvGiorni || request.getSpecialeId() != null);
+
+        LocalDateTime firstDate = virtualRecurrence
+                ? RecurrenceSupport.firstOccurrence(
+                        request.getData() != null ? request.getData().toLocalDate() : LocalDate.now(ROME),
+                        request.getData() != null ? request.getData().toLocalTime() : LocalTime.of(20, 0),
+                        giorni)
+                : resolveFirstOccurrence(request.getData(), ricorrente, singleDay);
 
         Event event = new Event();
         event.setTitolo(request.getTitolo());
@@ -56,8 +73,10 @@ public class EventService {
         event.setPostiTotali(request.getPostiTotali());
         event.setSpeciale(speciale);
         event.setRicorrente(ricorrente);
-        event.setGiornoSettimana(ricorrente ? request.getGiornoSettimana() : null);
+        event.setGiornoSettimana(ricorrente ? singleDay : null);
+        event.setGiorniSettimana(ricorrente ? RecurrenceSupport.serialize(giorni) : null);
         event.setDataFine(ricorrente ? request.getDataFine() : null);
+        event.setSpecialeId(request.getSpecialeId());
         event.setRunClub(Boolean.TRUE.equals(request.getRunClub()));
         event.setLuogo(trimToNull(request.getLuogo()));
         event.setDistanza(trimToNull(request.getDistanza()));
@@ -81,12 +100,32 @@ public class EventService {
 
         if (speciale && Boolean.TRUE.equals(request.getCreaEventoNormale())) {
             createSubordinateNormals(saved, request);
-        } else if (ricorrente && !speciale) {
-            // Evento normale ricorrente: materializza le prossime date
+        } else if (ricorrente && !speciale && !virtualRecurrence && saved.getSpecialeId() == null) {
+            // Serie materializzata (es. Run Club via EventService): crea figli.
             materializeOccurrences(saved, saved.getGiornoSettimana(), saved.getDataFine(), OCCURRENCE_HORIZON_WEEKS);
         }
 
-        return toResponse(saved);
+        return toResponse(saved, null);
+    }
+
+    @Transactional
+    public EventResponse copyPosterFromUrl(Long eventId, String sourceUrl) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new CornerPubException("Evento non trovato"));
+        if (sourceUrl == null || sourceUrl.isBlank()) {
+            return toResponse(event, null);
+        }
+        try {
+            String relative = storageService.copyTo(sourceUrl, "eventi", String.valueOf(event.getId()));
+            if (relative != null) {
+                event.setPosterUrl(storageService.publicUrl(relative));
+                event.setPosterPublicId(relative);
+                event = eventRepository.save(event);
+            }
+        } catch (Exception e) {
+            log.warn("Copia locandina da speciale non riuscita: {}", e.getMessage());
+        }
+        return toResponse(event, null);
     }
 
     @Transactional
@@ -95,15 +134,28 @@ public class EventService {
                 .orElseThrow(() -> new CornerPubException("Evento non trovato"));
 
         boolean ricorrente = Boolean.TRUE.equals(request.getRicorrente());
-        if (ricorrente && request.getGiornoSettimana() == null) {
-            throw new CornerPubException("Per un evento ricorrente seleziona il giorno della settimana");
+        String giorni = resolveGiorni(request, event);
+        if (ricorrente && (giorni == null || giorni.isBlank()) && request.getGiornoSettimana() == null) {
+            throw new CornerPubException("Per un evento ricorrente scegli almeno un giorno della settimana");
+        }
+        if (ricorrente && (giorni == null || giorni.isBlank()) && request.getGiornoSettimana() != null) {
+            giorni = String.valueOf(request.getGiornoSettimana());
         }
 
-        LocalDateTime firstDate = resolveFirstOccurrence(
-                request.getData(),
-                ricorrente,
-                request.getGiornoSettimana()
-        );
+        Integer singleDay = firstDay(giorni, request.getGiornoSettimana());
+        boolean csvGiorni = request.getGiorniSettimana() != null && !request.getGiorniSettimana().isBlank();
+        boolean linkedSpeciale = request.getSpecialeId() != null || event.getSpecialeId() != null;
+        boolean virtualRecurrence = ricorrente
+                && !Boolean.TRUE.equals(request.getRunClub())
+                && !event.isRunClub()
+                && (csvGiorni || linkedSpeciale);
+
+        LocalDateTime firstDate = virtualRecurrence
+                ? RecurrenceSupport.firstOccurrence(
+                        request.getData() != null ? request.getData().toLocalDate() : event.getData().toLocalDate(),
+                        request.getData() != null ? request.getData().toLocalTime() : event.getData().toLocalTime(),
+                        giorni)
+                : resolveFirstOccurrence(request.getData(), ricorrente, singleDay);
 
         event.setTitolo(request.getTitolo());
         event.setDescrizione(request.getDescrizione());
@@ -113,8 +165,12 @@ public class EventService {
             event.setSpeciale(request.getSpeciale());
         }
         event.setRicorrente(ricorrente);
-        event.setGiornoSettimana(ricorrente ? request.getGiornoSettimana() : null);
+        event.setGiornoSettimana(ricorrente ? singleDay : null);
+        event.setGiorniSettimana(ricorrente ? RecurrenceSupport.serialize(giorni) : null);
         event.setDataFine(ricorrente ? request.getDataFine() : null);
+        if (request.getSpecialeId() != null) {
+            event.setSpecialeId(request.getSpecialeId());
+        }
         if (request.getRunClub() != null) {
             event.setRunClub(request.getRunClub());
         }
@@ -137,18 +193,18 @@ public class EventService {
 
         Event updated = eventRepository.save(event);
 
-        // Se è uno speciale con figli, allinea titolo/descrizione/posti e rimpinisce l'orizzonte
-        if (updated.isSpeciale()) {
+        if (updated.isSpeciale() && eventRepository.countByParentEventId(updated.getId()) > 0) {
             syncChildrenMetadata(updated);
-            if (Boolean.TRUE.equals(request.getCreaEventoNormale())
-                    || eventRepository.countByParentEventId(updated.getId()) > 0) {
-                ensureChildrenHorizon(updated, request);
-            }
-        } else if (updated.isRicorrente() && updated.getParentEvent() == null) {
+            ensureChildrenHorizon(updated, request);
+        } else if (updated.isRicorrente()
+                && updated.getParentEvent() == null
+                && !virtualRecurrence
+                && updated.getSpecialeId() == null
+                && !updated.isSpeciale()) {
             materializeOccurrences(updated, updated.getGiornoSettimana(), updated.getDataFine(), OCCURRENCE_HORIZON_WEEKS);
         }
 
-        return toResponse(updated);
+        return toResponse(updated, null);
     }
 
     @Transactional
@@ -160,7 +216,7 @@ public class EventService {
                 .orElseThrow(() -> new CornerPubException("Evento non trovato"));
         replaceStoredPoster(event, poster);
         Event updated = eventRepository.save(event);
-        return toResponse(updated);
+        return toResponse(updated, null);
     }
 
     @Transactional
@@ -172,7 +228,7 @@ public class EventService {
         event.setPosterUrl(null);
         event.setPosterPublicId(null);
         Event updated = eventRepository.save(event);
-        return toResponse(updated);
+        return toResponse(updated, null);
     }
 
     private void replaceStoredPoster(Event event, MultipartFile poster) {
@@ -192,7 +248,6 @@ public class EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new CornerPubException("Evento non trovato"));
 
-        // Elimina prima i figli subordinati
         List<Event> children = eventRepository.findByParentEventIdOrderByDataAsc(eventId);
         for (Event child : children) {
             storageService.deleteOwned(child.getPosterUrl(), "eventi", String.valueOf(child.getId()));
@@ -204,14 +259,15 @@ public class EventService {
         storageService.deleteOwned(event.getPosterUrl(), "eventi", String.valueOf(eventId));
         storageService.delete(event.getPosterPublicId());
 
+        specialeRepository.findByEventoId(eventId).ifPresent(speciale -> {
+            speciale.setEventoId(null);
+            specialeRepository.save(speciale);
+        });
+
         registrationRepository.deleteByEventId(eventId);
         eventRepository.delete(event);
     }
 
-    /**
-     * Assicura che le serie ricorrenti abbiano date prenotabili nei prossimi mesi.
-     * Chiamato dalle API pubbliche di listing.
-     */
     @Transactional
     public void ensureRecurringHorizons() {
         List<Event> specials = eventRepository.findBySpecialeTrueAndRicorrenteTrue();
@@ -226,26 +282,29 @@ public class EventService {
     public List<EventResponse> listAllAdmin() {
         return eventRepository.findAllByOrderByDataAsc().stream()
                 .filter(event -> !event.isRunClub())
-                .map(this::toResponse)
+                .map(event -> toResponse(event, null))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Eventi prenotabili dal pubblico: date future normali (incluse subordinate)
-     * e speciali senza figli. Gli speciali "template" con figli restano nascosti
-     * perché si prenota la data subordinata.
+     * Eventi prenotabili dal pubblico.
+     * - Ricorrenza virtuale (giorni_settimana / speciale collegato): una riga con prossimeDate.
+     * - Serie materializzata: nasconde i template con figli, mostra le date figlie future.
      */
     @Transactional
     public List<EventResponse> listBookablePublic(LocalDate filterDate) {
         ensureRecurringHorizons();
 
+        LocalDateTime now = LocalDateTime.now(ROME);
+        LocalDate today = LocalDate.now(ROME);
+
         List<Event> candidates;
         if (filterDate != null) {
-            LocalDateTime startOfDay = filterDate.atStartOfDay();
-            LocalDateTime endOfDay = filterDate.plusDays(1).atStartOfDay();
-            candidates = eventRepository.findByDataBetween(startOfDay, endOfDay);
+            candidates = eventRepository.findBookable(now, today).stream()
+                    .filter(event -> RecurrenceSupport.isValidOccurrence(event, filterDate))
+                    .toList();
         } else {
-            candidates = eventRepository.findByDataAfterOrderByDataAsc(LocalDateTime.now());
+            candidates = eventRepository.findBookable(now, today);
         }
 
         Set<Long> parentsWithChildren = new HashSet<>();
@@ -254,7 +313,6 @@ public class EventService {
                 parentsWithChildren.add(e.getParentEvent().getId());
             }
         }
-        // Anche speciali futuri che hanno già figli oltre l'orizzonte filtrato
         for (Event e : eventRepository.findBySpecialeTrueAndRicorrenteTrue()) {
             if (eventRepository.countByParentEventId(e.getId()) > 0) {
                 parentsWithChildren.add(e.getId());
@@ -264,13 +322,18 @@ public class EventService {
         List<EventResponse> out = new ArrayList<>();
         for (Event event : candidates) {
             if (event.isRunClub()) {
-                continue; // le uscite del Run Club hanno il proprio sito
+                continue;
             }
             if (event.isSpeciale() && parentsWithChildren.contains(event.getId())) {
-                continue; // si prenota tramite le date subordinate
+                continue;
+            }
+            // Figli materializzati: solo se la data è ancora futura (o filtra)
+            if (event.getParentEvent() != null && filterDate == null
+                    && !event.getData().isAfter(now)) {
+                continue;
             }
             Event detailed = eventRepository.findDetailedById(event.getId()).orElse(event);
-            out.add(toResponse(detailed));
+            out.add(toResponse(detailed, filterDate));
         }
         return out;
     }
@@ -279,7 +342,17 @@ public class EventService {
     public EventResponse getById(Long eventId) {
         Event event = eventRepository.findDetailedById(eventId)
                 .orElseThrow(() -> new CornerPubException("Evento non trovato"));
-        return toResponse(event);
+        return toResponse(event, null);
+    }
+
+    @Transactional(readOnly = true)
+    public EventResponse getPublic(Long eventId, LocalDate occurrence) {
+        Event event = eventRepository.findDetailedById(eventId)
+                .orElseThrow(() -> new CornerPubException("Evento non trovato"));
+        if (occurrence != null && !RecurrenceSupport.isValidOccurrence(event, occurrence)) {
+            throw new CornerPubException("La data scelta non è valida per questo evento");
+        }
+        return toResponse(event, occurrence);
     }
 
     private void createSubordinateNormals(Event special, EventRequest request) {
@@ -299,7 +372,6 @@ public class EventService {
                     : request.getDataFine();
             materializeChildOccurrences(special, day, end, OCCURRENCE_HORIZON_WEEKS);
         } else {
-            // STESSO periodo della specialità
             if (special.isRicorrente()) {
                 materializeChildOccurrences(
                         special,
@@ -326,7 +398,6 @@ public class EventService {
             }
         }
         if (day == null) {
-            // non ricorrente: assicurati almeno la data dello speciale
             createChildIfAbsent(special, special.getData());
             return;
         }
@@ -334,10 +405,6 @@ public class EventService {
     }
 
     private void materializeOccurrences(Event seriesRoot, Integer isoDay, LocalDate end, int weeks) {
-        // Per serie senza parent: crea "cloni" normali subordinati a se stesso? No —
-        // se un normale è ricorrente senza essere speciale, materializziamo come figli di sé.
-        // Meglio: solo speciali creano figli. Qui se root non è speciale ma ricorrente,
-        // creiamo figli con parent = root.
         materializeChildOccurrences(seriesRoot, isoDay, end, weeks);
     }
 
@@ -354,7 +421,7 @@ public class EventService {
             cursor = cursor.with(java.time.temporal.TemporalAdjusters.nextOrSame(dow));
         }
 
-        LocalDate horizon = LocalDate.now().plusWeeks(weeksAhead);
+        LocalDate horizon = LocalDate.now(ROME).plusWeeks(weeksAhead);
         LocalDate limit = end != null && end.isBefore(horizon) ? end : horizon;
         if (end != null && end.isBefore(cursor)) {
             return;
@@ -363,7 +430,7 @@ public class EventService {
         int guard = 0;
         while (!cursor.isAfter(limit) && guard < 200) {
             LocalDateTime when = LocalDateTime.of(cursor, time);
-            if (when.isAfter(LocalDateTime.now().minusMinutes(1))) {
+            if (when.isAfter(LocalDateTime.now(ROME).minusMinutes(1))) {
                 createChildIfAbsent(parent, when);
             }
             cursor = cursor.plusWeeks(1);
@@ -375,8 +442,6 @@ public class EventService {
         if (eventRepository.existsByParentEventIdAndData(parent.getId(), when)) {
             return;
         }
-        // Evita duplicare la stessa data dello speciale come figlio se uguale e già usata solo come template:
-        // creiamo comunque il figlio prenotabile alla stessa data.
         Event child = new Event();
         child.setTitolo(parent.getTitolo());
         child.setDescrizione(parent.getDescrizione());
@@ -386,14 +451,15 @@ public class EventService {
         child.setRicorrente(false);
         child.setParentEvent(parent);
         child.setGiornoSettimana(null);
+        child.setGiorniSettimana(null);
         child.setDataFine(null);
+        child.setSpecialeId(parent.getSpecialeId());
         child.setRunClub(parent.isRunClub());
         child.setLuogo(parent.getLuogo());
         child.setDistanza(parent.getDistanza());
         child.setRitmo(parent.getRitmo());
         child.setQuotaEuro(parent.getQuotaEuro());
         child.setAnnullata(false);
-        // locandina ereditata in EventResponse dal parent
         eventRepository.save(child);
     }
 
@@ -417,7 +483,7 @@ public class EventService {
             throw new CornerPubException("La data è obbligatoria");
         }
         if (!ricorrente || isoDay == null) {
-            if (!requested.isAfter(LocalDateTime.now())) {
+            if (!requested.isAfter(LocalDateTime.now(ROME))) {
                 throw new CornerPubException("La data deve essere nel futuro");
             }
             return requested;
@@ -428,10 +494,31 @@ public class EventService {
             d = d.with(java.time.temporal.TemporalAdjusters.nextOrSame(dow));
         }
         LocalDateTime candidate = LocalDateTime.of(d, requested.toLocalTime());
-        if (!candidate.isAfter(LocalDateTime.now())) {
+        if (!candidate.isAfter(LocalDateTime.now(ROME))) {
             candidate = candidate.plusWeeks(1);
         }
         return candidate;
+    }
+
+    private static String resolveGiorni(EventRequest request, Event existing) {
+        if (request.getGiorniSettimana() != null && !request.getGiorniSettimana().isBlank()) {
+            return RecurrenceSupport.serialize(request.getGiorniSettimana());
+        }
+        if (request.getGiornoSettimana() != null) {
+            return String.valueOf(request.getGiornoSettimana());
+        }
+        if (existing != null) {
+            return existing.effectiveGiorniSettimana();
+        }
+        return null;
+    }
+
+    private static Integer firstDay(String giorni, Integer fallback) {
+        List<DayOfWeek> days = RecurrenceSupport.parseDays(giorni);
+        if (!days.isEmpty()) {
+            return days.get(0).getValue();
+        }
+        return fallback;
     }
 
     private static String trimToNull(String value) {
@@ -442,11 +529,32 @@ public class EventService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private EventResponse toResponse(Event event) {
-        long totale = registrationRepository.countByEventId(event.getId());
+    private EventResponse toResponse(Event event, LocalDate occurrence) {
+        LocalDate occ = occurrence;
+        if (occ == null && event.isRicorrente()
+                && event.effectiveGiorniSettimana() != null
+                && eventRepository.countByParentEventId(event.getId()) == 0) {
+            List<LocalDate> upcoming = RecurrenceSupport.upcoming(event, RecurrenceSupport.UPCOMING_LIMIT);
+            occ = upcoming.isEmpty() ? null : upcoming.get(0);
+        }
+
+        long totale;
+        if (occ != null && event.isRicorrente()
+                && event.effectiveGiorniSettimana() != null
+                && eventRepository.countByParentEventId(event.getId()) == 0) {
+            totale = registrationRepository
+                    .sumPartecipantiByEventIdAndOccurrenceDate(event.getId(), occ)
+                    .orElse(0L);
+        } else {
+            totale = registrationRepository.countByEventId(event.getId());
+        }
+
         EventResponse response = new EventResponse(event, totale);
         if (event.getParentEvent() == null) {
             response.setFigliCount((int) eventRepository.countByParentEventId(event.getId()));
+        }
+        if (occ != null && event.isRicorrente()) {
+            response.setData(RecurrenceSupport.atEventTime(event, occ).toString());
         }
         return response;
     }

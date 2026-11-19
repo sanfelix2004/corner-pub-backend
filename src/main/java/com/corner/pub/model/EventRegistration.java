@@ -2,10 +2,14 @@ package com.corner.pub.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
-@Table(name = "event_registration", uniqueConstraints = @UniqueConstraint(columnNames = { "user_id", "event_id" }))
+@Table(name = "event_registration", uniqueConstraints = @UniqueConstraint(
+        name = "uk_event_reg_user_event_occ",
+        columnNames = { "user_id", "event_id", "occurrence_date" }))
 public class EventRegistration {
 
     @Id
@@ -22,6 +26,12 @@ public class EventRegistration {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(name = "occurrence_date")
+    private LocalDate occurrenceDate;
+
+    @Column(name = "occurrence_time")
+    private LocalTime occurrenceTime;
 
     @Column(nullable = false)
     private int partecipanti;
@@ -144,6 +154,22 @@ public class EventRegistration {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDate getOccurrenceDate() {
+        return occurrenceDate;
+    }
+
+    public void setOccurrenceDate(LocalDate occurrenceDate) {
+        this.occurrenceDate = occurrenceDate;
+    }
+
+    public LocalTime getOccurrenceTime() {
+        return occurrenceTime;
+    }
+
+    public void setOccurrenceTime(LocalTime occurrenceTime) {
+        this.occurrenceTime = occurrenceTime;
     }
 
     public String getTableNumber() {

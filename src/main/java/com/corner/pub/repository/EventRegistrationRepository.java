@@ -15,6 +15,8 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     boolean existsByUserIdAndEventId(Long userId, Long eventId);
 
+    boolean existsByUserIdAndEventIdAndOccurrenceDate(Long userId, Long eventId, LocalDate occurrenceDate);
+
     Optional<EventRegistration> findByEventIdAndUserId(Long eventId, Long userId);
 
     @Query("SELECT COUNT(e) FROM EventRegistration e WHERE e.event.id = :eventId")
@@ -28,13 +30,19 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
     @Query("SELECT COALESCE(SUM(r.partecipanti), 0) FROM EventRegistration r WHERE r.event.id = :eventId")
     Optional<Long> sumPartecipantiByEventId(@Param("eventId") Long eventId);
 
+    @Query("SELECT COALESCE(SUM(r.partecipanti), 0) FROM EventRegistration r WHERE r.event.id = :eventId AND r.occurrenceDate = :date")
+    Optional<Long> sumPartecipantiByEventIdAndOccurrenceDate(@Param("eventId") Long eventId,
+                                                             @Param("date") LocalDate date);
+
     List<EventRegistration> findByEventId(Long eventId);
+
+    List<EventRegistration> findByEventIdAndOccurrenceDateOrderByCreatedAtAsc(Long eventId, LocalDate occurrenceDate);
 
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN TRUE ELSE FALSE END " +
             "FROM EventRegistration r " +
             "WHERE r.user.phone = :phone " +
-            "AND DATE(r.event.data) = :date " +
-            "AND r.event.runClub = :runClub")
+            "AND r.event.runClub = :runClub " +
+            "AND (r.occurrenceDate = :date OR (r.occurrenceDate IS NULL AND DATE(r.event.data) = :date))")
     boolean existsByPhoneAndEventDateAndRunClub(@Param("phone") String phone,
                                                 @Param("date") LocalDate date,
                                                 @Param("runClub") boolean runClub);
