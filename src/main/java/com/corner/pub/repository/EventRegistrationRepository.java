@@ -38,14 +38,23 @@ public interface EventRegistrationRepository extends JpaRepository<EventRegistra
 
     List<EventRegistration> findByEventIdAndOccurrenceDateOrderByCreatedAtAsc(Long eventId, LocalDate occurrenceDate);
 
-    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN TRUE ELSE FALSE END " +
-            "FROM EventRegistration r " +
-            "WHERE r.user.phone = :phone " +
-            "AND r.event.runClub = :runClub " +
-            "AND (r.occurrenceDate = :date OR (r.occurrenceDate IS NULL AND DATE(r.event.data) = :date))")
+    @Query("""
+            SELECT CASE WHEN COUNT(r) > 0 THEN TRUE ELSE FALSE END
+            FROM EventRegistration r
+            WHERE r.user.phone = :phone
+              AND r.event.runClub = :runClub
+              AND (
+                    r.occurrenceDate = :date
+                 OR (r.occurrenceDate IS NULL
+                     AND r.event.data >= :dayStart
+                     AND r.event.data < :dayEnd)
+              )
+            """)
     boolean existsByPhoneAndEventDateAndRunClub(@Param("phone") String phone,
                                                 @Param("date") LocalDate date,
-                                                @Param("runClub") boolean runClub);
+                                                @Param("runClub") boolean runClub,
+                                                @Param("dayStart") java.time.LocalDateTime dayStart,
+                                                @Param("dayEnd") java.time.LocalDateTime dayEnd);
 
     boolean existsByTicketCode(String ticketCode);
 

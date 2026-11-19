@@ -335,7 +335,13 @@ public class EventRegistrationService {
 
     @Transactional(readOnly = true)
     public boolean hasEventSameDay(String phone, LocalDate date, boolean runClub) {
-        return registrationRepository.existsByPhoneAndEventDateAndRunClub(phone, date, runClub);
+        LocalDate day = date != null ? date : LocalDate.now(ROME);
+        return registrationRepository.existsByPhoneAndEventDateAndRunClub(
+                phone,
+                day,
+                runClub,
+                day.atStartOfDay(),
+                day.plusDays(1).atStartOfDay());
     }
 
     // -----------------------------
