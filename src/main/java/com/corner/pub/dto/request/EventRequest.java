@@ -32,9 +32,16 @@ public class EventRequest {
     @Max(7)
     private Integer giornoSettimana;
 
+    /** Giorni CSV (1–7), es. "5" o "5,6" — modello Speciali / ricorrenza virtuale. */
+    @Size(max = 32)
+    private String giorniSettimana;
+
     /** Fine ricorrenza; vuoto = per sempre. */
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     private LocalDate dataFine;
+
+    /** Collegamento a uno speciale di periodo. */
+    private Long specialeId;
 
     /** Se true, crea anche un evento normale subordinato allo speciale. */
     private Boolean creaEventoNormale;
@@ -82,8 +89,12 @@ public class EventRequest {
     public void setRicorrente(Boolean ricorrente) { this.ricorrente = ricorrente; }
     public Integer getGiornoSettimana() { return giornoSettimana; }
     public void setGiornoSettimana(Integer giornoSettimana) { this.giornoSettimana = giornoSettimana; }
+    public String getGiorniSettimana() { return giorniSettimana; }
+    public void setGiorniSettimana(String giorniSettimana) { this.giorniSettimana = giorniSettimana; }
     public LocalDate getDataFine() { return dataFine; }
     public void setDataFine(LocalDate dataFine) { this.dataFine = dataFine; }
+    public Long getSpecialeId() { return specialeId; }
+    public void setSpecialeId(Long specialeId) { this.specialeId = specialeId; }
     public Boolean getCreaEventoNormale() { return creaEventoNormale; }
     public void setCreaEventoNormale(Boolean creaEventoNormale) { this.creaEventoNormale = creaEventoNormale; }
     public String getPeriodoNormale() { return periodoNormale; }

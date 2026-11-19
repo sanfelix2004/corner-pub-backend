@@ -43,8 +43,10 @@ public class StorageService {
         Files.createDirectories(root);
         Files.createDirectories(root.resolve("prodotti"));
         Files.createDirectories(root.resolve("eventi"));
+        Files.createDirectories(root.resolve("speciali"));
         Files.createDirectories(root.resolve("thumbs/prodotti"));
         Files.createDirectories(root.resolve("thumbs/eventi"));
+        Files.createDirectories(root.resolve("thumbs/speciali"));
         log.info("Upload directory: {}", root);
     }
 
@@ -145,6 +147,39 @@ public class StorageService {
         int dot = rest.lastIndexOf('.');
         String stamp = dot >= 0 ? rest.substring(0, dot) : rest;
         return !stamp.isEmpty() && stamp.chars().allMatch(Character::isDigit);
+    }
+
+    public String copyTo(String fromUrlOrRelative, String toFolder, String toBasename) throws IOException {
+        String localized = toLocalUrl(fromUrlOrRelative);
+        if (localized == null || localized.isBlank()
+                || localized.startsWith("http://") || localized.startsWith("https://")) {
+            return null;
+        }
+        String relative = localized;
+        String prefix = publicPath.endsWith("/") ? publicPath : publicPath + "/";
+        if (relative.startsWith(prefix)) {
+            relative = relative.substring(prefix.length());
+        } else if (relative.startsWith("/uploads/")) {
+            relative = relative.substring("/uploads/".length());
+        } else if (relative.startsWith("/")) {
+            relative = relative.substring(1);
+        }
+        Path src = safeResolve(relative);
+        if (!Files.isRegularFile(src)) {
+            return null;
+        }
+        Path dir = safeResolve(toFolder);
+        Files.createDirectories(dir);
+        deleteByBasename(toFolder, toBasename);
+        String name = src.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        String ext = dot >= 0 ? name.substring(dot + 1).toLowerCase(Locale.ROOT) : "jpg";
+        String destRelative = toFolder + "/" + toBasename + "-" + System.currentTimeMillis() + "." + ext;
+        Path dest = safeResolve(destRelative);
+        Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING);
+        writeThumb(destRelative);
+        log.info("Copiata foto {} -> {}", relative, destRelative);
+        return destRelative;
     }
 
     public String publicUrl(String relativePath) {

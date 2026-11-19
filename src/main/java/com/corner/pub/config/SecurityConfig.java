@@ -51,6 +51,7 @@ public class SecurityConfig {
                                                                 "/api/promotions", "/api/promotions/**",
                                                                 "/api/reservations", "/api/reservations/**",
                                                                 "/api/events", "/api/events/**",
+                                                                "/api/speciali", "/api/speciali/**",
                                                                 "/api/run-club", "/api/run-club/**",
                                                                 "/api/booking-settings", "/api/booking-settings/**",
                                                                 "/api/users", "/api/users/**")

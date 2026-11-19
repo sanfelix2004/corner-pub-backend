@@ -30,6 +30,8 @@ public class EventRegistrationResponse {
     private String paceCategory;
     private String paymentStatus;
     private java.time.LocalDateTime paidAt;
+    private java.time.LocalDate occurrenceDate;
+    private java.time.LocalTime occurrenceTime;
 
     public EventRegistrationResponse() {
     }
@@ -72,6 +74,8 @@ public class EventRegistrationResponse {
         this.paceCategory = reg.getPaceCategory();
         this.paymentStatus = reg.getPaymentStatus();
         this.paidAt = reg.getPaidAt();
+        this.occurrenceDate = reg.getOccurrenceDate();
+        this.occurrenceTime = reg.getOccurrenceTime();
     }
 
     public EventRegistrationResponse(Long id, LocalDateTime createdAt, EventResponse eventResponse,
@@ -216,4 +220,8 @@ public class EventRegistrationResponse {
     public void setPaymentStatus(String paymentStatus) { this.paymentStatus = paymentStatus; }
     public LocalDateTime getPaidAt() { return paidAt; }
     public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+    public java.time.LocalDate getOccurrenceDate() { return occurrenceDate; }
+    public void setOccurrenceDate(java.time.LocalDate occurrenceDate) { this.occurrenceDate = occurrenceDate; }
+    public java.time.LocalTime getOccurrenceTime() { return occurrenceTime; }
+    public void setOccurrenceTime(java.time.LocalTime occurrenceTime) { this.occurrenceTime = occurrenceTime; }
 }

@@ -34,6 +34,10 @@ public class Event {
     @Column(name = "speciale", nullable = false, columnDefinition = "boolean default false")
     private boolean speciale = false;
 
+    /** Collegamento alla tabella speciale (annuncio di periodo). */
+    @Column(name = "speciale_id")
+    private Long specialeId;
+
     /** Evento normale subordinato a uno speciale. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_event_id")
@@ -46,9 +50,16 @@ public class Event {
     @Column(name = "ricorrente", nullable = false)
     private boolean ricorrente = false;
 
-    /** ISO-8601: 1=Lunedì … 7=Domenica. */
+    /** ISO-8601: 1=Lunedì … 7=Domenica (singolo giorno, usato anche dal Run Club). */
     @Column(name = "giorno_settimana")
     private Integer giornoSettimana;
+
+    /**
+     * Giorni della settimana CSV (1–7), modello storico degli speciali/ricorrenze
+     * virtuali (es. "5" = ogni venerdì). Non eliminare: dati produzione.
+     */
+    @Column(name = "giorni_settimana", length = 32)
+    private String giorniSettimana;
 
     /** Fine ricorrenza; null = per sempre. */
     @Column(name = "data_fine")
@@ -161,6 +172,14 @@ public class Event {
         this.speciale = speciale;
     }
 
+    public Long getSpecialeId() {
+        return specialeId;
+    }
+
+    public void setSpecialeId(Long specialeId) {
+        this.specialeId = specialeId;
+    }
+
     public Event getParentEvent() {
         return parentEvent;
     }
@@ -191,6 +210,22 @@ public class Event {
 
     public void setGiornoSettimana(Integer giornoSettimana) {
         this.giornoSettimana = giornoSettimana;
+    }
+
+    public String getGiorniSettimana() {
+        return giorniSettimana;
+    }
+
+    public void setGiorniSettimana(String giorniSettimana) {
+        this.giorniSettimana = giorniSettimana;
+    }
+
+    /** Giorni effettivi per la ricorrenza virtuale (CSV o singolo giorno). */
+    public String effectiveGiorniSettimana() {
+        if (giorniSettimana != null && !giorniSettimana.isBlank()) {
+            return giorniSettimana;
+        }
+        return giornoSettimana != null ? String.valueOf(giornoSettimana) : null;
     }
 
     public LocalDate getDataFine() {
